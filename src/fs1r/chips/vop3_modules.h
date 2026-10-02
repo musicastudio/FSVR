@@ -8,8 +8,9 @@
 //   inputs   MEASURED s35h: the hardware writes the reverb send pair into r[0d]/r[0e] and the variation pair
 //            into r[0f]/r[10]; no step writes them, steps 002-005 read them in place (s22's r[03..08] were
 //            values the program computes). s36: the insertion pair lands in r[11]/r[12] (steps 006/007 scale
-//            r[0b..12] in place by 0x5a82). Register units: r = 8 x full scale. OPEN: the mid-pass arrival (r[0e] carries the mono reverb send one pass ahead of r[0d]); written at pass
-//            start here. The dry mix reaches the output bus already summed (s22), not modelled here.
+//            r[0b..12] in place by 0x5a82). Register units: r = 8 x full scale. MEASURED s37: the hardware writes
+//            the same mono send into both registers of a pair; writing all six as run() does replays every type
+//            tested (Hall1/Plate 1.3-1.8 LSB, Delay LCR 2.5 LSB). The dry mix reaches the output bus already summed (s22), not modelled here.
 //   NOTE s37: the hardware writes the same mono send into BOTH registers of an algorithm's pair; which one the
 //            microcode reads is the algorithm's business (Hall1/Plate read r[0d], Delay LCR reads r[0e] /
 //            r[10]). Writing both, as run() does, is measured correct: Delay LCR replays to 2.5 LSB.
@@ -21,9 +22,9 @@
 //            OPEN: computing these words from the parameters in C++ (the handlers' soft-float designer); feed
 //            a dump (FS1R.unlock session.json) when exact output matters.
 //   output   MEASURED s27/s28: DAC = d[10] (L, one pass late) / d[11] (R), readout d / 4, 18-bit floor.
-// VOP3-1: the same core on docs/vop3/program_N.bin; OPEN: per-channel register banks, the voice input
-// registers and the output cells are not measured, so Vop3Filter is not wired into the voice yet (VFilter in
-// vop3_filter.h stays the voice filter).
+// VOP3-1: the same core on docs/vop3/program_N.bin. Its program structure is mapped (see below); what is
+// OPEN is which register carries the voice in and which carries the filtered voice out, so Vop3Filter is not
+// wired into the voice yet (VFilter in vop3_filter.h stays the voice filter, which is a model).
 #pragma once
 #include <cstring>
 #include "vop3_core.h"

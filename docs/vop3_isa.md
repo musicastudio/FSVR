@@ -615,3 +615,21 @@ field): every segment reads the same -56.6 dBFS floor as the reference, +-0.1 dB
 The next step is the same sweep on a **silent** chip (no note: the register writes are then unambiguously the
 only signal, and a write that appears at the output proves the write path), then the register probe under a note
 once the path is proven.
+
+**Session 38b: a silent filter part makes no sound at all, so the register write path is still unproven.**
+(FS1R.unlock `2026-10-02-150543-s25`; `docs/vop3_ship/38b.probes.json`.) 13 registers written with 0x4000 and
+back to 0 on a silent chip (voice off): every segment is exact digital silence (L and R max 0.0). A filter part
+whose operator is silent produces nothing even with the program running, so this cannot separate "the write
+does not land" from "the program passes nothing"; s38c (audible note, coefficient cells r[64]/[67]/[6a] and the
+lane heads swept) is the deciding round.
+
+**Session 38c: writing the filter's coefficient cells does not change the response.** (FS1R.unlock
+`2026-10-02-151144-s25`; `docs/vop3_ship/38c.probes.json`.) An audible filter part, 28 segments: r[0x64],
+r[0x67], r[0x6a] (the cells the program reads as `f6c` coefficient operands) and the lane heads r[07]/[13]/
+[31]/[49] each written 0x0000/0x4000/0x8000/0xC000. Every segment reads within +-1 dB of the reference level
+(-64.4 dBFS) and within a few dB per band (noise). So the monitor's direct register write either does not
+reach the chip while it is running the voice, or those registers are not in the sounding channel's path.
+*The harness point first:* the filter part as configured here only produces -64 dBFS, which is too little
+headroom for a register-difference test; the next round raises the source (operator level, filter gain, or
+the cutoff) until the reference reads near -20 dBFS, then repeats this sweep. `regs` / `filter` in the s25
+runner are the interface (FS1R.unlock, `fs1r_capture_session25.py`).
