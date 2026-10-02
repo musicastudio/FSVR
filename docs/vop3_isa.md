@@ -894,3 +894,17 @@ step's `y` is the running value for the next step even when the next step's oper
 own `s` term is added to whatever the next step computes when it uses `s`). The model resets/ignores `s` unless
 the next step reads it. Fixing it needs the 398-probe self-check to stay green and the board sum to not regress;
 the `rev1_C` segment (unit rms 0.8 vs model 22.8) is the test.
+
+**Session 38t (correction): the rev1_B/C pair is carried state, not the 1f1 rule.**
+`rev1_A/B/C` are `voice: off` configs: `_A` writes the effect's input steps with a note from the config's own
+voice, `_B` and `_C` only sweep step `1f1`'s constant. With no source, the model gives 0 for every pass
+(traced: `acc` 0 at 1f0/1f1/1f2, `r[0x78]` 0), yet the unit reads rms 21.4 in `_B` and 0.8 in `_C` - i.e. the
+unit still holds the **decay of the preceding segment's note** and the `_C` write changes how fast that tail
+falls. That is the same carried-state situation as `ua4k*`, not a step rule: the model cannot reproduce a
+segment whose content is the previous segment's tail unless the tail is replayed with the same length and the
+same parameter history. So the `_C` "miss" is a **probe-design artifact** (a no-source segment used as a
+measurement), and `rev1_B`/`_C` should be read as "the unit's tail under a parameter change", not as
+step-response data. The earlier s38t note above is withdrawn: with a source the model carries `s` through
+`1f1` correctly.
+What this says for the board: segments with `voice: off` and no source in a `keep` chain measure the previous
+segment's decay, so they must be excluded from a first-bad sum or replayed with the preceding segment included.
