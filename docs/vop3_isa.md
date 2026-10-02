@@ -739,3 +739,13 @@ first. The rule to settle: **the result's mode and the route scale interact - a 
 without the clip) and only shows on `ua4k*`. Fixing it in `tools/vop3_interp.py`'s `mode()` / `acc_mode()` and
 re-running the board (`sum first-bad L 1014120 / R 1046334`) is the next model step; it must not move any other
 take's first-bad sample.
+
+**Session 38l (cont.): neither wrap location fixes the ua4k* takes - the divergence is carried-in state.**
+Tried the wrap at the route-scaled result (limited to +-2*RANGE on a route-1 step) and at the d[] write
+(+-DSAT): both leave every `ua4k*` take byte-identical to the clamp model, and the interp self-check stays
+398/398. So the divergence at sample 0/1 of those takes is not a per-step overflow rule - the `z*` probe that
+drives the loop to the clip leaves the unit in a state the model does not reproduce, and the next segment reads
+it. That is a probe-design problem (the model cannot be seeded with the unit's carried state from a
+clip-driving segment), not a rule to fit: leave the clamp as measured for the non-overflowing 200 takes and
+record the ua4k* set as not decidable by this pair of segments. A cleaner probe would drive the loop to a
+*known* state (a short burst then silence) so both sides start from the same place.
