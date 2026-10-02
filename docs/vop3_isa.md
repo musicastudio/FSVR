@@ -874,3 +874,23 @@ session-28..35 notes recorded a miss at 5002 R. The board's sum is unchanged onl
 segments that were already clean past the window: the residual is now concentrated in the `_C` segments and the
 `ut3c_mem1ra` family (err/unit rms 16.6 and 0.99), which are the ones worth attacking next. Recorded so the next
 session does not chase a 5002 that no longer exists.
+
+**Session 38t: the _C silence - a class-2 step with rA = 0 is not a discard; it feeds the next step's `s`.**
+(FS1R.unlock `2026-10-01-215125-s25`, rev1_A/B/C.)
+
+The probe sweeps step `1f1`'s constant (a Dry/Wet and High Damp parameter step, `docs/vop3_2_params.md`):
+`_B` sets it to 16, `_C` sets it to 0. The unit's right output falls from rms 21.4 (`_B`) to **0.8** (`_C`);
+the model gives 22.8 for both. So the model misses a real effect of this step.
+
+`1f1` is `op 0, rA = 0, rB = 0x78, rd-en 0`, and `r[0x78]` is written by eight class-2 steps (012, 039, 088,
+091, 09a, 14d, 195, 1ec) and read by fourteen. With `rA = 0` the model writes no register, so the step's
+`y = s + k * r[0x78]` survives only as the running value `s` for the **next** step - which is the mechanism the
+sweep is measuring, and the model only carries it when the next step reads `s` (rB = 0). The shipped step after
+`1f1` is `1f2` (`op 0, rA = r05, rB = r77`), which takes `x = r[rB]`, not `s`, so the model drops the step's
+contribution entirely and reads the same value whatever the constant is.
+
+That is a concrete, testable rule: **`s` must accumulate across steps that do not read it**, i.e. a class-2
+step's `y` is the running value for the next step even when the next step's operand is a register (the step's
+own `s` term is added to whatever the next step computes when it uses `s`). The model resets/ignores `s` unless
+the next step reads it. Fixing it needs the 398-probe self-check to stay green and the board sum to not regress;
+the `rev1_C` segment (unit rms 0.8 vs model 22.8) is the test.
