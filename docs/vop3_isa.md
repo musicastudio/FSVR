@@ -908,3 +908,24 @@ step-response data. The earlier s38t note above is withdrawn: with a source the 
 `1f1` correctly.
 What this says for the board: segments with `voice: off` and no source in a `keep` chain measure the previous
 segment's decay, so they must be excluded from a first-bad sum or replayed with the preceding segment included.
+
+**Session 38u: VOP3-1's staged table is the chip's LIVE PER-CHANNEL STATE, and it is readable.**
+(rig `vop1_state.py`; one performance with part 0 filter 1 and part 1 filter 2, notes on MIDI ch 0 and ch 1.)
+
+Reading `DAT_01068F78` (512 u16) at four points:
+
+| point | nonzero | words that moved vs idle |
+|---|---|---|
+| idle (no note) | 148 | - |
+| channel 0 note | 149 | 0x15, 0x48, 0x85 |
+| channel 1 note | 150 | + 0x18, 0x4c, 0x86 |
+| after both stop | 150 | unchanged - **it persists** |
+
+Each note adds exactly three words, and the second channel's three are at a **stride of 3** from the first's
+(0x15/0x18, 0x48/0x4c, 0x85/0x86) - the same interleave the ISA doc records for the channels' steps. So the
+table is the chip's live per-channel constant/state table, indexed by channel, and it survives note-off.
+
+This is the seed the VOP3-1 replay needs: `docs/vop3/coefficients_state_ch0.bin` / `_ch1.bin` hold it for a note on
+channel 0 / channel 1. The model can be driven with the state the unit actually holds, which removes the last
+guess (which constants the firmware patched) from the comparison. Combined with `op5s1` in
+`2026-09-30-10` (the output stage's op changed to 5 = the chip's input), both sides of the filter are measurable.
