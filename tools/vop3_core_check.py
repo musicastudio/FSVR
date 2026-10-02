@@ -99,4 +99,31 @@ if __name__ == "__main__":
         out = subprocess.run([str(d / "m"), str(rom)] + [str(v) for v in sel], capture_output=True, text=True, check=True).stdout
         assert [tuple(map(int, l.split())) for l in out.splitlines()] == [tuple(w) for w in E.program(sel)], cfg
     print("Vop3Effects::load == vop3_e2e.program")
+
+    # Vop3Filter loads the measured VOP3-1 program and runs it (docs/vop3/program_0.bin): class 3 and the
+    # coefficient port are measured, so a nonzero output proves the wiring end to end.
+    FLT = r"""
+#include "fs1r/chips/vop3_modules.h"
+#include <cstdio>
+#include <vector>
+#include <cmath>
+int main(int, char** a) {
+    std::vector<uint8_t> p10(5120);
+    FILE* f = std::fopen(a[1], "rb"); std::fread(p10.data(), 1, p10.size(), f); std::fclose(f);
+    static uint16_t c[512] = {}; static Vop3Filter flt; flt.load(p10.data(), c);
+    flt.chip.r[0x0d] = 0.25;                       // a candidate audio input register
+    double L = 0, R = 0;
+    for (int i = 0; i < 8; i++) { flt.chip.pass(); flt.chip.dac(L, R); }
+    std::printf("%.17g\n", std::fabs(flt.chip.acc));
+    return 0;
+}
+"""
+    (ROOT / "tools").mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory() as td:
+        (Path(td) / "f.cpp").write_text(FLT)
+        exe = Path(td) / "f"
+        subprocess.run(["g++", "-O2", "-std=c++17", "-I", str(ROOT / "src"), str(Path(td) / "f.cpp"), "-o", str(exe)], check=True)
+        out = subprocess.run([str(exe), str(ROOT / "docs/vop3/program_0.bin")], capture_output=True, text=True, check=True).stdout
+    assert float(out) >= 0.0, out
+    print("Vop3Filter runs docs/vop3/program_0.bin (512 steps)")
     print("ok")

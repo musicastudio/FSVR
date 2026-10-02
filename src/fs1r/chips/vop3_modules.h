@@ -70,8 +70,10 @@ struct Vop3Effects {
 //            (0x100 up, the channel's own copy). Each block is: an 8-step header writing the parameter file
 //            r[0x65], r[0x66], r[0x68], r[0x69], r[0x6b], r[0x6c] by class-2 op 0 (rA = the destination, one
 //            running value passed step to step), then the two biquad sections.
-//   inputs   OPEN: r[0x64], r[0x67], r[0x6a] are read (as f6c operands, so the filter's coefficients) and never
-//            written by any step: they and the voice's audio registers are the hardware's. The candidate audio
+//   inputs   FW s38e: r[0] / r[11] are the COEFFICIENT port (slot then value: FUN_0000C36C stages
+//            0x01068F78[slot], FUN_0000B6A4 writes the pair) - the boot program's first steps read r[0]. Do not
+//            drive them as audio. OPEN: r[0x64], r[0x67], r[0x6a] are read (as f6c operands, so the filter's
+//            coefficients) and never written by any step: they and the voice's audio registers are the hardware's. The candidate audio
 //            registers are the block heads - r[07]/r[08]/r[09], r[13]/r[14]/r[15], r[31..35], r[49..4d] (read by
 //            op 0/op 3/op 5 steps, never written) - i.e. one three-register lane per voice or per filter state.
 //            Which lane is live and which register holds the note is a rig measurement: re-point a probe step

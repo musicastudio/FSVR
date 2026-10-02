@@ -648,3 +648,14 @@ every VOP3-1 probe so far reads as nothing, and it is the blocker for the whole 
 live and the *register* path is not). Candidates: the write needs the chip idle / a status handshake
 (`DAT_010683E0` is VOP3-2's busy; VOP3-1's may be elsewhere), or the routine's register 0/11 staging (the
 `FUN_0000B6A4` pair) is what the chip actually samples.
+
+**Session 38e: VOP3-1's coefficient port is registers 0 and 11, and the audio path is still OPEN.**
+(`FUN_0000B6A4` decompile + `docs/vop3/program_0.bin`.) The firmware's own coefficient write is a *pair*:
+register 0 takes the coefficient **slot** number and register 11 takes the **value** (`FUN_0000C36C` stages
+`0x01068F78[slot]` then calls `FUN_0000B6A4(1, ptr)`), which is why the boot program opens with steps 000-008
+reading r[0]. A monitor poke of a *coefficient slot* through `FUN_0000B5E2` therefore writes the slot number
+where the value belongs - which is exactly the historical "the panel lit up" failure. So r[0]/r[11] are the
+coefficient port, not audio, and every s38 register sweep that wrote r[0]/[11] was writing the wrong thing.
+Still OPEN: which register carries the voice audio. `docs/vop3/program_0.bin` never reads r[0]/r[11] as operands,
+so the audio must sit in a cell the program reads and never writes; `tools/vop3_core_check.py` now asserts that
+`Vop3Filter` loads and runs the measured program, so the next rig round starts from a wired module.
