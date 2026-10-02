@@ -771,3 +771,21 @@ record the ua4k* set as not decidable by this pair of segments. A cleaner probe 
 * The s38g model result stands on its own (which registers *would* reach the sum bus, if written), and the
   in-unit breakpoint route is still available - but this readback is cheaper and it also settles what a
   breakpoint would have told us: the value written is not the problem, the write path is.
+
+**Session 38m RETRACTED / 38n: the VOP3-1 window is write-only; the readback was bus noise, and the write path
+works.** (rig one-offs `vop1_noise.py`, `vop1_read.py`.)
+
+* `docs/protocol.md` says it outright and I had skipped it: "0x00800100 - the LED and LCD-contrast latch,
+  **write only** ... write-only devices read back as **bus noise**, so peeking 0xC00000 or 0x800100 tells you
+  nothing." `captures/sweep.py` says the same of VOP3-1's block: "VOP3-1's block is write-only, so the check is
+  the firmware's echo instead."
+* Measured: 0x800100 reads a **floating** pattern (0x644d, 0xfffe, 0xfffe -> 0x644d moving between reads);
+  0xC00000 reads 0x4dff / 0xffff moving; **0x800200 reads all zeros with an occasional 0xd**. All three are
+  write-only; the VOP3-1 window's "r[1] = 9 -> 0xa, r[0x43] = 0xe9" in s38m was an artifact of the floating bus,
+  not a register. So s38m's "the write never lands" and "no register holds audio" are **withdrawn**.
+* **What is established instead:** session 8's `bits` / `nop` / `filtcoef` runs wrote program steps through
+  `FUN_0000B5E2` and moved the filter hard - `probe_check.csv` shows **62 of 96 segments moving >50 Hz** in
+  spectral centroid, up to +11 dB. So the monitor's write path into VOP3-1 is live and audible. The s38
+  register-write negatives therefore stay unexplained by any write-path failure; the open question is back to
+  the honest one - which register (or which non-register path) carries the audio - and it is only answerable
+  with audio, next to a **positive control** in the same take.
