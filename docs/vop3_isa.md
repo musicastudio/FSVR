@@ -633,3 +633,18 @@ reach the chip while it is running the voice, or those registers are not in the 
 headroom for a register-difference test; the next round raises the source (operator level, filter gain, or
 the cutoff) until the reference reads near -20 dBFS, then repeats this sweep. `regs` / `filter` in the s25
 runner are the interface (FS1R.unlock, `fs1r_capture_session25.py`).
+
+**Session 38d: the monitor's VOP3-1 register write does not reach the running chip.** (FS1R.unlock
+`2026-10-02-152257-s25`; `docs/vop3_ship/38d.probes.json`.) The s38c sweep with the source at full (operator
+level 127, cutoff 64, note 36), so the reference reads -34.9 dBFS: all 28 segments land within +-0.1 dB of the
+reference overall and every band difference is noise (the largest, 6.4 dB in the 20-40 Hz band, also appears at
+repeat writes of the same value). Writing r[0x64], r[0x67], r[0x6a] - read by the program as `f6c` coefficient
+operands, so they must change the filter if they land - and the lane heads r[07]/[13]/[31]/[49] leaves the
+response untouched.
+
+**Conclusion: FUN_0000B5E2 does not reach the running chip's register file from the monitor.** That is why
+every VOP3-1 probe so far reads as nothing, and it is the blocker for the whole VOP3-1 input-register question
+(and for the s8 `bits` runs, which write program steps, not registers - those do land, so the *program* path is
+live and the *register* path is not). Candidates: the write needs the chip idle / a status handshake
+(`DAT_010683E0` is VOP3-2's busy; VOP3-1's may be elsewhere), or the routine's register 0/11 staging (the
+`FUN_0000B6A4` pair) is what the chip actually samples.
