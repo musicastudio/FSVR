@@ -100,7 +100,17 @@ Notes, bend, aftertouch, controllers, RPN and NRPN, clock and sysex reach the en
 
 ## Sessions
 
-The session holds every param, the engine's own bulk dumps, the morph corners and your MIDI learn assignments, so a project reopens exactly as it was saved. The params hosts see are every FS1R param for all four parts, the morph square, the knobs and the performance, voice and Fseq numbers; the editor's own state (pages, the browser's position, the selected part, the scale) is saved with it but not listed. The window's size, 1x to 4x, is the scale in the LCD's bottom right corner: click it.
+The session holds every param, the engine's own bulk dumps, the morph corners and your MIDI learn assignments, so a project reopens exactly as it was saved. The params hosts see are every FS1R param for all four parts, the morph square, the knobs and the performance, voice and Fseq numbers; the editor's own state (pages, the browser's position, the selected part, the scale) is saved with it but not listed. The window's size is the scale in the LCD's bottom right corner (see the next section), and it is saved with the session too.
+
+## The window's size
+
+The editor can be any size from half to four times the skin's own, at the skin's own proportions, so it follows a monitor of any resolution and a 150 % or 200 % display. Three ways to set it:
+
+- **Drag the window's frame**, in a host that lets you (the standalone does, and so do the CLAP and VST3 hosts whose plug-in windows can be sized). The editor keeps its proportions, fits entirely inside the frame, and lands on a whole scale (1x, 2x ...) when you are close to one.
+- **Drag the window's bottom right corner.** A small grip shows there when the pointer is over it. It asks the host for the new size, so it works wherever a host accepts that request, which includes hosts that give you no frame to drag.
+- **The LCD's scale button** (bottom right of the LCD, tooltip "Window size") picks 0.5x, 0.75x, 1x, 1.25x, 1.5x, 2x, 3x or 4x. It reads 2x at a whole scale and as a percentage (150 %) at any other.
+
+At a whole scale the skin's pixels are shown exactly as drawn; at any other the picture is resampled (smoothed one window pixel wide when it grows, averaged when it shrinks), so it stays sharp. The last size is saved with the session, and the standalone remembers it between runs. A new instance with no saved size opens at your display's scale (150 % shows it 1.5x), never larger than the screen. The VST2 and the DXi have no way to be sized by the host's frame; the corner grip and the scale button are how they are sized.
 
 ## What is modelled and what is read
 
