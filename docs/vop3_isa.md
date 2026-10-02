@@ -699,3 +699,22 @@ output is the sum bus, not the DAC cells** - the model's `bus` (op-1 route 0) is
   ch0 0x70, ch1-3 0x90, ch4-5 0xf0, ch6-7 0x110, ch8-11 0x170, ch12-15 0x10 - the group whose cutoff step the
   table names. A channel's lane trio is at the group's own cells, so a probe reads `FILT_STEPS[channel]` and
   `BLOCK_TAB[channel]` and writes that group.
+
+**Session 38j: with the register window opened, VOP3-1 still does not take a monitor register write.**
+(FS1R.unlock `2026-10-02-154946-s25`; `docs/vop3_ship/38j.probes.json`.) Same loud filter part as s38d; each probe
+opens the window (`FUN_0000B5E2(1, 0x1004)`), writes one lane cell (r[09]..r[1d], the s38g lane trios) 0x4000,
+closes it. Every segment is within +-0.1 dB of the reference; every band difference is at or below the -3.8 dB
+bass-bin transient that the reference and `aud_ref_end` show too. So **register 1 alone does not gate it**: the
+monitor's write does not reach a running chip's VOP3-1 register file even with the window opened, though the
+same routine *does* write the program steps (s8's `bits`/`nop` runs move the filter), and the boot upload
+(`FUN_0000BC8C`) uses the identical call.
+
+**Where this leaves VOP3-1 (blocker, with the specific ask).** Everything about the chip that can be read from
+the firmware is now in `Vop3Filter`: the 512-step program, the block/lane structure, the sum-bus output, the
+coefficient port, the channel map, the window bit. What is missing is which register carries the voice's audio
+in. To get it, from inside the unit rather than from the monitor:
+* breakpoint `FUN_0000B5E2` while a note sounds and read the caller's register/value arguments; or
+* break at `FUN_0000B600` (the program upload) and see whether it is called when a voice arrives (if it is, the
+  program image is the CPU's `0x01069978`, which is readable from the monitor); or
+* note the arguments the firmware's own coefficient write (`FUN_0000C36C` -> `FUN_0000B6A4`) passes for a *known*
+  coefficient, and compare with the monitor's call.
