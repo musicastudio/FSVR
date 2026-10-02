@@ -950,3 +950,23 @@ and see which segment of a recording changes (the session-8 method, which works)
 Harness state for whoever picks this up: `tools/vop3_filt_replay.py` loads the full program, accepts any
 constant table, and compares against the measured input/output pair in `2026-09-30-10`. The remaining work is the
 stripe map, not the arithmetic or the constants.
+
+**Session 38w: VOP3-1's blocker is now exactly one thing - the register bank of a channel's steps.**
+(`vop1_coefs2.py` with the filter wide open; the interpreter traced with `inp = 0.25`.)
+
+* The constants are **not** the blocker after all: with the cutoff wide open the live table still reads 149
+  nonzero and the class-1 loads at 0x012/0x015/0x018 carry `0c0d` (the cutoff), while the output-stage steps
+  (0x14d, 0x174, ...) genuinely carry `k = 0` - `0x14d` is `op 0, rA = r31, rB = r31, k = 0`, i.e. `y = s`, so
+  those steps are pure state carriers. That is by design, not a bad dump.
+* With `inp = 0.25` driven for 30 passes the chain **is live**: `r[0x0c]` reaches 1.18 and steps 0x011/0x109/0x10c
+  produce -224, exactly as the hardware's class-1 sign rule predicts. So the input path, the arithmetic and the
+  constants are all fine.
+* What stays at **0** is every register the output stages read (`r31`..`r35`, `r62`..`r68`), because those steps
+  are in a different bank than the steps that write them: `0x14d` (which writes r31) is `fs1r_bank` 8 while
+  `0x174` (which reads r35) is bank 8 too but `0x175` (which writes r35) is bank 9. The stripes the documented
+  `fs1r_bank` assigns do not match the stripes the program's own dataflow implies.
+* So the single remaining unknown is the stripe map - and it is one bit of information per group that only a
+  measurement can supply: set one output-stage step's constant and see which segment of a recording moves (the
+  session-8 method, already proven to work on this unit), or set a class-1 load's constant and see which
+  channel's corner moves. Everything else in VOP3-1 is now in place: program, constants (live, dumped), input
+  path (works), arithmetic (verified), and the harness (`tools/vop3_filt_replay.py`).
