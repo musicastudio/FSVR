@@ -726,3 +726,16 @@ named: (1) every Hall1 take still misses on R at 5002, and the s33 08c-08f / 054
 overflow rule inside the comb loop, the last open VOP3-2 arithmetic question. Everything else that s36 settled
 (Hall1/Hall9 click replays, the Delay LCR pair, the capture source) is locked behind `tools/vop3_replay.py`'s
 assertion, so a regression in any of them fails the check.
+
+**Session 38l: the comb's overflow is a WRAP at the route-scaled range, not the +-8 clip.** (FS1R.unlock
+`2026-10-02-021742-s25`, the `ua4k*` takes.) Driving Hall1's comb to the clip (0a4 k = 0x7fff, then reducing it)
+the unit's output sits at exactly +-131071 / -131072 of the 16384-unit readout - i.e. **+-8 full scale at the
+DAC, d[] +-32** - and alternates sign sample to sample, which is a wrap, not a clamp (the model pins at +8 and
+never alternates). The comb's steps: 0a5 is class-2 op 0 rA = rB = r37, mode 1 (saturate), route 1 (x2),
+k = 0x001d; 0a4 is op 4 route 0 mode 0 (wrap) writing d[0x22]; 0a9 is op 5 rB = r37. So the running value inside
+the comb reaches +-256 through route 1 and wraps there, while the model applies the step's mode-1 saturation
+first. The rule to settle: **the result's mode and the route scale interact - a route-1 (x2) result wraps at
++-256 rather than saturating at +-128**, which is invisible on every non-overflowing probe (all 200 takes
+without the clip) and only shows on `ua4k*`. Fixing it in `tools/vop3_interp.py`'s `mode()` / `acc_mode()` and
+re-running the board (`sum first-bad L 1014120 / R 1046334`) is the next model step; it must not move any other
+take's first-bad sample.
