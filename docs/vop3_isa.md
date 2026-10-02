@@ -659,3 +659,13 @@ coefficient port, not audio, and every s38 register sweep that wrote r[0]/[11] w
 Still OPEN: which register carries the voice audio. `docs/vop3/program_0.bin` never reads r[0]/r[11] as operands,
 so the audio must sit in a cell the program reads and never writes; `tools/vop3_core_check.py` now asserts that
 `Vop3Filter` loads and runs the measured program, so the next rig round starts from a wired module.
+
+**Session 38f: VOP3-1's head is a table setup; the filter's parameter cells are the f6c 0x11/0x14/0x17/0x1a.**
+(`docs/vop3/program_0.bin` 0x000-0x01f.) Steps 000-00e write d[] cells (0x18, 0x59, 0xd7, 0x1bf/0x1be/0x1bd,
+0x83) and load r[01..05] - the table the firmware patches at note-on (FUN_0000D050 changes a channel's type
+and gains in the live shadow, not the image). From 0x010 on, the filter proper: class-2 op 5 reading
+`f6c` 0x11 / 0x14 / 0x17 / 0x1a (the per-voice parameter cells) storing into d[] 0x01/0x02/0x03/0x04, then
+class-1 loads r[61]/r[62]/r[63] and the two biquad sections (0x1c+). So the parameter cells a rig probe can
+sweep with visible effect are `f6c` 0x11/0x14/0x17/0x1a, with r[61]/[62]/[63] the cutoff/resonance/gain
+constants - a much smaller candidate set than the 128-register sweep. Still OPEN: the audio input register,
+which no step writes and (per s38d) the monitor cannot reach while the chip runs.
