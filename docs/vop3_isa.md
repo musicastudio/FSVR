@@ -1009,3 +1009,19 @@ A textbook lowpass: the top three bands fall 21-26 dB, the 320-640 band gains +1
 64), and everything below 320 Hz is untouched. So VOP3-1's function on this voice is confirmed end to end
 without reading a single op code, and this pair - not the session-9 `op5s1` patch - is the input/output pair a
 replay should be scored against. `vop3_filt_replay.py` is being pointed at it.
+
+**Session 39: a step's CONSTANT poked through FUN_0000B6A4 does not change the sound; only the step WORDS do.**
+(FS1R.unlock `2026-10-03-003449-s39`.) Eight candidate steps (0x10d, 0x111, 0x115, 0x14f, 0x174, 0x175, 0x150,
+0x16d - the ones the output stages and the stripes are built from), each written to 0x7fff and then 0x0000
+through the firmware's own coefficient path (`STAGED[step] = v` then `FUN_0000B6A4(1, STEP_LIST + step*2)`), with a
+note through filter channel 1. Every one of the 16 segments lands within +-0.7 dB of the reference on level and
+within a few dB per band (the low bands' 1-4 dB movement is the segment-onset transient, and `ref_end` shows the
+same). Contrast session 8: rewriting a step's **words** (its op code / fields) through `FUN_0000B5E2(0, step)` plus
+the word registers moved the filter hard (62/96 segments). So on VOP3-1 the *program words* are the live,
+changeable state and the per-step constant is not reached the same way - or the constant this voice uses is not
+the one at that index.
+
+That closes the poke route to the stripe map. The stripe is still the one unknown, and the only method left that
+is known to work is the one session 8 used: rewrite a candidate step's **words** (e.g. clear the step, or change
+its op) and see which segment moves. `docs/vop3_ship/39a.probes.json`-style, but that needs the s25 runner rather
+than a one-off. Recorded so the next round starts from the method that works instead of the one that does not.
