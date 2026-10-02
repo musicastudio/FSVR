@@ -603,3 +603,15 @@ steps; class 2 = 416, class 1 = 57, class 0 = 7, class 3 = 32.)
   step, so the DAC path is not how the filtered voice leaves; the output stages 0f0 / 0f8 are the candidates.
 * This is where the rig takes over: re-point a probe step into d[10] as in s36 and drive r[07], r[13], r[31],
   r[49] in turn. `Vop3Filter` now carries the map, the `param()` write (FUN_0000B5E2) and the OPEN list.
+
+**Session 38a: driving VOP3-1 registers from the monitor under a running note is silent.** (FS1R.unlock
+`2026-10-02-145907-s25`; `docs/vop3_ship/38a.probes.json`.) A filter part with the operator silent (`level=0`,
+so the note itself contributes nothing) and the 8 candidate registers r[07]/[13]/[31]/[49]/[64]/[67]/[6a]/[0d]
+held at +-0x4000 for 0.35 s each through the firmware's own write (FUN_0000B5E2, the s25 runner's new `regs`
+field): every segment reads the same -56.6 dBFS floor as the reference, +-0.1 dB (0.5 s, 48 kHz). So
+* the write does not take effect under a running note (the firmware stages VOP3-1 through register 0 and 11,
+  and a direct poke may need the chip idle), or
+* none of these registers is the sounding channel's input.
+The next step is the same sweep on a **silent** chip (no note: the register writes are then unambiguously the
+only signal, and a write that appears at the output proves the write path), then the register probe under a note
+once the path is proven.
