@@ -78,8 +78,13 @@ struct Vop3Effects {
 //            op 0/op 3/op 5 steps, never written) - i.e. one three-register lane per voice or per filter state.
 //            Which lane is live and which register holds the note is a rig measurement: re-point a probe step
 //            into d[10] as in s36 and drive r[07], r[13], r[31], r[49] in turn.
-//   outputs  OPEN: no step of this program is an op-1 route-0 step, so the DAC path (d[10]/d[11]) is not how the
-//            filtered voice leaves. The output stages 0f0/0f8 (op 1, sel, rB = 1c/1d) are the candidates.
+//   outputs  MEASURED s38g: the program has NO d[10]/d[11] write; its output is the SUM BUS (48 class-2 op-1
+//            route-0 steps - Vop3::bus / Interp.bus). Driving each of the 128 registers and reading that bus
+//            gives 33 live cells in four lanes: {09,0a,0b}, {15,16,17}, {1b,1c,1d} at +18 and +30 steps apart
+//            (i.e. {21,22,23}/{2d,2e,2f}/{33,34,35} ... {5d,5e,5f}). Each lane is a filter channel's
+//            input/output trio: the voice's audio enters one cell and the filtered result leaves another.
+//            OPEN: which of the trio is IN, which is OUT - the rig round (`regs` on the s25 runner, loud filter
+//            part) drives lane 0's three cells in turn.
 //   consts   FW: DAT_0106842C has never been dumped for VOP3-1; the model runs with zero constants. The
 //            parameter file r[0x65..] is what the CPU writes there (FUN_0000B5E2, EPROM 0x800200).
 struct Vop3Filter {

@@ -669,3 +669,20 @@ class-1 loads r[61]/r[62]/r[63] and the two biquad sections (0x1c+). So the para
 sweep with visible effect are `f6c` 0x11/0x14/0x17/0x1a, with r[61]/[62]/[63] the cutoff/resonance/gain
 constants - a much smaller candidate set than the 128-register sweep. Still OPEN: the audio input register,
 which no step writes and (per s38d) the monitor cannot reach while the chip runs.
+
+**Session 38g: VOP3-1's output is the SUM BUS, and 33 registers feed it (four lane groups).**
+(`docs/vop3/program_0.bin`.) The boot program has **no d[10]/d[11] write at all** (the s38 DAC sweep found zero
+registers reaching the DAC cells), but it does have **48 class-2 op-1 route-0 steps**, which is the model's sum
+bus. Driving each of the 128 registers and reading that bus instead:
+
+    0x09 0x0a 0x0b   0x15 0x16 0x17   0x1b 0x1c 0x1d    (the first lane, x4 offsets)
+    0x21 0x22 0x23   0x2d 0x2e 0x2f   0x33 0x34 0x35
+    0x39 0x3a 0x3b   0x45 0x46 0x47   0x4b 0x4c 0x4d
+    0x51 0x52 0x53   0x5d 0x5e 0x5f
+    (+ lane groups at +0x18 and +0x30): 33 registers in **four lanes of a three-register group plus the
+    filter-state cells**. Each lane is one filter channel's input/output trio, so the voice's audio enters
+    through a lane register and the filtered result leaves through a later one in the same lane.
+
+That is the candidate set the rig needs, and it is small: the next round drives lane 0's r[09]/r[0a]/r[0b] (and
+the +0x18/+0x30 equivalents) with the loud filter part already in hand. Note the ordering rule: **on VOP3-1 the
+output is the sum bus, not the DAC cells** - the model's `bus` (op-1 route 0) is the right output there.
