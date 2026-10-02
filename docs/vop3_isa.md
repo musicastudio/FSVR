@@ -837,3 +837,32 @@ the input cells and comparing the sum bus to the recording, with no register in 
   recorded input (`op5s1`, the output stage's op changed to 5 = the chip input) and the filtered output (`ref`)
   from the same session-9 take, and reports model-vs-unit rms, gain, correlation and error. It is the harness the
   bank map can be settled with, and it needs no further rig setup.
+
+**Session 38r: what VOP3-1's replay needs, and the measured facts it rests on.** (rig dumps; take
+`2026-09-30-10`.)
+
+Settled this session, all measured:
+* The firmware writes **only parameters, program words, tags and control bits** into VOP3-1's window (`r[0]`,
+  `r[10..6]`, `r[0xb]`, `r[0xc]`, `r[0x14]`, `r[0x16]`, `r[0x1c]`, `r[0x20]`, `r[0x21]`, `r[0x24..0x2d]`, `r[1]`).
+  **No audio register exists**; audio comes in through the chip's own path, as on VOP3-2.
+* The window reads back as **bus noise** (0x800100 and 0xC00000 read floating values, 0x800200 reads zeros), so
+  it is write-only - `docs/protocol.md` and `sweep.py` both say so.
+* The **live constant table** `DAT_01068F78` (512 u16) is readable RAM and holds **149 nonzero words** where the
+  EPROM has 132: the extras are the per-channel constants the firmware patches at note-on. Dumped to
+  `docs/vop3/coefficients_live_0.bin` (program copy in `shadow_program_0.bin`).
+* With the live constants and `bank_of = fs1r_bank`, the chain runs: steps 0x10c / 0x114 produce 0.6 / 15.15
+  where zero constants gave 0.
+* The **bank map still does not close the loop**: the output stage 0x174 (bank 8) reads r[0x35] which only bank 9
+  writes, and no uniform shift -4..+4 of `fs1r_bank` makes the group's output nonzero. Two readings are
+  consistent with the data and cannot be told apart from the program text: (a) the output stage reads a
+  *previous pass's* state (a per-pass pipeline, not a same-pass chain), or (b) the bank of a channel's steps is
+  set by the chip's channel allocation rather than by step position.
+
+What would settle it, in one round, without any register writes (all reads + ordinary MIDI):
+1. A note through a filter channel, then **stop the note and read `DAT_01068F78` again** - if the per-channel
+   constants persist, the table is the channel's state and the model can be seeded from it directly.
+2. The same note with the **filter channel number forced** (performance part 1 filter = 1, 2, 3, 4) so the
+   mapping channel -> step stripe is read off the unit rather than inferred: with one voice, `probe_check`
+   reports which segment changes.
+3. If (1) shows the table is state, `vop3_filt_replay.py` can be seeded from it and the only remaining unknown
+   is the input cell - which `op5s1` (the output stage's op changed to 5 = the chip input) already measures.
