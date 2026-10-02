@@ -10,6 +10,9 @@
 //            values the program computes). s36: the insertion pair lands in r[11]/r[12] (steps 006/007 scale
 //            r[0b..12] in place by 0x5a82). Register units: r = 8 x full scale. OPEN: the mid-pass arrival (r[0e] carries the mono reverb send one pass ahead of r[0d]); written at pass
 //            start here. The dry mix reaches the output bus already summed (s22), not modelled here.
+//   NOTE s37: the hardware writes the same mono send into BOTH registers of an algorithm's pair; which one the
+//            microcode reads is the algorithm's business (Hall1/Plate read r[0d], Delay LCR reads r[0e] /
+//            r[10]). Writing both, as run() does, is measured correct: Delay LCR replays to 2.5 LSB.
 //   program  FW: base image + one type per window at the upload function's addresses (tools/vop3_e2e.py WIN),
 //            selectors from the performance's effect types (docs/vop3_2_params.md, Dispatch).
 //   consts   FW: DAT_0106842C as the effect handlers leave it; offsets DAT_0106882C + area base (FUN_000397F4).

@@ -575,3 +575,14 @@ input lines are right. The replay check (`tools/vop3_replay.py`) moves to Hall1 
   own writers (steps 0xda-0x0e7 for the delay mix, 0x13e/0x140 re-pointed at r[0d]/r[0e] for the delay programs)
   move the input on. The tap is the way to ask: re-point 0cf at each register in turn (s36). `_ia` / `_ib` /
   `_ir` on a per-algorithm config is the shape of every future replay round.
+
+**Session 37c: the mono send feeds both registers of the pair; the delay algorithms are exact.** (FS1R.unlock
+`2026-10-02-142901-s25`.) Each delay config captured alone, after a silence segment, with the taps re-pointed per
+register: `rev13e` Delay LCR and `var20e` Delay LCR both reproduce the unit to 2.3-2.8 LSB (corr 0.99999, gain
+0.9999, lag 0) over 14000 samples, when r[0d]/r[0e] and r[0f]/r[10] are fed the same recorded send — feeding only
+the second register of the pair is enough (the two registers carry the same send; s36's "r[0e] two passes later"
+is step 003's in-place scale, not a different signal). The earlier zero-output and constant-hold readings were
+the take's own delay ring: a Delay config captured after other configs still holds their tail (2^18 words at
+48 kHz), so delay algorithms need a single config per take with a silence lead — both now measured.
+* `rev7e` (reverb 7 Stage2, the base program) still misses: model rms 99/165 against the unit's 236/238, corr
+  0.83/0.94 at gains 2.0/1.35 (OPEN — the stage program's own input path differs from Hall1/Plate's).
