@@ -48,23 +48,34 @@ def board(defs=(), n=6000, only=None):
                 if not f.exists():
                     continue
                 hw, m = np.load(f).astype(float), sim[p["name"]]
+                # s38t: a segment whose probe patches NOTHING (no steps/coefs/offs/regs of its own) and that
+                # follows one which did patch something measures the previous segment's decay, not its own
+                # response - the model cannot know that tail. `ps.index(p)` is unreliable when probes repeat, so
+                # compare against the probe that precedes this one in the same config.
+                # ponytail: only a probe that patches NOTHING counts as a tail, so `_C` (which sets a constant)
+                # stays data; its divergence is carried state the model cannot know (docs/vop3_isa.md s38t).
+                i_ = next((j for j, q in enumerate(ps) if q is p), 0)
+                prev = ps[i_ - 1] if i_ > 0 else None
+                tail = bool(p.get("keep") and not (p.get("steps") or p.get("coefs") or p.get("offs") or p.get("regs"))
+                            and prev and (prev.get("steps") or prev.get("coefs") or prev.get("offs") or prev.get("regs")))
                 a, b = onset(hw), onset(m)
                 if a < 0 or b < 0:
-                    rows.append((d.name, p["name"], -1, -1, float("nan")))
+                    rows.append((d.name, p["name"], -1, -1, float("nan"), False))
                     continue
                 hw, m = hw[a:][:n], m[b:][:n]
                 k = min(len(hw), len(m))
                 e = np.abs(hw[:k] - m[:k])
                 fb = [int(np.argmax(e[:, c] > LSB)) if (e[:, c] > LSB).any() else k for c in (0, 1)]
                 rel = np.sqrt(((hw[:k] - m[:k]) ** 2).mean()) / (np.sqrt((hw[:k] ** 2).mean()) + 1e-12)
-                rows.append((d.name, p["name"], fb[0], fb[1], rel))
+                rows.append((d.name, p["name"], fb[0], fb[1], rel, tail))
     return rows
 
 
 if __name__ == "__main__":
     defs = [a for i, a in enumerate(sys.argv[1:]) if sys.argv[i] == "-D"]
     rows = board(defs)
-    for dn, nm, fl, fr, rel in rows:
-        print(f"{dn[:22]:22s} {nm:14s} first bad L {fl:5d} R {fr:5d}  err/unit rms {rel:.4f}")
-    up = [r for r in rows if r[1].startswith("u") or r[1].endswith("_B")]   # the step-up segments
+    for dn, nm, fl, fr, rel, tail in rows:
+        print(f"{dn[:22]:22s} {nm:14s} first bad L {fl:5d} R {fr:5d}  err/unit rms {rel:.4f}"
+              + ("   (tail)" if tail else ""))
+    up = [r for r in rows if (r[1].startswith("u") or r[1].endswith("_B")) and not r[5]]   # step-up, not tails
     print(f"{len(rows)} takes; step-up segments {len(up)}: sum first-bad L {sum(r[2] for r in up)} R {sum(r[3] for r in up)}")
