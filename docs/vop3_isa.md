@@ -929,3 +929,24 @@ This is the seed the VOP3-1 replay needs: `docs/vop3/coefficients_state_ch0.bin`
 channel 0 / channel 1. The model can be driven with the state the unit actually holds, which removes the last
 guess (which constants the firmware patched) from the comparison. Combined with `op5s1` in
 `2026-09-30-10` (the output stage's op changed to 5 = the chip's input), both sides of the filter are measurable.
+
+**Session 38v: the constants were not the blocker - nothing in the model's VOP3-1 output path fires, whatever the seed.**
+Four coefficient sets (EPROM 132 nonzero, the live table 149, the per-channel state at idle 148 and after a
+note 150) each with the input driven into r[0x7f] / r[0x64] / nothing: every combination leaves the model's sum
+bus at zero. So the silence is structural, and the constants are a red herring for it.
+
+What that rules out and what it leaves:
+* Ruled out: "the model runs with zero constants" (the s38q diagnosis). With the unit's own 150-word state table
+  it still produces nothing.
+* Left: the **channel stripe / bank assignment** - which steps belong to the channel whose group is at 0x108 -
+  or the **output mechanism** (the op-1 route-0 steps summing into `bus`, which no VOP3-2 program uses and which
+  has therefore never been validated on VOP3-1 against a recording).
+The program's own shape says the output stages are the op-1 steps at 0x14c, 0x150, 0x154, 0x158, 0x16c, 0x16e,
+0x170, 0x172, 0x174, 0x176, 0x178, 0x17a, each reading a register (`r62`, `r63`, `r65`, `r68`, `r34`, `r3a`,
+`r40`, `r46`, `r35`, `r3b`, `r41`, `r47`) that the same group's op-0 steps write one step later in the same
+stripe. Which stripe those pairs share is the one unknown, and it needs a measurement: set one step's constant
+and see which segment of a recording changes (the session-8 method, which works), rather than more inference.
+
+Harness state for whoever picks this up: `tools/vop3_filt_replay.py` loads the full program, accepts any
+constant table, and compares against the measured input/output pair in `2026-09-30-10`. The remaining work is the
+stripe map, not the arithmetic or the constants.
