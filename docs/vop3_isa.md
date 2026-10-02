@@ -586,3 +586,20 @@ the take's own delay ring: a Delay config captured after other configs still hol
 48 kHz), so delay algorithms need a single config per take with a silence lead — both now measured.
 * `rev7e` (reverb 7 Stage2, the base program) still misses: model rms 99/165 against the unit's 236/238, corr
   0.83/0.94 at gains 2.0/1.35 (OPEN — the stage program's own input path differs from Hall1/Plate's).
+
+**Session 37d: VOP3-1's program structure, as far as it goes without the rig.** (`docs/vop3/program_0.bin`, 512
+steps; class 2 = 416, class 1 = 57, class 0 = 7, class 3 = 32.)
+
+* It is a repetition of one 20-step filter block writing its own register bank: **block A at 0x059 writes
+  r[02..0x18]**, **block B at 0x14d writes r[0x31..0x48]**, **block C at 0x1c9 writes r[0x49..0x60]**, and the
+  upper half (0x100 up) repeats the pattern for the channel's own copy. Blocks are not translations of each
+  other, so register numbers carry the block's identity, not its position.
+* Each block opens with an 8-step header (e.g. 0x059-0x060) that writes the **parameter file r[0x65], r[0x66],
+  r[0x68], r[0x69], r[0x6b], r[0x6c]** with class-2 op-0 steps (rA = the destination, one running value passed
+  step to step), then runs the two biquad sections.
+* **r[0x64], r[0x67], r[0x6a] are read as `f6c` operands - the filter coefficients - and never written by any
+  step.** The candidate voice-audio registers are the block heads r[07]/[08]/[09], r[13]/[14]/[15],
+  r[31..35], r[49..4d], each read by op 0 / op 3 / op 5 steps and never written. No step is an op-1 route-0
+  step, so the DAC path is not how the filtered voice leaves; the output stages 0f0 / 0f8 are the candidates.
+* This is where the rig takes over: re-point a probe step into d[10] as in s36 and drive r[07], r[13], r[31],
+  r[49] in turn. `Vop3Filter` now carries the map, the `param()` write (FUN_0000B5E2) and the OPEN list.

@@ -59,11 +59,33 @@ struct Vop3Effects {
     }
 };
 
-struct Vop3Filter {                              // OPEN: outline only, see the header
+// VOP3-1, the per-voice filter: the same chip, the same instruction set, a different program
+// (docs/vop3/program_N.bin, one per channel). Crystallization: the program structure is now mapped (below); what
+// is missing is which register carries the voice's audio in and which carries the filtered out.
+//
+//   program  FW: 512 steps. Class 2 = 416, class 1 = 57, class 0 = 7, class 3 = 32. Repeats a 20-step filter
+//            block writing its own register bank: block A at 0x059 writes r[02..0x18], block B at 0x14d writes
+//            r[0x31..0x48], block C at 0x1c9 writes r[0x49..0x60], and the pattern continues in the upper half
+//            (0x100 up, the channel's own copy). Each block is: an 8-step header writing the parameter file
+//            r[0x65], r[0x66], r[0x68], r[0x69], r[0x6b], r[0x6c] by class-2 op 0 (rA = the destination, one
+//            running value passed step to step), then the two biquad sections.
+//   inputs   OPEN: r[0x64], r[0x67], r[0x6a] are read (as f6c operands, so the filter's coefficients) and never
+//            written by any step: they and the voice's audio registers are the hardware's. The candidate audio
+//            registers are the block heads - r[07]/r[08]/r[09], r[13]/r[14]/r[15], r[31..35], r[49..4d] (read by
+//            op 0/op 3/op 5 steps, never written) - i.e. one three-register lane per voice or per filter state.
+//            Which lane is live and which register holds the note is a rig measurement: re-point a probe step
+//            into d[10] as in s36 and drive r[07], r[13], r[31], r[49] in turn.
+//   outputs  OPEN: no step of this program is an op-1 route-0 step, so the DAC path (d[10]/d[11]) is not how the
+//            filtered voice leaves. The output stages 0f0/0f8 (op 1, sel, rB = 1c/1d) are the candidates.
+//   consts   FW: DAT_0106842C has never been dumped for VOP3-1; the model runs with zero constants. The
+//            parameter file r[0x65..] is what the CPU writes there (FUN_0000B5E2, EPROM 0x800200).
+struct Vop3Filter {
     Vop3 chip;
     void load(const uint8_t* prog10, const uint16_t coef[512]) {
         for (int i = 0; i < 512; i++)
             for (int j = 0; j < 5; j++) chip.prog[i].w[j] = (uint16_t)(prog10[10 * i + 2 * j] << 8 | prog10[10 * i + 2 * j + 1]);
         std::memcpy(chip.coef.data(), coef, 512 * sizeof *coef);
     }
+    // The CPU's parameter write (FUN_0000B5E2): register `reg` of VOP3-1 <- `v`.
+    void param(int reg, uint16_t v) { chip.r[reg] = (double)(int16_t)v / 256.0; }
 };
