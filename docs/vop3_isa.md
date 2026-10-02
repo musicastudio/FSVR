@@ -558,3 +558,20 @@ input lines are right. The replay check (`tools/vop3_replay.py`) moves to Hall1 
 * Noise replays (s35j / s36a) stay at corr 0.67..0.89: those takes start mid-stream with the unit's DRAM full of
   earlier noise, which the replay cannot know. The click takes start from silence and are the exactness test.
 * Remaining at <= 6 LSB: rounding (output / accumulator LSB conventions), first at Hall1 1927 / Hall9 2236.
+
+**Session 37: the effect input pair is per algorithm; every VOP3-2 type replayed from a click.** (FS1R.unlock
+`2026-10-02-104635-s25`, `-140637-s25`.) Take: one config per algorithm, each with `_ia` / `_ib` re-pointing the
+0cf tap at r[0d] / r[0e], `_ir` at the driven register, all under a fresh click per segment.
+
+* `rev3c` Room1 / `rev8c` Plate: r[0d] drives the output (err rms 1.8 / 1.3 LSB, corr 1.00000 over 16000 samples).
+* `rev13c` Delay LCR / `var20c` Delay LCR: **the mono send pair arrives on r[0d] and r[0e] only for the
+  algorithm that reads it there; Delay LCR reads r[0e]** (a single register, driven by the second tap) — feeding
+  r[0d] gives exact 0, r[0e] gives corr 1.0000 / 2 LSB. Variation types read r[0f] / r[10].
+* The Delay algorithms are **not clean** in a multi-config take: their output equals their own segment's R for
+  the first ~5100 samples and holds a constant after (the delay ring is 2^18 words at 48 kHz, so an earlier
+  config's tail is still in it). Replaying them needs a silence lead-in and a single config per take; a rig round
+  is queued. Under those terms `rev13c` is exact (corr 1.0000).
+* Register-level rule: **which register the hardware drives depends on the algorithm**, and the base program's
+  own writers (steps 0xda-0x0e7 for the delay mix, 0x13e/0x140 re-pointed at r[0d]/r[0e] for the delay programs)
+  move the input on. The tap is the way to ask: re-point 0cf at each register in turn (s36). `_ia` / `_ib` /
+  `_ir` on a per-algorithm config is the shape of every future replay round.
