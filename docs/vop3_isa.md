@@ -814,3 +814,26 @@ something that does not exist - and it is a **confirmation of the model's existi
 narrower: which `d[]` cell (or op-7 route) the voice enters on, and how the filtered result leaves - and the
 filter's actual behaviour is already testable against the unit by feeding the interpreter the note's audio in
 the input cells and comparing the sum bus to the recording, with no register in the loop.
+
+**Session 38q: VOP3-1's live constant table dumped, and the bank map is the remaining bug.**
+(rig `vop1_coefs.py`; FS1R.unlock take `2026-09-30-10` already on disk.)
+
+* **The staged constant table reads back** (`DAT_01068F78`, 512 x u16, RAM not write-only): one note through a
+  filter channel and the table holds **149 nonzero words** where the EPROM image has 132 - the extra are exactly
+  the per-channel constants the firmware patches at note-on. Saved as `docs/vop3/coefficients_live_0.bin`, with
+  the CPU program copy as `docs/vop3/shadow_program_0.bin` (the shadow is the boot image, unchanged by a note).
+  This is what `Vop3Filter` should run with: the model's zero constants were the first reason its output was
+  silent.
+* **The chain runs** once the real constants and the per-channel banks are in: with `bank_of = fs1r_bank` and
+  r[0x7f] driven, steps 0x10c and 0x114 produce 0.6 and 15.15 where they were 0 before.
+* **What is still wrong is the bank assignment, not the arithmetic.** The output stage 0x174 (bank 8 per
+  `fs1r_bank`) reads r[0x35], which step 0x175 writes in bank **9**; r[0x3a] is written in bank 11, r[0x34] in
+  bank 9. On the chip a channel's steps must share one bank, so `fs1r_bank` (documented INFERRED, never measured)
+  is off by the group, and the group at 0x108 belongs to channel 4 whose own steps are interleaved across it.
+  Four variants (as-is, shift-4, group->channel, all-in-one-bank) all stay silent downstream, so the formula
+  needs a measurement, not another guess: the cleanest is VOP3-2's (session 16) - move one register between two
+  banks and see which step's read changes.
+* `tools/vop3_filt_replay.py` is in place: it loads the full 512-step program and the live constants, takes the
+  recorded input (`op5s1`, the output stage's op changed to 5 = the chip input) and the filtered output (`ref`)
+  from the same session-9 take, and reports model-vs-unit rms, gain, correlation and error. It is the harness the
+  bank map can be settled with, and it needs no further rig setup.
