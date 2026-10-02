@@ -686,3 +686,16 @@ bus. Driving each of the 128 registers and reading that bus instead:
 That is the candidate set the rig needs, and it is small: the next round drives lane 0's r[09]/r[0a]/r[0b] (and
 the +0x18/+0x30 equivalents) with the loud filter part already in hand. Note the ordering rule: **on VOP3-1 the
 output is the sum bus, not the DAC cells** - the model's `bus` (op-1 route 0) is the right output there.
+
+**Session 38i: the VOP3-1 register window is gated by register 1, and the channel map is known.**
+(`FUN_0000BC8C` / `FUN_0000B600` decompiles, `FILT_STEPS` 0x374E44 / `BLOCK_TAB` 0x374F2E.)
+
+* **The window bit.** `FUN_0000B5E2(1, 0x1004)` **opens** VOP3-1's register window and `FUN_0000B5E2(1, 0)`
+  closes it; `FUN_0000BC8C` brackets its whole upload that way, and `FUN_0000B600` writes a step as
+  `FUN_0000B5E2(0, slot)` then `FUN_0000B5E2(10 - k, word)` (k = 0..4). All of s38a-38h wrote registers with the
+  window **closed**, which is why 128 registers and 33 lane cells all read as nothing. Every future VOP3-1
+  probe must open the window first (FS1R.unlock `fs1r_capture_session25.py` now does it around `regs`).
+* **The channel map** (what the note lands on, so a probe writes the right lane):
+  ch0 0x70, ch1-3 0x90, ch4-5 0xf0, ch6-7 0x110, ch8-11 0x170, ch12-15 0x10 - the group whose cutoff step the
+  table names. A channel's lane trio is at the group's own cells, so a probe reads `FILT_STEPS[channel]` and
+  `BLOCK_TAB[channel]` and writes that group.

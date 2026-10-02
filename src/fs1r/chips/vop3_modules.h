@@ -78,6 +78,12 @@ struct Vop3Effects {
 //            op 0/op 3/op 5 steps, never written) - i.e. one three-register lane per voice or per filter state.
 //            Which lane is live and which register holds the note is a rig measurement: re-point a probe step
 //            into d[10] as in s36 and drive r[07], r[13], r[31], r[49] in turn.
+//   window   FW s38i: FUN_0000B5E2(1, 0x1004) OPENS VOP3-1's register window; (1, 0) closes it (FUN_0000BC8C
+//            brackets its upload that way). A monitor register write with the window closed does nothing - the
+//            s38a-38h negatives. Open it before any register probe.
+//   channels FW s38i: a note runs in a filter channel; the channel's step group is FILT_STEPS[ch] (EPROM
+//            0x374E44) rounded into the 0x20 groups - ch0 0x70, ch1-3 0x90, ch4-5 0xf0, ch6-7 0x110, ch8-11 0x170,
+//            ch12-15 0x10 - and BLOCK_TAB[ch] (0x374F2E) the block the firmware patches in.
 //   outputs  MEASURED s38g: the program has NO d[10]/d[11] write; its output is the SUM BUS (48 class-2 op-1
 //            route-0 steps - Vop3::bus / Interp.bus). Driving each of the 128 registers and reading that bus
 //            gives 33 live cells in four lanes: {09,0a,0b}, {15,16,17}, {1b,1c,1d} at +18 and +30 steps apart
