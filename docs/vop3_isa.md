@@ -749,3 +749,25 @@ it. That is a probe-design problem (the model cannot be seeded with the unit's c
 clip-driving segment), not a rule to fit: leave the clamp as measured for the non-overflowing 200 takes and
 record the ua4k* set as not decidable by this pair of segments. A cleaner probe would drive the loop to a
 *known* state (a short burst then silence) so both sides start from the same place.
+
+**Session 38m: the VOP3-1 window readback proves the monitor write never lands (chip-select, not audio).**
+(rig, one-off `vop1_rw.py` / `vop1_read.py`.) Read-only + one-register writes:
+
+* **The window reads back.** `peek(0x00800200, 128, 2)` returns VOP3-1's register file: on an idle unit it is
+  almost entirely 0, with only r[1] = 9 and r[0x43] = 0xe9 non-zero; a note moves r[1] 9 -> 0xa and r[0x43]
+  0xe9 -> 0xea (so r[1] is a write counter, not data). **No register ever holds the voice audio** - the audio
+  does not enter through a register. (Also: the CPU shadow at 0x01069978 does not change under a note, so it is
+  the boot image, not a live copy; and VOP3-1 has no live copy of its program at all.)
+* **The write never lands.** `FUN_0000B5E2(0x0b, 0x1234)` on an idle unit, read back at 0x800200 + 2*0x0b:
+  0x0000. Same for r[09] and r[01]; the firmware's own window-open write `(1, 0x1004)` also reads back 0. So
+  s38a-38j's negatives were never about audio or the window bit: **the monitor's write to 0x00800200 does not
+  reach VOP3-1's register file at all.**
+* **Why:** every register write that *has* worked in this project (s8/s11 `write_step` / `write_coef`, the test
+  images) pokes **0x00800000 - VOP3-2**. Nothing has ever written 0x00800200 successfully. The firmware writes
+  it, and the note-on handler sets the per-channel **chip-select flag** before its first event (docs elsewhere),
+  so the CS2 decode for 0x00800200 depends on that selection being made. Candidate next measurement: read the
+  per-channel struct's chip-select cell before and after a note, then set it before a monitor write and read
+  0x800200 back again.
+* The s38g model result stands on its own (which registers *would* reach the sum bus, if written), and the
+  in-unit breakpoint route is still available - but this readback is cheaper and it also settles what a
+  breakpoint would have told us: the value written is not the problem, the write path is.
