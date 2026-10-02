@@ -996,3 +996,16 @@ writes to VOP3-1 are not worth attempting again):
    stripe map, measured the way the unit has already proven it can be measured.
 2. Record the same note once with the filter off and once on, in one take: that is the input/output pair, with no
    reliance on interpreting an op-code patch.
+
+**Session 38y: VOP3-1's input/output pair, measured cleanly.** (FS1R.unlock `2026-10-03-002654-s38`.)
+One take, one note, the same voice: the performance's part 1 with the **filter off** then **filter on**.
+
+| segment | R rms | 20-40 | 40-80 | 80-160 | 160-320 | 320-640 | 640-1280 | 1.2-2.5k | 2.5-5k | 5-10k | 10-20k |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| filter off (input) | 0.0229 | 23.7 | 26.7 | 28.8 | 33.5 | 35.8 | 38.8 | 42.1 | 45.9 | 49.9 | 49.6 |
+| filter on (output) | 0.0138 | 23.4 | 28.2 | 30.1 | 34.6 | 50.1 | 36.8 | 14.7 | -3.6 | -21.0 | -22.8 |
+
+A textbook lowpass: the top three bands fall 21-26 dB, the 320-640 band gains +14 dB (the resonance at cutoff
+64), and everything below 320 Hz is untouched. So VOP3-1's function on this voice is confirmed end to end
+without reading a single op code, and this pair - not the session-9 `op5s1` patch - is the input/output pair a
+replay should be scored against. `vop3_filt_replay.py` is being pointed at it.
