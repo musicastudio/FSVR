@@ -970,3 +970,29 @@ stripe map, not the arithmetic or the constants.
   session-8 method, already proven to work on this unit), or set a class-1 load's constant and see which
   channel's corner moves. Everything else in VOP3-1 is now in place: program, constants (live, dumped), input
   path (works), arithmetic (verified), and the harness (`tools/vop3_filt_replay.py`).
+
+**Session 38x: VOP3-1 status - everything measured except one mapping, and the clean way to get it.**
+
+Done and measured this session (all in `Vop3Filter` / the docs):
+* The program (512 steps), its block/lane structure, the parameter file r[0x65..0x6c], the coefficient cells
+  r[0x64/0x67/0x6a], the sum-bus output (no d[10]/d[11] write), and the coefficient port r[0]/r[11].
+* **No audio register exists**: the firmware writes only parameters, program words, tags and control bits into
+  VOP3-1's window (exhaustive over every caller of FUN_0000B5E2).
+* The window is **write-only** (reads the floating pattern 0x644d/0xfffe like its 0x800100/0xC00000 neighbours).
+* **The live constant table is readable RAM** and is the chip's per-channel state: each note adds three words at
+  a stride of 3 and it persists after note-off (`coefficients_state_ch0/ch1.bin`, `coefficients_live_0.bin`).
+* With the input driven, the chain **is live** in the interpreter (r[0x0c] 1.18, class-1 sign rule exact).
+
+Not settled: **which stripe of steps belongs to the channel** whose output is the recording. Deduced (and it is
+a hard constraint): steps 0x174 and 0x175 are adjacent and share the output register r35, so they must share a
+bank - the documented `fs1r_bank` puts them in 8 and 9. But neither `fs1r_bank` nor two contiguous alternatives
+makes the recording match, so the recording's segment roles (`ref` = filtered, `op5s1` = input) are also not yet
+confirmed on this take; the two unknowns have to be separated by one round.
+
+The clean round, all reads + ordinary MIDI, no register writes (the s38a-j lesson is that monitor register
+writes to VOP3-1 are not worth attempting again):
+1. Filter channel 1, one note, and record `DAT_01068F78` **per segment** while session 8's proven method
+   rewrites one step constant at a time. The segment whose output moves names the step's channel - that is the
+   stripe map, measured the way the unit has already proven it can be measured.
+2. Record the same note once with the filter off and once on, in one take: that is the input/output pair, with no
+   reliance on interpreting an op-code patch.
