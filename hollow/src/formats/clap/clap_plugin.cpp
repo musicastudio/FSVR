@@ -307,7 +307,11 @@ const clap_plugin_gui_t kGui = {
         return true;
     },
     [](const clap_plugin_t* p) { self(p)->editor.reset(); },
-    [](const clap_plugin_t*, double) { return false; },   // the editor keeps its own integer scale
+    // The display's scale factor: an instance with no saved size opens at it; one that has a size keeps it (false).
+    [](const clap_plugin_t* p, double factor) {
+        Editor* e = self(p)->editor.get();
+        return e && e->setHostScale(factor);
+    },
     [](const clap_plugin_t* p, uint32_t* w, uint32_t* h) {
         const Editor* e = self(p)->editor.get();
         if (!e) return false;
@@ -315,18 +319,33 @@ const clap_plugin_gui_t kGui = {
         *h = (uint32_t)e->height();
         return true;
     },
-    [](const clap_plugin_t*) { return false; },
-    [](const clap_plugin_t*, clap_gui_resize_hints_t*) { return false; },
+    // The editor can be any size within its limits at the root view's aspect ratio, which the host is told so
+    // that dragging a frame keeps it (adjust_size says the same for a host that asks about one size at a time).
+    [](const clap_plugin_t* p) { return self(p)->editor != nullptr; },
+    [](const clap_plugin_t* p, clap_gui_resize_hints_t* hints) {
+        const Editor* e = self(p)->editor.get();
+        if (!e || !hints) return false;
+        int w, h;
+        e->aspect(w, h);
+        hints->can_resize_horizontally = true;
+        hints->can_resize_vertically = true;
+        hints->preserve_aspect_ratio = true;
+        hints->aspect_ratio_width = (uint32_t)w;
+        hints->aspect_ratio_height = (uint32_t)h;
+        return true;
+    },
     [](const clap_plugin_t* p, uint32_t* w, uint32_t* h) {
         const Editor* e = self(p)->editor.get();
         if (!e) return false;
-        *w = (uint32_t)e->width();
-        *h = (uint32_t)e->height();
+        int width = (int)*w, height = (int)*h;
+        e->constrain(width, height);
+        *w = (uint32_t)width;
+        *h = (uint32_t)height;
         return true;
     },
     [](const clap_plugin_t* p, uint32_t w, uint32_t h) {
-        const Editor* e = self(p)->editor.get();
-        return e && w == (uint32_t)e->width() && h == (uint32_t)e->height();
+        Editor* e = self(p)->editor.get();
+        return e && e->setSize((int)w, (int)h);
     },
 #if defined(_WIN32) || defined(__APPLE__)
     [](const clap_plugin_t* p, const clap_window_t* w) { return self(p)->editor && self(p)->editor->attach(w->ptr); },
