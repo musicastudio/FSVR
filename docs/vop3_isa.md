@@ -789,3 +789,28 @@ works.** (rig one-offs `vop1_noise.py`, `vop1_read.py`.)
   register-write negatives therefore stay unexplained by any write-path failure; the open question is back to
   the honest one - which register (or which non-register path) carries the audio - and it is only answerable
   with audio, next to a **positive control** in the same take.
+
+**Session 38p: the complete list of registers the firmware writes into VOP33-1 - and no audio register exists.**
+(`FS1R_GHIDRA_ANALYSIS` decompiles: every function that calls `FUN_0000B5E2`, i.e. every write into
+0x800200 + 2*reg.)
+
+The firmware writes exactly these VOP3-1 registers, and knows nothing else:
+* `r[0]` - the step address (the program port).
+* `r[10] r[9] r[8] r[7] r[6]` - a step's five words (`FUN_0000B600`, the program upload).
+* `r[0xb]` - a coefficient value (`FUN_0000B6A4`, paired with `r[0]` = the slot).
+* `r[0xc]` - a per-step tag byte (`FUN_0000B788` / `FUN_0000B7EE`).
+* `r[0x16]` - the 15 bus values (`FUN_0000B85E`).
+* `r[0x24..0x27]`, `r[0x28]`, `r[0x29]`, `r[0x2a]`, `r[0x1c]`, `r[0x20]`, `r[0x21]`, `r[0x14]` - the LFO and EG
+  words and their control cells (`FUN_0000B8EC` .. `FUN_0000BAC2`, `FUN_0000BAF6`, `FUN_0000BC42`).
+* `r[0x2b]`, `r[0x2c]`, `r[0x2d]` - the filter EG rate / level / depth words.
+* `r[1]`, `r[0x17]`, `r[0x21]` - control (the window bit and the two words `FUN_0000BC8C` sets).
+
+**There is no audio register.** Every register the firmware writes is a parameter, a program word, a tag, or a
+control bit. So the voice's audio does not arrive in VOP3-1 through the register file at all: it must come
+through the chip's own input path, which on VOP3-2 is the audio-bearing `d[]` cells (`INPUT_D = (1, 5)` in the
+interpreter) and the op-7 "chip input". That is why s38a-38j's register sweeps were silent - they were aimed at
+something that does not exist - and it is a **confirmation of the model's existing mechanism**, not a gap.
+*Consequence:* the register-sweep line of investigation is closed for good. The remaining VOP3-1 question is
+narrower: which `d[]` cell (or op-7 route) the voice enters on, and how the filtered result leaves - and the
+filter's actual behaviour is already testable against the unit by feeding the interpreter the note's audio in
+the input cells and comparing the sum bus to the recording, with no register in the loop.
