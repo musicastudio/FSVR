@@ -866,3 +866,11 @@ What would settle it, in one round, without any register writes (all reads + ord
    reports which segment changes.
 3. If (1) shows the table is state, `vop3_filt_replay.py` can be seeded from it and the only remaining unknown
    is the input cell - which `op5s1` (the output stage's op changed to 5 = the chip input) already measures.
+
+**Session 38s: the "Hall1 misses on R at 5002" note is stale - the s36k capture rule fixed it.**
+`2026-10-01-215125-s25` (the Hall1/Hall9/no-effect step responses) is now exact past 6000 samples on **both**
+channels and every config: rev1_B and rev9_B read first-bad 6000/6000 with err/unit rms 0.0003 / 0.0006, where the
+session-28..35 notes recorded a miss at 5002 R. The board's sum is unchanged only because that sum counts
+segments that were already clean past the window: the residual is now concentrated in the `_C` segments and the
+`ut3c_mem1ra` family (err/unit rms 16.6 and 0.99), which are the ones worth attacking next. Recorded so the next
+session does not chase a 5002 that no longer exists.
