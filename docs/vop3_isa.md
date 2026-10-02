@@ -718,3 +718,11 @@ in. To get it, from inside the unit rather than from the monitor:
   program image is the CPU's `0x01069978`, which is readable from the monitor); or
 * note the arguments the firmware's own coefficient write (`FUN_0000C36C` -> `FUN_0000B6A4`) passes for a *known*
   coefficient, and compare with the monitor's call.
+
+**Session 38k: baseline board and the remaining VOP3-2 misses.** Board (`tools/vop3_board.py`, 200 takes, 185
+step-up segments): **sum of first-bad L 1014120, R 1046334** with the s36k capture rule in. Remaining, both
+named: (1) every Hall1 take still misses on R at 5002, and the s33 08c-08f / 054-05b segments at 3065/3066;
+(2) `ua4k0800` (0a4 k = 0x7fff then 0x0800) does not recover in the model the way the unit does - the clip /
+overflow rule inside the comb loop, the last open VOP3-2 arithmetic question. Everything else that s36 settled
+(Hall1/Hall9 click replays, the Delay LCR pair, the capture source) is locked behind `tools/vop3_replay.py`'s
+assertion, so a regression in any of them fails the check.
