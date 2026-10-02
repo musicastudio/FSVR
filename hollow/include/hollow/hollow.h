@@ -183,8 +183,19 @@ public:
     void detach();
     int width() const;                    // window size in pixels: root view size * scale
     int height() const;
-    int scale() const;                    // 1..4, remembered in State::ui()
-    void setScale(int s);                 // resizes the window and calls Host::resize
+    double scale() const;                 // 0.5..4, remembered in State::ui(); whole scales draw the skin's pixels as they are
+    void setScale(double s);              // resizes the window and calls Host::resize
+    // For hosts that size the window by dragging its frame. The window keeps the root view's aspect ratio, so
+    // aspect() is that ratio as a pair of integers; constrain() turns any proposed size into the nearest size the
+    // editor can have (asking it again with the answer gives the same answer); setSize() takes such a size, as
+    // the host's own resizing, and does not call Host::resize. setSize() is false for a size that is not one
+    // constrain() would give.
+    void aspect(int& width, int& height) const;
+    void constrain(int& width, int& height) const;
+    bool setSize(int width, int height);
+    // The display's scale factor, when the host says it (CLAP set_scale, VST3 content scale): a new instance, one
+    // with no saved size, opens at it (true). An instance that has a size keeps it (false).
+    bool setHostScale(double factor);
     // A key the host delivered through its plug-in API rather than to the window, for the hosts that keep
     // the keyboard to themselves (REAPER's "send all keyboard input to plugin"). `character` is what the key
     // typed, as the host reported it and so as the layout made it, 0 for a key that types nothing; which key

@@ -734,6 +734,7 @@ const std::vector<uint32_t>& Gui::pixels() {
             outline(c, rectOf(*learnTarget_.node, learnTarget_.i), skin_->learnOutline, skin_->lw());
             c.clip = saved;
         }
+        if (gripHover_ || gripDrag_) paintGrip(c);
         if (!tipShown_.empty()) paintTip(c);
         for (auto& m : menus_) paintMenu(c, m);
     }
@@ -813,7 +814,7 @@ std::string Gui::sourceValue(const Widget& w) const {
     case Widget::MidiIn: return Clock::now() < midiUntil_ ? "1" : "0";
     case Widget::Modified: return state_.modified() ? "1" : "0";
     case Widget::Voices: return state_.voices() < 0 ? "" : formatInt(w.format.empty() ? "%d" : w.format, state_.voices());
-    case Widget::Scale: return std::to_string(scale_) + "x";
+    case Widget::Scale: return scaleText(scale_);
     default: return "";
     }
 }
@@ -1495,6 +1496,12 @@ void Gui::mouseDown(int x, int y, bool right, bool dbl, bool shift) {
         finishEdit(true);   // clicking elsewhere commits, and the click goes on
     }
     if (live(press_)) return;
+    if (!right && gripHover_ && gripRect().contains(x, y)) {   // the corner: a drag rescales the window
+        gripDrag_ = true;
+        gripOffX_ = windowWidth() - (x + 0.5) * scale_;
+        gripOffY_ = windowHeight() - (y + 0.5) * scale_;
+        return;
+    }
     Hit h = hit(x, y);
     if (live(listFocus_) && !(h == listFocus_)) {
         listFocus_ = {};
@@ -1588,6 +1595,8 @@ void Gui::mouseDown(int x, int y, bool right, bool dbl, bool shift) {
 void Gui::mouseMove(int x, int y, bool shift) {
     mouseX_ = x;
     mouseY_ = y;
+    gripMove(x, y);
+    if (gripDrag_) return;
     if (!menus_.empty()) {   // the highlight follows the pointer; leaving the menus keeps it
         size_t level;
         int row;
@@ -1646,6 +1655,13 @@ void Gui::mouseMove(int x, int y, bool shift) {
 }
 
 void Gui::mouseUp(int x, int y, bool shift) {
+    if (gripDrag_) {   // the size is kept with the state once, not at every step of the drag
+        gripDrag_ = false;
+        gripHover_ = false;
+        invalidate(gripRect());
+        saveUi();
+        return;
+    }
     if (!menus_.empty()) {
         // A release soon after opening is ignored (unless the menu was pressed), so a click opens
         // it and leaves it open. Later, a release over an item picks it. With a release guard (the
@@ -1739,6 +1755,10 @@ int Gui::listRowAt(const Hit& h, int y) const {
 void Gui::mouseLeave() {
     hideTip(false);
     tipHit_ = {};
+    if (gripHover_ && !gripDrag_) {
+        gripHover_ = false;
+        invalidate(gripRect());
+    }
     if (live(press_) || !live(hover_)) return;
     Rect r = rectOf(*hover_.node, hover_.i);
     invalidate(r);
@@ -2288,17 +2308,20 @@ void Gui::contextMenu(const Hit& h, int x, int y, const std::vector<Item>& items
     itemMenu(h, items, {x, y, 0, 0}, style, false);
 }
 
+// The window scales the menu offers; dragging the window's corner (or the host's frame) reaches every one between.
+static const double kScaleChoices[] = {0.5, 0.75, 1, 1.25, 1.5, 2, 3, 4};
+
 void Gui::scaleMenu(Rect at) {
     std::vector<MenuEntry> menu;
-    for (int s = 1; s <= 4; ++s) {
+    for (size_t k = 0; k < sizeof kScaleChoices / sizeof kScaleChoices[0]; ++k) {
         MenuEntry e;
-        e.label = std::to_string(s) + "x";
-        e.id = s;
-        e.current = s == scale_;
+        e.label = formatNumber("%g", kScaleChoices[k]) + "x";
+        e.id = (int)k + 1;
+        e.current = std::fabs(kScaleChoices[k] - scale_) < 1e-9;
         menu.push_back(e);
     }
     openMenu(std::move(menu), at, "", [this](int id) {
-        if (id > 0) setScale(id);
+        if (id > 0) setScale(kScaleChoices[id - 1]);
     });
 }
 
@@ -2542,7 +2565,7 @@ void Gui::showTip() {
     int tw, th;
     textSize(skin_->fonts[t.font], text, tw, th);
     int b = skin_->lw(), w = tw + t.pad[0] + t.pad[2] + 2 * b, h = th + t.pad[1] + t.pad[3] + 2 * b;
-    int y = mouseY_ + std::max(1, skin_->dp(20) / scale_);   // below the pointer, or above it at the bottom edge
+    int y = mouseY_ + std::max(1, (int)std::lround(skin_->dp(20) / scale_));   // below the pointer, or above it at the bottom edge
     if (y + h > h_) y = std::max(0, mouseY_ - h - skin_->dp(2));
     tipShown_ = text;
     tipRect_ = {std::max(0, std::min(mouseX_, w_ - w)), y, w, h};
@@ -2720,19 +2743,90 @@ void Gui::watch(std::shared_ptr<Skin> skin) {
 
 // Asks the host for the new size and sizes our window; when the host declines (or cannot resize),
 // the windows around ours are resized too.
-void Gui::resizeWindow() {
+// With askHost false the host did the sizing (it set our size), so it is not asked again.
+void Gui::resizeWindow(bool askHost) {
     if (!window) return;
-    bool asked = host_ && host_->resize(w_ * scale_, h_ * scale_);
-    if (!asked) platformResizeParents(window, w_ * scale_, h_ * scale_);   // measures the frames before we move
-    platformSize(window, w_ * scale_, h_ * scale_);
+    const int W = windowWidth(), H = windowHeight();
+    if (askHost) {
+        bool asked = host_ && host_->resize(W, H);
+        if (!asked) platformResizeParents(window, W, H);   // measures the frames before we move
+    }
+    platformSize(window, W, H);
 }
 
-void Gui::setScale(int s) {
-    s = std::clamp(s, 1, 4);
-    if (s == scale_) return;
+void Gui::applyScale(double s, bool save, bool askHost) {
+    s = clampScale(s);
+    if (std::fabs(s - scale_) < 1e-9) return;
     scale_ = s;
-    resizeWindow();
-    saveUi();
+    resizeWindow(askHost);
+    invalidateAll();
+    if (save) saveUi();
+}
+
+void Gui::setScale(double s) { applyScale(s, true, true); }
+
+// The scale a window of this size has: the whole canvas inside it, so the smaller of the two ratios. The host
+// sizes the frame (a drag, a restored layout); the editor follows and the host is not asked to resize again.
+bool Gui::setWindowSize(int width, int height) {
+    if (width < 1 || height < 1 || (width == windowWidth() && height == windowHeight())) return false;
+    applyScale(fitScale(width, height), true, false);
+    return true;
+}
+
+// The window's height follows from its width (windowHeight), so a size is the width that fits: the proposed one
+// when its height is enough for it, else the one the proposed height allows.
+double Gui::fitScale(int width, int height) const {
+    width = std::max(width, 1);
+    height = std::max(height, 1);
+    const int heightAtWidth = std::max(1, (int)std::lround(h_ * (double)width / w_));
+    return clampScale(heightAtWidth <= height ? (double)width / w_ : (double)height / h_);
+}
+
+// Asking again with what it answered gives the same answer, which a host that hands our size back relies on.
+void Gui::constrainSize(int& width, int& height) const {
+    const double s = fitScale(width, height);
+    width = scaledSize(w_, s);
+    height = std::max(1, (int)std::lround(h_ * (double)width / w_));
+}
+
+// ---- the resize grip ----------------------------------------------------------------------------
+
+// A corner of the canvas, the size of a small icon at the skin's density. Nothing draws there until the pointer
+// is over it, so the skin looks as it always did.
+Rect Gui::gripRect() const {
+    const int g = std::max(skin_->dp(12), 8);
+    return {w_ - g, h_ - g, g, g};
+}
+
+void Gui::paintGrip(Canvas& c) const {
+    const Rect r = gripRect();
+    const int k = skin_->lw(), pitch = std::max(skin_->dp(3), 2);
+    for (int n = 1; n <= 3; ++n) {   // three diagonal strokes, a dark one over a light one, as a window corner has
+        const int len = n * pitch + 1;
+        for (int i = 0; i < len; ++i) {
+            const int x = r.x + r.w - 1 - i, y = r.y + r.h - 1 - (n * pitch - i);
+            fillRect(c, {x - k, y - k, k, k}, 0xc8ffffff);
+            fillRect(c, {x, y, k, k}, 0xd0303030);
+        }
+    }
+}
+
+// The pointer over the grip lights it; a drag turns the pointer's place into a scale. The offsets keep the
+// corner where it was grabbed. Window pixels are used throughout, so the resizing window never feeds back.
+void Gui::dragGrip(int x, int y) {
+    const double W = (x + 0.5) * scale_ + gripOffX_, H = (y + 0.5) * scale_ + gripOffY_;
+    applyScale(std::min(W / w_, H / h_), false, true);
+}
+
+void Gui::gripMove(int x, int y) {
+    if (gripDrag_) {
+        dragGrip(x, y);
+        return;
+    }
+    const bool over = menus_.empty() && !editing_on_ && !live(press_) && gripRect().contains(x, y);
+    if (over == gripHover_) return;
+    gripHover_ = over;
+    invalidate(gripRect());
 }
 
 void Gui::writeEmbeds(const Node& n, std::string& o) const {
@@ -2769,8 +2863,18 @@ void Gui::writeScroll(const Node& n, std::string& o) const {
     }
 }
 
+// The window scale as the state keeps it: a whole number as an integer, as every version wrote it, any
+// other with up to four decimals (an older version reads it as the whole number below).
+static std::string scaleJson(double s) {
+    if (wholeScale(s)) return std::to_string((long)std::lround(s));
+    std::string t = formatNumber("%.4f", s);
+    while (!t.empty() && t.back() == '0') t.pop_back();
+    if (!t.empty() && t.back() == '.') t.pop_back();
+    return t;
+}
+
 std::string Gui::uiJson() const {
-    std::string o = "{\"scale\":" + std::to_string(scale_) + ",\"vars\":";
+    std::string o = "{\"scale\":" + scaleJson(scale_) + ",\"vars\":";
     writeVars(vars_, o);
     o += ",\"embeds\":{";
     writeEmbeds(root_, o);
@@ -2788,10 +2892,10 @@ void Gui::saveUi() {
 
 void Gui::applyUi(const std::string& json) {
     Json j;
-    int scale = scale_;
+    double scale = scale_;
     vars_ = skin_->vars;
     if (parseJson(json, j) && j.type == Json::Object) {
-        scale = std::clamp(j["scale"].integer(scale), 1, 4);
+        scale = clampScale(j["scale"].num(scale));
         for (auto& m : j["vars"].members) setVar(vars_, m.first, m.second.str());
     }
     standaloneVar();   // a session saved in the standalone opens in a host without its buttons
@@ -2914,7 +3018,8 @@ void Gui::setSkin(const Skin* skin) {
 
 struct Editor::Impl {
     Gui gui;
-    Impl(std::shared_ptr<Skin> skin, State& state, Host& host) : gui(skin.get(), state, &host) {
+    bool fresh;   // no saved state to take the size from: the first editor of a new instance may open at the display's scale
+    Impl(std::shared_ptr<Skin> skin, State& state, Host& host) : gui(skin.get(), state, &host), fresh(state.ui().empty()) {
         gui.watch(std::move(skin));
         gui.applyUi(state.ui());
     }
@@ -2931,6 +3036,11 @@ bool Editor::attach(void* parent) {
         g.state().setData(kModalKey, "");   // a new window never opens on a modal an old one left
         g.window = platformOpen(parent, &g);
         if (g.window && g.standalone() && !g.skin().closeModal.empty()) platformWatchClose(g.window);
+        if (g.window && impl_->fresh) {   // a new instance: the size a 100 % display would have shown, on this display
+            impl_->fresh = false;
+            const double open = std::min(platformDpiScale(g.window), std::max(1.0, platformFitScale(g.window, g.width(), g.height())));
+            if (open > 1.01) g.setScale(open);
+        }
     }
     return g.window != nullptr;
 }
@@ -2944,13 +3054,55 @@ void Editor::detach() {
     impl_->gui.window = nullptr;
 }
 
-int Editor::width() const { return impl_->gui.width() * impl_->gui.scale(); }
-int Editor::height() const { return impl_->gui.height() * impl_->gui.scale(); }
-int Editor::scale() const { return impl_->gui.scale(); }
-void Editor::setScale(int s) {
-    if (impl_->gui.window) platformHold(impl_->gui.window, true);
+int Editor::width() const { return impl_->gui.windowWidth(); }
+int Editor::height() const { return impl_->gui.windowHeight(); }
+double Editor::scale() const { return impl_->gui.scale(); }
+
+// The calls the host makes from its own thread take the GUI's lock, as every other one does.
+struct Hold {
+    PlatformWindow* w;
+    explicit Hold(PlatformWindow* window) : w(window) { if (w) platformHold(w, true); }
+    ~Hold() { if (w) platformHold(w, false); }
+};
+
+void Editor::setScale(double s) {
+    Hold hold(impl_->gui.window);
     impl_->gui.setScale(s);
-    if (impl_->gui.window) platformHold(impl_->gui.window, false);
+}
+
+void Editor::aspect(int& w, int& h) const {
+    w = impl_->gui.width();
+    h = impl_->gui.height();
+}
+
+void Editor::constrain(int& width, int& height) const {
+    Hold hold(impl_->gui.window);
+    impl_->gui.constrainSize(width, height);
+}
+
+bool Editor::setSize(int width, int height) {
+    Hold hold(impl_->gui.window);
+    int w = width, h = height;
+    impl_->gui.constrainSize(w, h);
+    if (w != width || h != height) return false;   // not a size the editor can have
+    impl_->gui.setWindowSize(w, h);
+    return true;
+}
+
+bool Editor::setHostScale(double factor) {
+#if defined(__APPLE__)
+    (void)factor;   // views are in points there: AppKit already scales them for a Retina display
+    return false;
+#else
+    if (!impl_->fresh) return false;   // a saved size wins over the display's
+    impl_->fresh = false;              // and once the host has said what the display is, the window is not asked
+    Gui& g = impl_->gui;
+    const double open = std::min(factor, std::max(1.0, platformFitScale(g.window, g.width(), g.height())));   // never bigger than the screen
+    if (!(open > 1.01)) return false;
+    Hold hold(g.window);
+    g.setScale(open);
+    return true;
+#endif
 }
 
 // A key from the host's own plug-in API, which is the only route in a host that keeps the keyboard. It runs

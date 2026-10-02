@@ -220,11 +220,161 @@ int main() {
         u.click("topbar/knobs_tone");
         CHECK(u.shows("topbar/attack") && !u.shows("topbar/kn1"), "Tone did not show the part's knobs");
 
-        if (u.click("topbar/lcd_scale")) u.menuIs({"1x", "2x", "3x", "4x"}, "the LCD's scale");
+        if (u.click("topbar/lcd_scale")) u.menuIs({"0.5x", "0.75x", "1x", "1.25x", "1.5x", "2x", "3x", "4x"}, "the LCD's scale");
         u.choose("2x");
-        CHECK(u.gui.scale() == 2, "the scale is %dx, not 2x", u.gui.scale());
+        CHECK(u.gui.scale() == 2, "the scale is %gx, not 2x", u.gui.scale());
         u.click("topbar/lcd_scale");
         u.choose("1x");
+        CHECK(u.gui.scale() == 1, "the scale is %gx, not 1x", u.gui.scale());
+
+        // ---- the window's size: any scale from 0.5x to 4x, kept with the state, followed from a host's resize
+        // and from a drag of the corner; the canvas stays the skin's own size whatever the window is.
+        {
+            const int cw = u.gui.width(), ch = u.gui.height();
+            auto sized = [&](double s) { return (int)std::lround(cw * s); };
+            u.click("topbar/lcd_scale");
+            u.choose("1.5x");
+            CHECK(u.gui.scale() == 1.5 && u.gui.windowWidth() == sized(1.5) && u.gui.windowHeight() == (int)std::lround(ch * (double)sized(1.5) / cw),
+                  "1.5x gave a %dx%d window at scale %g", u.gui.windowWidth(), u.gui.windowHeight(), u.gui.scale());
+            CHECK(u.gui.width() == cw && u.gui.height() == ch, "the canvas changed with the window's scale");
+            CHECK(u.ui().rfind("{\"scale\":1.5,", 0) == 0, "the state keeps %s, not the 1.5 scale", u.ui().substr(0, 20).c_str());
+            Rect lcd;
+            if (u.rect("topbar/lcd_scale", lcd)) CHECK(u.gui.tipOf("topbar/lcd_scale") == "Window size", "the scale button lost its tip");
+            CHECK(scaleText(1.5) == "150%" && scaleText(2) == "2x" && scaleText(0.75) == "75%", "scaleText reads %s %s %s", scaleText(1.5).c_str(),
+                  scaleText(2).c_str(), scaleText(0.75).c_str());
+
+            // A host's frame: the nearest size the editor can have keeps the canvas' aspect ratio, and asking again
+            // with the answer gives the same answer (a host hands our own size back).
+            const int widths[] = {1000, 1422, 1423, 1430, 2000, 2844, 700, 5000};
+            const int heights[] = {5000, 843, 900, 848, 700, 1686, 4000, 100};
+            for (size_t k = 0; k < 8; ++k) {
+                int w = widths[k], h = heights[k];
+                u.gui.constrainSize(w, h);
+                int w2 = w, h2 = h;
+                u.gui.constrainSize(w2, h2);
+                CHECK(w2 == w && h2 == h, "constrain(%d, %d) gave %dx%d, and then %dx%d", widths[k], heights[k], w, h, w2, h2);
+                CHECK(w <= (int)std::lround(cw * kMaxScale) && w >= (int)std::lround(cw * kMinScale), "constrain(%d, %d) gave a width of %d", widths[k], heights[k], w);
+                CHECK(std::abs((double)w / cw - (double)h / ch) < 0.002, "constrain(%d, %d) gave %dx%d: not the canvas' aspect", widths[k], heights[k], w, h);
+                CHECK(h <= std::max(heights[k], (int)std::lround(ch * kMinScale)) + 1, "constrain(%d, %d) gave a height of %d", widths[k], heights[k], h);
+            }
+            // Whatever scale the window is at, the size it reports is a size constrain() would give and the host's
+            // own size for it changes nothing: swept over the whole range in steps that are not whole pixels.
+            int swept = 0, mismatched = 0;
+            for (double s = kMinScale; s <= kMaxScale; s += 0.0137, ++swept) {
+                u.gui.setScale(s);
+                int rw = u.gui.windowWidth(), rh = u.gui.windowHeight();
+                const int reportedW = rw, reportedH = rh;
+                const double before = u.gui.scale();
+                u.gui.constrainSize(rw, rh);
+                const int nowW = u.gui.windowWidth(), nowH = u.gui.windowHeight();
+                const bool changed = u.gui.setWindowSize(reportedW, reportedH);   // its own size: nothing to change
+                if (rw != reportedW || rh != reportedH || changed) {
+                    if (!mismatched++)
+                        std::printf("check_gui: FAIL line %d: at scale %.9g the window is %dx%d (%dx%d a moment later), constrain gives %dx%d, and setting its own size %s (scale now %.9g)\n",
+                                    __LINE__, before, reportedW, reportedH, nowW, nowH, rw, rh, changed ? "changed it" : "changed nothing", u.gui.scale());
+                    ++fails;
+                }
+            }
+            CHECK(swept > 250 && mismatched == 0, "%d of %d scales gave a window size that is not its own constrained size", mismatched, swept);
+            u.gui.setScale(1);
+            int w = 1000, h = 5000;
+            u.gui.constrainSize(w, h);
+            CHECK(w == 1000 && h == (int)std::lround(ch * 1000.0 / cw), "constrain(1000, 5000) gave %dx%d", w, h);
+            w = 5000;
+            h = 400;
+            u.gui.constrainSize(w, h);
+            CHECK(w == sized(0.5), "a size below the least scale gave a width of %d, not %d", w, sized(0.5));
+
+            CHECK(u.gui.setWindowSize(sized(1.25), (int)std::lround(ch * (double)sized(1.25) / cw)) && std::fabs(u.gui.scale() - (double)sized(1.25) / cw) < 1e-9,
+                  "the host's size did not set the scale (%g)", u.gui.scale());
+            CHECK(!u.gui.setWindowSize(u.gui.windowWidth(), u.gui.windowHeight()), "its own size asked for a change");
+            CHECK(u.gui.setWindowSize(cw + 8, ch + 5) && u.gui.scale() == 1 && u.gui.windowWidth() == cw, "a size near 1x did not land on 1x (%g)", u.gui.scale());
+            CHECK(u.gui.setWindowSize(cw * 2 + 16, ch * 2 + 4) && u.gui.scale() == 2, "a size near 2x did not land on 2x (%g)", u.gui.scale());
+            u.gui.setScale(100);
+            CHECK(u.gui.scale() == kMaxScale, "a huge scale gave %g", u.gui.scale());
+            u.gui.setScale(0.01);
+            CHECK(u.gui.scale() == kMinScale, "a tiny scale gave %g", u.gui.scale());
+
+            // The state: a session restores the scale; a whole one is written as an integer, as every version did.
+            u.gui.setScale(1.25);
+            const std::string saved = u.ui();
+            CHECK(saved.rfind("{\"scale\":1.25,", 0) == 0, "the state reads %s", saved.substr(0, 20).c_str());
+            {
+                Gui again{u.skin.get(), *u.st, nullptr};
+                again.applyUi(saved);
+                CHECK(again.scale() == 1.25 && again.windowWidth() == sized(1.25), "the saved 1.25 came back as %g", again.scale());
+                again.applyUi("{\"scale\":3,\"vars\":{}}");
+                CHECK(again.scale() == 3, "a whole scale from an older session came back as %g", again.scale());
+                again.applyUi("{\"scale\":9,\"vars\":{}}");
+                CHECK(again.scale() == kMaxScale, "an out of range scale was taken as %g", again.scale());
+            }
+            u.gui.setScale(2);
+            CHECK(u.ui().rfind("{\"scale\":2,", 0) == 0, "a whole scale is not written as an integer: %s", u.ui().substr(0, 20).c_str());
+
+            // The corner: a drag from the window's bottom-right corner rescales it, and it is looked for by the pointer
+            // alone, so the skin shows nothing there until the pointer is.
+            u.gui.setScale(1);
+            const int gx = cw - 3, gy = ch - 3;
+            u.gui.mouseMove(3, 3, false);
+            CHECK(u.gui.cursor() == 0, "the pointer is the arrow away from the corner");
+            u.gui.mouseMove(gx, gy, false);
+            CHECK(u.gui.cursor() == 1, "the pointer over the corner is not the resize arrow");
+            u.gui.mouseDown(gx, gy, false, false, false);
+            u.gui.mouseMove(sized(1.5) - 3, (int)std::lround(ch * 1.5) - 3, false);
+            CHECK(std::fabs(u.gui.scale() - 1.5) < 0.01, "dragging the corner to 1.5x gave %g", u.gui.scale());
+            u.gui.mouseUp(0, 0, false);
+            CHECK(u.ui().rfind("{\"scale\":1.5", 0) == 0 && u.st->ui().rfind("{\"scale\":1.5", 0) == 0, "the drag's size was not kept with the state: %s",
+                  u.ui().substr(0, 20).c_str());
+            const double dragged = u.gui.scale();
+            u.gui.mouseMove(3, 3, false);
+            u.gui.mouseDown(3, 3, false, false, false);   // nothing there to hold: a press away from the corner never resizes
+            u.gui.mouseMove(400, 300, false);
+            u.gui.mouseUp(400, 300, false);
+            CHECK(u.gui.scale() == dragged, "a press away from the corner changed the scale");
+            u.gui.setScale(1);
+            u.run(2);
+        }
+
+        // ---- presenting the canvas: whole scales copy pixels, the others resample (src/core/present.cpp) --------
+        {
+            const uint32_t A = 0xffff0000, B = 0xff00ff00, C = 0xff0000ff, D = 0xffffffff;
+            const uint32_t two[4] = {A, B, C, D};
+            std::vector<uint32_t> out(5 * 5);
+            presentScaled(two, 2, 2, 4, 4, {0, 0, 4, 4}, out.data());   // 2x: pixels replicated
+            CHECK(out[0] == A && out[1] == A && out[2] == B && out[3] == B && out[4 * 3] == C && out[15] == D && out[5] == A, "2x did not replicate pixels");
+            presentScaled(two, 2, 2, 5, 5, {0, 0, 5, 5}, out.data());   // 2.5x: sharp bilinear, corners stay the pixel's colour
+            CHECK(out[0] == A && out[4] == B && out[20] == C && out[24] == D, "2.5x corners are %08x %08x %08x %08x", out[0], out[4], out[20], out[24]);
+            std::vector<uint32_t> flat(9 * 7, 0xff336699u);
+            std::vector<uint32_t> big(14 * 11), small(5 * 4);
+            presentScaled(flat.data(), 9, 7, 14, 11, {0, 0, 14, 11}, big.data());   // a flat colour stays that colour up ...
+            presentScaled(flat.data(), 9, 7, 5, 4, {0, 0, 5, 4}, small.data());     // ... and down
+            bool same = true;
+            for (uint32_t p : big) same = same && p == 0xff336699u;
+            for (uint32_t p : small) same = same && p == 0xff336699u;
+            CHECK(same, "a flat colour did not stay flat when resampled");
+            const uint32_t chk[4] = {0xff000000, 0xffffffff, 0xffffffff, 0xff000000};
+            uint32_t one = 0;
+            presentScaled(chk, 2, 2, 1, 1, {0, 0, 1, 1}, &one);   // half black, half white: the average
+            CHECK((one >> 16 & 255) >= 127 && (one >> 16 & 255) <= 128, "the average of black and white is %u", one >> 16 & 255);
+
+            // A repainted region is the same pixels the whole window would have: cut out of the full presentation.
+            std::vector<uint32_t> img(40 * 30);
+            for (size_t i = 0; i < img.size(); ++i) img[i] = 0xff000000u | (uint32_t)((i * 2654435761u) >> 8 & 0xffffff);
+            const int sizes[][2] = {{55, 41}, {25, 19}, {80, 60}, {37, 28}};   // up, down, whole, down
+            for (auto& sz : sizes) {
+                std::vector<uint32_t> full((size_t)sz[0] * sz[1]), part(11 * 7);
+                presentScaled(img.data(), 40, 30, sz[0], sz[1], {0, 0, sz[0], sz[1]}, full.data());
+                presentScaled(img.data(), 40, 30, sz[0], sz[1], {5, 9, 11, 7}, part.data());
+                bool cut = true;
+                for (int y = 0; y < 7; ++y)
+                    for (int x = 0; x < 11; ++x) cut = cut && part[(size_t)y * 11 + x] == full[(size_t)(9 + y) * sz[0] + 5 + x];
+                CHECK(cut, "a region of the %dx%d presentation is not the same pixels as the whole", sz[0], sz[1]);
+            }
+            const Rect wr = windowRect({10, 10, 4, 4}, 1.5, 100, 100);
+            CHECK(wr.x <= 15 && wr.y <= 15 && wr.x + wr.w >= 21 && wr.y + wr.h >= 21, "the window rect of a canvas rect is %d,%d %dx%d", wr.x, wr.y, wr.w, wr.h);
+            const Rect whole = windowRect({10, 10, 4, 4}, 3, 100, 100);
+            CHECK(whole.x == 30 && whole.y == 30 && whole.w == 12 && whole.h == 12, "at a whole scale the window rect is %d,%d %dx%d", whole.x, whole.y, whole.w, whole.h);
+        }
 
         // Right-clicking empty space opens nothing: the scale is the LCD's.
         u.rclickAt(3, 3);

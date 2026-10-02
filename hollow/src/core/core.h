@@ -345,6 +345,25 @@ void drawText(Canvas& c, const Font& f, const std::string& s, Rect r, int align,
 // use this to agree with drawText's "middle".
 int textTop(const Font& f, int h, int lines = 1);
 
+// ---- window scale (present.cpp) -----------------------------------------------------------------
+//
+// The canvas is always drawn at scale 1, the root view's own size. The window shows it at any scale from
+// kMinScale to kMaxScale: whole scales replicate pixels (the artwork exactly as drawn), the others resample.
+constexpr double kMinScale = 0.5, kMaxScale = 4.0;
+constexpr double kSnapScale = 0.02;   // a scale this close to a whole one is taken as that one (a drag lands on 1x, 2x ...)
+double clampScale(double s);          // into kMinScale..kMaxScale, snapped to a whole scale when that close to one
+bool wholeScale(double s);            // a whole number of window pixels per canvas pixel
+int scaledSize(int canvas, double scale);   // a canvas length in window pixels, at least 1
+// The window pixels a canvas rect can change when drawn at this scale (a smoothed pixel reaches one canvas pixel
+// past its own), clipped to a window of width x height.
+Rect windowRect(Rect r, double scale, int width, int height);
+// A canvas (sw x sh, 0xAARRGGBB) shown in a window of W x H pixels, into dst: the window region r (inside the
+// window; a region outside it draws nothing), row after row of r.w pixels. Whole scales copy pixels; above 1,
+// sharp bilinear (the blend is one window pixel wide); below 1, the exact average of the canvas area a window
+// pixel covers. Pixels come out opaque, except at a whole scale, where they are the canvas' own.
+void presentScaled(const uint32_t* src, int sw, int sh, int W, int H, Rect r, uint32_t* dst);
+std::string scaleText(double scale);  // as the LCD shows it: "2x" for a whole scale, "125%" for any other
+
 // ---- platform window (platform/win32.cpp, platform/mac.mm) ---------------------------------------
 
 class Gui;
@@ -367,6 +386,12 @@ void platformClose(PlatformWindow* w);
 void platformHold(PlatformWindow* w, bool hold);
 void platformInvalidate(PlatformWindow* w, Rect r);                 // canvas pixels
 void platformSize(PlatformWindow* w, int width, int height);        // window pixels
+// The display's scale factor for this window (1.5 on a 150 % display), 1 where it cannot be known: a new editor
+// opens at it, so it is the size a 100 % display would have shown.
+double platformDpiScale(PlatformWindow* w);
+// The largest scale at which a canvas of cw x ch fits the screen the window is on (90 % of its work area), kMaxScale
+// where that is not known. w may be null before the window exists: then the main screen.
+double platformFitScale(PlatformWindow* w, int canvasW, int canvasH);
 // The host did not resize its frame: resize the windows around ours that closely fit it.
 void platformResizeParents(PlatformWindow* w, int width, int height);
 int platformMenu(PlatformWindow* w, const std::vector<MenuEntry>& items, int x, int y);  // canvas pixels; the id or -1
@@ -453,8 +478,19 @@ public:
     void setSkin(const Skin* skin);              // live reload: rebuild, keeping the GUI state
     int width() const { return w_; }             // canvas size (root view, scale 1)
     int height() const { return h_; }
-    int scale() const { return scale_; }
-    void setScale(int s);
+    double scale() const { return scale_; }      // window pixels per canvas pixel, kMinScale..kMaxScale
+    // The window's size in pixels: its width at the scale, and its height from that width, so a size handed back
+    // to constrainSize is its own answer.
+    int windowWidth() const { return scaledSize(w_, scale_); }
+    int windowHeight() const { return std::max(1, (int)std::lround(h_ * (double)windowWidth() / w_)); }
+    int toCanvas(int windowPx) const { return (int)std::floor(windowPx / scale_); }   // a window coordinate as a canvas one
+    void setScale(double s);                     // resizes the window, asking the host, and keeps the scale with the state
+    // The host has sized the window: the scale that fits the whole canvas inside it. It asks nobody to resize,
+    // since the host just did. False, and nothing changed, when that is the size the window already has.
+    bool setWindowSize(int width, int height);
+    // The nearest size the window can have: the canvas' aspect ratio at a scale within the limits.
+    void constrainSize(int& width, int& height) const;
+    int cursor() const { return gripHover_ || gripDrag_ ? 1 : 0; }   // what the pointer shows: 0 the arrow, 1 the diagonal resize arrow
     std::string uiJson() const;
     void applyUi(const std::string& json);
     const std::vector<uint32_t>& pixels();       // repaints what is dirty, then returns the canvas
@@ -549,7 +585,12 @@ private:
     std::string rootName_, savedUi_, tip_;
     Node root_;
     Vars vars_;
-    int w_ = 0, h_ = 0, scale_ = 1, ticks_ = 0;
+    int w_ = 0, h_ = 0, ticks_ = 0;
+    double scale_ = 1;
+    // The resize grip in the window's bottom-right corner: invisible until the pointer is over it, then drawn,
+    // and dragged to rescale the window. Offsets are window pixels from the pointer to the window's corner.
+    bool gripHover_ = false, gripDrag_ = false;
+    double gripOffX_ = 0, gripOffY_ = 0;
     uint64_t stamp_ = 0;
     std::vector<uint32_t> canvas_;
     Rect dirty_;
@@ -597,7 +638,13 @@ private:
     bool conds(Node& n, bool animate);           // re-evaluates showIf/enableIf; true if a visibility changed
     void update();                               // after values or vars change
     void relayout();                             // flow, fit, then every node's origin and clip
-    void resizeWindow();                         // the window follows the canvas and scale
+    void resizeWindow(bool askHost = true);      // the window follows the canvas and scale
+    void applyScale(double s, bool save, bool askHost);
+    double fitScale(int width, int height) const;   // the scale of a window this size, whole canvas inside
+    Rect gripRect() const;                       // canvas pixels
+    void gripMove(int x, int y);                 // the pointer moved: it is over the grip, or dragging it
+    void dragGrip(int x, int y);
+    void paintGrip(Canvas& c) const;
     void flow(Node& n);
     void place(Node& n, int x, int y, Rect clip);
     void placeChild(Node& n, int i);
