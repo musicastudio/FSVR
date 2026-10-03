@@ -27,7 +27,7 @@ static void mouse(id self, NSEvent* e, int kind) {   // 0 down, 1 drag/move, 2 u
     PlatformWindow* w = windowOf(self);
     if (!w) return;
     NSPoint p = [self convertPoint:[e locationInWindow] fromView:nil];
-    int s = w->gui->scale();
+    const double s = w->gui->scale();
     int x = (int)std::floor(p.x / s), y = (int)std::floor(p.y / s);
     bool shift = ([e modifierFlags] & NSEventModifierFlagShift) != 0;
     if (kind == 0) w->gui->mouseDown(x, y, false, [e clickCount] == 2, shift);
@@ -53,7 +53,7 @@ static void scrollWheel(id self, SEL, NSEvent* e) {
     PlatformWindow* w = windowOf(self);
     if (!w) return;
     NSPoint p = [self convertPoint:[e locationInWindow] fromView:nil];
-    int s = w->gui->scale();
+    const double s = w->gui->scale();
     double notches = [e scrollingDeltaY];
     if ([e hasPreciseScrollingDeltas]) notches /= 10;   // Shortcut: 10 points of trackpad scroll = one notch
     w->gui->wheel((int)std::floor(p.x / s), (int)std::floor(p.y / s), notches, ([e modifierFlags] & NSEventModifierFlagShift) != 0);
@@ -152,12 +152,13 @@ static void drawRect(id self, SEL, NSRect) {
     CGDataProviderRef dp = CGDataProviderCreateWithData(nullptr, px.data(), px.size() * 4, nullptr);
     CGImageRef img = CGImageCreate(g.width(), g.height(), 8, 32, g.width() * 4, cs,
                                    (CGBitmapInfo)kCGBitmapByteOrder32Little | (CGBitmapInfo)kCGImageAlphaNoneSkipFirst, dp, nullptr, false, kCGRenderingIntentDefault);
-    int s = g.scale();
+    const int W = g.windowWidth(), H = g.windowHeight();
     CGContextSaveGState(ctx);
-    CGContextSetInterpolationQuality(ctx, kCGInterpolationNone);   // pixel replication
-    CGContextTranslateCTM(ctx, 0, g.height() * s);                  // the view is flipped, images are not
+    // A whole scale replicates pixels; any other is smoothed (high quality averages when it shrinks).
+    CGContextSetInterpolationQuality(ctx, wholeScale(g.scale()) ? kCGInterpolationNone : kCGInterpolationHigh);
+    CGContextTranslateCTM(ctx, 0, H);                               // the view is flipped, images are not
     CGContextScaleCTM(ctx, 1, -1);
-    CGContextDrawImage(ctx, CGRectMake(0, 0, g.width() * s, g.height() * s), img);
+    CGContextDrawImage(ctx, CGRectMake(0, 0, W, H), img);
     CGContextRestoreGState(ctx);
     CGImageRelease(img);
     CGDataProviderRelease(dp);
@@ -198,7 +199,7 @@ PlatformWindow* platformOpen(void* parent, Gui* gui) {
     if (!p) return nullptr;
     auto* w = new PlatformWindow;
     w->gui = gui;
-    NSView* v = [[viewClass() alloc] initWithFrame:NSMakeRect(0, 0, gui->width() * gui->scale(), gui->height() * gui->scale())];
+    NSView* v = [[viewClass() alloc] initWithFrame:NSMakeRect(0, 0, gui->windowWidth(), gui->windowHeight())];
     windowOf(v) = w;
     NSTrackingArea* area = [[NSTrackingArea alloc] initWithRect:NSZeroRect
                                                         options:NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveAlways | NSTrackingInVisibleRect
@@ -231,8 +232,20 @@ const bool kNativeMenus = true;
 void platformHold(PlatformWindow*, bool) {}   // the GUI runs on the host's thread
 
 void platformInvalidate(PlatformWindow* w, Rect r) {
-    int s = w->gui->scale();
-    [(__bridge NSView*)w->view setNeedsDisplayInRect:NSMakeRect(r.x * s, r.y * s, r.w * s, r.h * s)];
+    const Rect wr = windowRect(r, w->gui->scale(), w->gui->windowWidth(), w->gui->windowHeight());
+    if (wr.empty()) return;
+    [(__bridge NSView*)w->view setNeedsDisplayInRect:NSMakeRect(wr.x, wr.y, wr.w, wr.h)];
+}
+
+// Points, not pixels: AppKit scales a Retina display's views itself, so there is no factor to apply here.
+double platformDpiScale(PlatformWindow*) { return 1.0; }
+
+double platformFitScale(PlatformWindow* w, int canvasW, int canvasH) {
+    NSScreen* s = w ? [[(__bridge NSView*)w->view window] screen] : nil;
+    if (!s) s = [NSScreen mainScreen];
+    if (!s || canvasW <= 0 || canvasH <= 0) return kMaxScale;
+    const NSRect f = [s visibleFrame];
+    return std::min(0.9 * f.size.width / canvasW, 0.9 * f.size.height / canvasH);
 }
 
 void platformSize(PlatformWindow* w, int width, int height) {
@@ -273,7 +286,7 @@ int platformMenu(PlatformWindow* w, const std::vector<MenuEntry>& items, int x, 
     NSView* v = (__bridge NSView*)w->view;
     NSMenu* menu = buildMenu(v, items);
     w->pick = -1;
-    int s = w->gui->scale();
+    const double s = w->gui->scale();
     [menu popUpMenuPositioningItem:nil atLocation:NSMakePoint(x * s, y * s) inView:v];   // returns after the choice
 #if !__has_feature(objc_arc)
     [menu release];

@@ -10,6 +10,7 @@ set(_core "${HOLLOW_FRAMEWORK_DIR}/src/core")
 set(HOLLOW_CORE_SOURCES
     "${_core}/skin.cpp"
     "${_core}/draw.cpp"
+    "${_core}/present.cpp"
     "${_core}/state.cpp"
     "${_core}/editor.cpp"
     "${_core}/kinds.cpp")

@@ -34,10 +34,11 @@ struct PlatformWindow {
     GC gc = nullptr;
     XImage* img = nullptr;
     std::vector<uint32_t> frame;       // the canvas at the window's scale, what img points at
+    std::vector<uint32_t> region;      // one repainted region on its way into frame
     std::thread thread;
     std::recursive_mutex lock;         // the Gui: this thread while it works, Editor's calls from the host
     std::mutex pending;                // what the host's thread asks for
-    Rect dirty;
+    Rect dirty;                        // window pixels
     int wantW = 0, wantH = 0;          // a size to apply, 0 = none
     std::atomic<bool> quit{false};
     int wake[2] = {-1, -1};
@@ -45,18 +46,17 @@ struct PlatformWindow {
     int clickX = 0, clickY = 0;
 };
 
-static int floorDiv(int a, int b) { return a >= 0 ? a / b : -((-a + b - 1) / b); }
-
 static void poke(PlatformWindow* w) {
     char c = 1;
     if (write(w->wake[1], &c, 1) < 0) {}   // a full pipe is already awake
 }
 
-// The canvas scaled by pixel replication into frame, then the rect r (canvas pixels) to the window.
+// The canvas at the window's scale into frame (a whole scale replicates pixels, any other resamples), then the
+// rect r (window pixels) to the window.
 static void present(PlatformWindow* w, Rect r) {
     Gui& g = *w->gui;
     const std::vector<uint32_t>& px = g.pixels();
-    const int s = g.scale(), W = g.width() * s, H = g.height() * s;
+    const int W = g.windowWidth(), H = g.windowHeight();
     if (!w->img || w->img->width != W || w->img->height != H) {
         if (w->img) {
             w->img->data = nullptr;   // frame owns the pixels
@@ -65,20 +65,19 @@ static void present(PlatformWindow* w, Rect r) {
         w->frame.assign((size_t)W * H, 0);
         Visual* vis = DefaultVisual(w->dpy, DefaultScreen(w->dpy));
         w->img = XCreateImage(w->dpy, vis, 24, ZPixmap, 0, (char*)w->frame.data(), (unsigned)W, (unsigned)H, 32, W * 4);
-        r = {0, 0, g.width(), g.height()};
+        r = {0, 0, W, H};
     }
     if (!w->img) return;
-    r = r & Rect{0, 0, g.width(), g.height()};
+    r = r & Rect{0, 0, W, H};
     if (r.empty()) return;
-    for (int y = r.y; y < r.y + r.h; ++y) {
-        const uint32_t* src = px.data() + (size_t)y * g.width();
-        for (int k = 0; k < s; ++k) {
-            uint32_t* dst = w->frame.data() + (size_t)(y * s + k) * W;
-            for (int x = r.x; x < r.x + r.w; ++x)
-                for (int j = 0; j < s; ++j) dst[x * s + j] = src[x] & 0xffffff;
-        }
+    w->region.resize((size_t)r.w * r.h);
+    presentScaled(px.data(), g.width(), g.height(), W, H, r, w->region.data());
+    for (int y = 0; y < r.h; ++y) {
+        const uint32_t* src = w->region.data() + (size_t)y * r.w;
+        uint32_t* dst = w->frame.data() + (size_t)(r.y + y) * W + r.x;
+        for (int x = 0; x < r.w; ++x) dst[x] = src[x] & 0xffffff;
     }
-    XPutImage(w->dpy, w->win, w->gc, w->img, r.x * s, r.y * s, r.x * s, r.y * s, (unsigned)(r.w * s), (unsigned)(r.h * s));
+    XPutImage(w->dpy, w->win, w->gc, w->img, r.x, r.y, r.x, r.y, (unsigned)r.w, (unsigned)r.h);
 }
 
 static Key keyOf(KeySym k, bool ctrl) {
@@ -101,7 +100,6 @@ static Key keyOf(KeySym k, bool ctrl) {
 
 static void event(PlatformWindow* w, XEvent& e) {
     Gui& g = *w->gui;
-    const int s = g.scale();
     switch (e.type) {
     case Expose:
         // The window is mapped by now, so this is the first safe point to take the keyboard, and it is on the
@@ -110,10 +108,10 @@ static void event(PlatformWindow* w, XEvent& e) {
             w->tookFocus = true;
             platformFocus(w, true);
         }
-        present(w, {floorDiv(e.xexpose.x, s), floorDiv(e.xexpose.y, s), e.xexpose.width / s + 2, e.xexpose.height / s + 2});
+        present(w, {e.xexpose.x, e.xexpose.y, e.xexpose.width, e.xexpose.height});
         break;
     case ButtonPress: {
-        const int x = floorDiv(e.xbutton.x, s), y = floorDiv(e.xbutton.y, s);
+        const int x = g.toCanvas(e.xbutton.x), y = g.toCanvas(e.xbutton.y);
         const bool shift = (e.xbutton.state & ShiftMask) != 0;
         if (!g.skin().keys.empty()) platformFocus(w, true);   // a click takes the keyboard back after the host has had it
         if (e.xbutton.button == 4 || e.xbutton.button == 5) {   // the wheel arrives as buttons
@@ -130,14 +128,14 @@ static void event(PlatformWindow* w, XEvent& e) {
         break;
     }
     case ButtonRelease: {
-        const int x = floorDiv(e.xbutton.x, s), y = floorDiv(e.xbutton.y, s);
+        const int x = g.toCanvas(e.xbutton.x), y = g.toCanvas(e.xbutton.y);
         const bool shift = (e.xbutton.state & ShiftMask) != 0;
         if (e.xbutton.button == 1) g.mouseUp(x, y, shift);
         else if (e.xbutton.button == 3) g.rightUp(x, y, shift);
         break;
     }
     case MotionNotify:
-        g.mouseMove(floorDiv(e.xmotion.x, s), floorDiv(e.xmotion.y, s), (e.xmotion.state & ShiftMask) != 0);
+        g.mouseMove(g.toCanvas(e.xmotion.x), g.toCanvas(e.xmotion.y), (e.xmotion.state & ShiftMask) != 0);
         break;
     case LeaveNotify:
         if (!(e.xcrossing.state & Button1Mask)) g.mouseLeave();   // a drag keeps its implicit grab
@@ -230,7 +228,7 @@ PlatformWindow* platformOpen(void* parent, Gui* gui) {
     a.background_pixel = BlackPixel(w->dpy, screen);
     const Window host = parent ? (Window)(uintptr_t)parent : RootWindow(w->dpy, screen);
     if (parent) w->parent = host;   // only a plug-in has a host window to hand unused keys back to
-    w->win = XCreateWindow(w->dpy, host, 0, 0, (unsigned)(gui->width() * gui->scale()), (unsigned)(gui->height() * gui->scale()), 0,
+    w->win = XCreateWindow(w->dpy, host, 0, 0, (unsigned)gui->windowWidth(), (unsigned)gui->windowHeight(), 0,
                            CopyFromParent, InputOutput, CopyFromParent, CWEventMask | CWBackPixel, &a);
     w->gc = XCreateGC(w->dpy, w->win, 0, nullptr);
     XMapWindow(w->dpy, w->win);
@@ -261,9 +259,10 @@ void platformHold(PlatformWindow* w, bool hold) {
 }
 
 void platformInvalidate(PlatformWindow* w, Rect r) {
+    const Rect wr = windowRect(r, w->gui->scale(), w->gui->windowWidth(), w->gui->windowHeight());
     {
         std::lock_guard<std::mutex> p(w->pending);
-        w->dirty = w->dirty | r;
+        w->dirty = w->dirty | wr;
     }
     if (std::this_thread::get_id() != w->thread.get_id()) poke(w);
 }
@@ -273,8 +272,17 @@ void platformSize(PlatformWindow* w, int width, int height) {
         std::lock_guard<std::mutex> p(w->pending);
         w->wantW = width;
         w->wantH = height;
+        w->dirty = Rect{0, 0, width, height};
     }
-    platformInvalidate(w, {0, 0, w->gui->width(), w->gui->height()});
+    if (std::this_thread::get_id() != w->thread.get_id()) poke(w);
+}
+
+double platformDpiScale(PlatformWindow*) { return 1.0; }   // an X11 host sizes its own windows; no display scale to read here
+
+double platformFitScale(PlatformWindow* w, int canvasW, int canvasH) {
+    if (!w || !w->dpy || canvasW <= 0 || canvasH <= 0) return kMaxScale;
+    const int screen = DefaultScreen(w->dpy);
+    return std::min(0.9 * DisplayWidth(w->dpy, screen) / canvasW, 0.9 * DisplayHeight(w->dpy, screen) / canvasH);
 }
 
 void platformResizeParents(PlatformWindow*, int, int) {}   // X11 hosts size their own frames

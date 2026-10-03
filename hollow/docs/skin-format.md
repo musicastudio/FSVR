@@ -140,7 +140,7 @@ Button state tile: the strip is laid out as groups `[normal][pressed, if pressed
 - `{ "url": "https://example.com" }`: open in the browser.
 - `{ "standalone": "settings" }`: open the standalone app's own audio and MIDI settings (clap-wrapper's device window), or with skin.json `"standalone": { "settings": "<view>" }` that view as a modal where the platform can read the window (Windows; see Modals). A menu item with it is listed only in the standalone, and only where that app has such a window (Windows and macOS), so a File menu can carry it in every format. `{ "standalone": "close" }` closes the standalone without asking.
 - `{ "modal": "<view>", "data": { "<key>": "<text>" } }`: store the text data first (keys may use `{var}`), then show that view as the modal; `"modal": ""` closes it. See Modals.
-- `{ "scale": "menu" }`: open the window scale menu (1x to 4x) under the widget. A right-click on empty space opens nothing, so a skin that wants the scales offers them with this.
+- `{ "scale": "menu" }`: open the window scale menu (0.5x to 4x) under the widget. A right-click on empty space opens nothing, so a skin that wants the scales offers them with this.
 - `{ "sequence": "insert", "prefix": "arp.step.", "index": "{step}", "count": 32 }` (or `"delete"`): treats params named `<prefix><n>.<leaf>` for n = 1..count as a step sequence. Insert moves steps index..count-1 one place up (the last is dropped) and resets step index to its defaults; delete moves steps index+1..count one place down and resets step count. `index` may use `{var}`.
 - `{ "sequence": "reset" | "random", "prefix": "arp.step.", "leaf": "on", "count": 32 }`: sets `<prefix><n>.<leaf>` for n = 1..count to its default, or to random valid values (for a step sequencer's rows).
 - `{ "presets": "<table>", "key": "env.{op}", "name": "<text key>", "save": true, "columns": 16 }`: a native menu of the preset slots of `data/<table>.json` (kept, once changed, in text data `presets.<table>`), `columns` items per column. Choosing a slot copies its content into text data `key` and its name into text data `name`; with `save` the menu also offers storing the current content and name into a slot.
@@ -266,7 +266,7 @@ Further `menu` fields:
 
 ### Runtime values
 
-- `"source"` on a `textbox`, `plate` or `button` shows a value the runtime knows: `"cpu"` (the audio thread's load in percent, as a number through the widget's `format`, e.g. `"%3d%%"`), `"midi_in"` (tile 1 for 200 ms after any incoming MIDI), `"modified"` (tile 1 while the state differs from the last load or save), `"voices"` (the processor's voice count, if it reports one), `"scale"` (the window scale as text, `1x` to `4x`).
+- `"source"` on a `textbox`, `plate` or `button` shows a value the runtime knows: `"cpu"` (the audio thread's load in percent, as a number through the widget's `format`, e.g. `"%3d%%"`), `"midi_in"` (tile 1 for 200 ms after any incoming MIDI), `"modified"` (tile 1 while the state differs from the last load or save), `"voices"` (the processor's voice count, if it reports one), `"scale"` (the window scale as text: `2x` at a whole scale, a percentage such as `150%` at any other).
 - `"source"` on a `meter`: `"level_l"` or `"level_r"`, the output's peak level on that channel as the format layer measures every block, shown -60 to 0 dB over the meter's range and falling about 54 dB a second.
 - A `list` with `dataRows` redraws whenever the text data its rows come from changes, so a processor can fill a list after it is shown.
 - `list` field `"source": "midi_map"`: rows are the MIDI learn assignments (below).
@@ -307,7 +307,7 @@ A font is a PNG glyph strip holding the 256 characters of Latin-1 (codes 0..255)
 
 ## Scale
 
-The runtime draws at scale 1 into a buffer and presents it at an integer scale 1..4 with nearest-neighbour pixel replication, so the artwork stays sharp. A `scale` action offers the scales.
+The runtime draws at scale 1 into a buffer, so a skin is always laid out in the root view's own pixels, and presents it at any scale from 0.5 to 4 at the root view's aspect ratio. At a whole scale (1, 2, 3, 4) it is nearest-neighbour pixel replication, the artwork exactly as drawn. At any other scale it is resampled: a "sharp bilinear" blend that is one window pixel wide when the picture grows (pixel edges stay crisp), and the exact average of the covered area when it shrinks. Nothing in a skin depends on the scale; the window's size is the user's, by dragging the frame or the bottom-right corner, or by a `scale` action's menu, and it is saved with the instance (the saved `scale` is a number, an integer when whole, which older versions also read).
 
 ## Live editing
 

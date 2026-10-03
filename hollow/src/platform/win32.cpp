@@ -11,6 +11,7 @@
 #include <commdlg.h>
 #include <algorithm>
 #include <climits>
+#include <cmath>
 #include <map>
 #include <mutex>
 #include <vector>
@@ -28,6 +29,7 @@ struct PlatformWindow {
     HWND root = nullptr;        // the standalone's window, while its close asks the GUI first
     WNDPROC rootProc = nullptr; // and its own procedure
     bool closing = false;       // platformCloseApp: it closes without asking
+    std::vector<uint32_t> frame;   // a repainted region of the canvas at a scale that is not a whole one
 };
 
 static int classUsers = 0;
@@ -52,8 +54,6 @@ static std::string narrow(const std::wstring& w) {
     WideCharToMultiByte(CP_UTF8, 0, w.c_str(), (int)w.size(), &s[0], n, nullptr, nullptr);
     return s;
 }
-
-static int floorDiv(int a, int b) { return a >= 0 ? a / b : -((-a + b - 1) / b); }
 
 // One tool covers the whole window.
 static void tool(PlatformWindow* w, UINT msg, const std::string& text) {
@@ -183,8 +183,7 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     auto* w = (PlatformWindow*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     if (!w) return DefWindowProcW(hwnd, msg, wp, lp);
     Gui& g = *w->gui;
-    int s = g.scale();
-    int x = floorDiv(GET_X_LPARAM(lp), s), y = floorDiv(GET_Y_LPARAM(lp), s);
+    int x = g.toCanvas(GET_X_LPARAM(lp)), y = g.toCanvas(GET_Y_LPARAM(lp));
     bool shift = (wp & MK_SHIFT) != 0;
     switch (msg) {
     case WM_PAINT: {
@@ -198,11 +197,31 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         bi.bmiHeader.biPlanes = 1;
         bi.bmiHeader.biBitCount = 32;
         bi.bmiHeader.biCompression = BI_RGB;
-        SetStretchBltMode(dc, COLORONCOLOR);   // pixel replication, no smoothing
-        StretchDIBits(dc, 0, 0, g.width() * s, g.height() * s, 0, 0, g.width(), g.height(), px.data(), &bi, DIB_RGB_COLORS, SRCCOPY);
+        if (wholeScale(g.scale())) {
+            const int s = (int)std::lround(g.scale());
+            SetStretchBltMode(dc, COLORONCOLOR);   // pixel replication, no smoothing
+            StretchDIBits(dc, 0, 0, g.width() * s, g.height() * s, 0, 0, g.width(), g.height(), px.data(), &bi, DIB_RGB_COLORS, SRCCOPY);
+        } else {   // any other scale: the repainted region, resampled
+            const int W = g.windowWidth(), H = g.windowHeight();
+            const Rect r = Rect{ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top} & Rect{0, 0, W, H};
+            if (!r.empty()) {
+                w->frame.resize((size_t)r.w * r.h);
+                presentScaled(px.data(), g.width(), g.height(), W, H, r, w->frame.data());
+                BITMAPINFO fb = bi;
+                fb.bmiHeader.biWidth = r.w;
+                fb.bmiHeader.biHeight = -r.h;
+                SetDIBitsToDevice(dc, r.x, r.y, (DWORD)r.w, (DWORD)r.h, 0, 0, 0, (UINT)r.h, w->frame.data(), &fb, DIB_RGB_COLORS);
+            }
+        }
         EndPaint(hwnd, &ps);
         return 0;
     }
+    case WM_SETCURSOR:   // the diagonal arrow over the resize grip, the window class' arrow elsewhere
+        if (LOWORD(lp) == HTCLIENT && g.cursor() == 1) {
+            SetCursor(LoadCursor(nullptr, IDC_SIZENWSE));
+            return TRUE;
+        }
+        break;
     case WM_ERASEBKGND:
         return 1;
     case WM_LBUTTONDOWN:
@@ -241,7 +260,7 @@ static LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     case WM_MOUSEWHEEL: {
         POINT p = {GET_X_LPARAM(lp), GET_Y_LPARAM(lp)};
         ScreenToClient(hwnd, &p);
-        g.wheel(floorDiv(p.x, s), floorDiv(p.y, s), GET_WHEEL_DELTA_WPARAM(wp) / 120.0, (GET_KEYSTATE_WPARAM(wp) & MK_SHIFT) != 0);
+        g.wheel(g.toCanvas(p.x), g.toCanvas(p.y), GET_WHEEL_DELTA_WPARAM(wp) / 120.0, (GET_KEYSTATE_WPARAM(wp) & MK_SHIFT) != 0);
         return 0;
     }
     case WM_TIMER:
@@ -325,8 +344,8 @@ PlatformWindow* platformOpen(void* parent, Gui* gui) {
     }
     auto* w = new PlatformWindow;
     w->gui = gui;
-    w->hwnd = CreateWindowExW(0, className, L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, 0, 0, gui->width() * gui->scale(),
-                              gui->height() * gui->scale(), (HWND)parent, nullptr, mod, nullptr);
+    w->hwnd = CreateWindowExW(0, className, L"", WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS, 0, 0, gui->windowWidth(),
+                              gui->windowHeight(), (HWND)parent, nullptr, mod, nullptr);
     if (!w->hwnd) {
         delete w;
         if (--classUsers == 0) UnregisterClassW(className, mod);
@@ -369,14 +388,40 @@ const bool kNativeMenus = true;
 void platformHold(PlatformWindow*, bool) {}   // the GUI runs on the host's thread
 
 void platformInvalidate(PlatformWindow* w, Rect r) {
-    int s = w->gui->scale();
-    RECT rc = {r.x * s, r.y * s, (r.x + r.w) * s, (r.y + r.h) * s};
+    const Rect wr = windowRect(r, w->gui->scale(), w->gui->windowWidth(), w->gui->windowHeight());
+    if (wr.empty()) return;
+    RECT rc = {wr.x, wr.y, wr.x + wr.w, wr.y + wr.h};
     InvalidateRect(w->hwnd, &rc, FALSE);
 }
 
 void platformSize(PlatformWindow* w, int width, int height) {
     SetWindowPos(w->hwnd, nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
     InvalidateRect(w->hwnd, nullptr, FALSE);
+}
+
+// GetDpiForWindow is Windows 10 1607 and later, so it is looked up rather than linked. 96 is a 100 % display; a
+// host that is not DPI aware gets 96 from it whatever the display, which is what its own window is drawn at.
+double platformDpiScale(PlatformWindow* w) {
+    typedef UINT(WINAPI * GetDpiForWindowFn)(HWND);
+    static const GetDpiForWindowFn fn = reinterpret_cast<GetDpiForWindowFn>(
+        reinterpret_cast<void*>(GetProcAddress(GetModuleHandleW(L"user32.dll"), "GetDpiForWindow")));
+    const UINT dpi = fn ? fn(w->hwnd) : 0;
+    return dpi ? dpi / 96.0 : 1.0;
+}
+
+double platformFitScale(PlatformWindow* w, int canvasW, int canvasH) {
+    RECT area = {};
+    bool known = false;
+    if (w && w->hwnd) {
+        MONITORINFO mi = {sizeof mi};
+        if (GetMonitorInfoW(MonitorFromWindow(w->hwnd, MONITOR_DEFAULTTONEAREST), &mi)) {
+            area = mi.rcWork;
+            known = true;
+        }
+    }
+    if (!known) known = SystemParametersInfoW(SPI_GETWORKAREA, 0, &area, 0) != 0;
+    if (!known || area.right <= area.left || area.bottom <= area.top || canvasW <= 0 || canvasH <= 0) return kMaxScale;
+    return std::min(0.9 * (area.right - area.left) / canvasW, 0.9 * (area.bottom - area.top) / canvasH);
 }
 
 // Up the parent chain, each window that closely wraps ours (its frame adds at most 80 px either way)
@@ -417,8 +462,8 @@ static void fillMenu(HMENU m, const std::vector<MenuEntry>& items) {
 int platformMenu(PlatformWindow* w, const std::vector<MenuEntry>& items, int x, int y) {
     HMENU m = CreatePopupMenu();
     fillMenu(m, items);
-    int s = w->gui->scale();
-    POINT p = {x * s, y * s};
+    const double s = w->gui->scale();
+    POINT p = {(LONG)std::lround(x * s), (LONG)std::lround(y * s)};
     ClientToScreen(w->hwnd, &p);
     int r = TrackPopupMenu(m, TPM_RETURNCMD | TPM_NONOTIFY | TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON, p.x, p.y, 0, w->hwnd, nullptr);
     DestroyMenu(m);
