@@ -319,6 +319,157 @@ int main() {
             tipEnds("pages/unvoiced", "Alt+N");
         }
 
+        // ---- the operator page's EG plot -------------------------------------
+        {
+            u.click("sidebar/nav_op_1");
+            const char* ids[] = {"eg_hold", "eg_t1", "eg_l1", "eg_t2", "eg_l2", "eg_t3", "eg_l3", "eg_t4", "eg_l4", "eg_time_scale"};
+            const double vals[] = {40, 30, 99, 40, 50, 40, 0, 40, 0, 0};
+            auto id = [](const char* p) { return std::string("op.1.v.") + p + ".p1"; };
+            for (size_t i = 0; i < std::size(ids); ++i) u.set(id(ids[i]), vals[i]);
+            for (auto p : {"part.attack.p1", "part.decay.p1", "part.release.p1"}) u.set(p, 0);
+            u.set("gui.eg_db", 1);
+            u.set("gui.eg_overlay", 0);   // so only this operator sets the time axis
+            u.run(3);
+            Rect env;
+            auto handles = [&]() {   // centres of the red handle frames, left to right
+                std::vector<Rect> boxes;
+                const auto& px = u.gui.pixels();
+                for (int y = env.y; y < env.y + env.h; ++y)
+                    for (int x = env.x; x < env.x + env.w; ++x) {
+                        if ((px[(size_t)y * u.gui.width() + x] & 0xffffff) != 0xc80800) continue;
+                        Rect* in = nullptr;
+                        for (auto& b : boxes)
+                            if (x >= b.x - 2 && x <= b.x + b.w + 1 && y >= b.y - 2 && y <= b.y + b.h + 1) in = &b;
+                        if (!in) boxes.push_back({x, y, 1, 1});
+                        else *in = *in | Rect{x, y, 1, 1};
+                    }
+                std::vector<std::pair<int, int>> c;
+                for (auto& b : boxes) c.push_back({b.x + b.w / 2, b.y + b.h / 2});
+                std::sort(c.begin(), c.end());
+                return c;
+            };
+            auto picture = [&]() {
+                const auto& px = u.gui.pixels();
+                uint64_t h = 1469598103934665603ull;
+                for (int y = env.y; y < env.y + env.h; ++y)
+                    for (int x = env.x; x < env.x + env.w; ++x) h = (h ^ px[(size_t)y * u.gui.width() + x]) * 1099511628211ull;
+                return h;
+            };
+            if (u.rect("pages/envelope", env)) {
+                auto hs = handles();
+                CHECK(hs.size() == 5, "the amplitude EG plot shows %zu handles, not 5", hs.size());
+                if (hs.size() == 5) {
+                    const auto p = hs[2];   // level 2
+                    // Mid-drag, the handle is under the pointer.
+                    const int tx = p.first + 17, ty = p.second + 11;
+                    u.gui.mouseMove(p.first, p.second, false);
+                    u.gui.mouseDown(p.first, p.second, false, false, false);
+                    for (int k = 1; k <= 8; ++k) u.gui.mouseMove(p.first + 17 * k / 8, p.second + 11 * k / 8, false);
+                    u.run(1);
+                    CHECK((u.gui.pixels()[(size_t)ty * u.gui.width() + tx] & 0xffffff) == 0xc80800, "the held handle is not under the pointer");
+                    u.gui.mouseMove(p.first, p.second + 12, false);
+                    u.gui.mouseUp(p.first, p.second + 12, false);
+                    u.run(2);
+                    // Released 12 px lower: the level went down.
+                    auto after = handles();
+                    CHECK(u.get(id("eg_l2")) < 50 && after.size() == 5, "a point dragged down left L2 at %g", u.get(id("eg_l2")));
+                    if (after.size() == 5) {
+                        const double l2 = u.get(id("eg_l2")), t2 = u.get(id("eg_t2"));
+                        u.drag(after[2].first, after[2].second, 40, 0);
+                        CHECK(u.get(id("eg_t2")) > t2 && std::abs(u.get(id("eg_l2")) - l2) <= 1, "a point dragged right moved T2 to %g and L2 to %g", u.get(id("eg_t2")), u.get(id("eg_l2")));
+                    }
+                    if ((after = handles()).size() == 5) {
+                        const auto q = after[2];
+                        u.gui.mouseMove(q.first, q.second, false);
+                        u.gui.mouseDown(q.first, q.second, false, false, false);
+                        int off = 0;
+                        for (int k = 1; k <= 10; ++k) {
+                            u.gui.mouseMove(q.first, q.second + 3 * k, false);
+                            u.run(1);
+                            auto now = handles();
+                            int best = 1 << 20;
+                            for (auto& n : now) best = std::min(best, std::max(std::abs(n.first - q.first), std::abs(n.second - q.second - 3 * k)));
+                            off = std::max(off, best);
+                        }
+                        u.gui.mouseUp(q.first, q.second + 30, false);
+                        u.run(2);
+                        CHECK(off <= 1, "a point dragged straight down strayed %d px from the pointer", off);
+                    }
+                    // The wheel zooms, a drag on empty plot pans, a double-click fits again. The wheel can't zoom out past the fit.
+                    const int ex = env.x + env.w - 30, ey = env.y + 12;   // empty plot, away from the handles
+                    u.clickAt(ex, ey, true);   // start from the fit
+                    auto fit = handles();
+                    if (fit.size() == 5) {
+                        u.gui.wheel(fit[1].first, fit[1].second, 2, false);
+                        u.run(2);
+                        auto zoom = handles();
+                        CHECK(zoom.size() >= 3 && zoom[2].first - zoom[1].first > fit[2].first - fit[1].first + 4, "the wheel did not zoom the plot in");
+                        u.drag(ex, ey, -20, 0);
+                        auto panned = handles();
+                        bool shifted = panned.size() == zoom.size() && !panned.empty() && panned[0].first < zoom[0].first;
+                        for (size_t k = 0; shifted && k < panned.size(); ++k) shifted = std::abs((panned[k].first - zoom[k].first) - (panned[0].first - zoom[0].first)) <= 1;
+                        CHECK(shifted, "a drag on empty plot did not pan every handle alike");
+                        u.clickAt(ex, ey, true);
+                        CHECK(handles() == fit, "a double-click did not fit the plot again");
+                        u.gui.wheel(ex, ey, -20, false);
+                        u.run(2);
+                        CHECK(handles() == fit, "the wheel zoomed out past the fit");
+                    }
+                    // A very long envelope still fits, and switching operators refits.
+                    u.set(id("eg_l3"), 90);
+                    u.set(id("eg_t4"), 99);   // minutes of release
+                    u.run(2);
+                    auto slow = handles();
+                    CHECK(!slow.empty() && slow.back().first > env.x + env.w * 3 / 4, "a long release ends off the plot");
+                    u.gui.wheel(env.x + 40, ey, 4, false);
+                    u.run(2);
+                    CHECK(handles() != slow, "the wheel did not zoom the long envelope in");
+                    u.click("sidebar/nav_op_2");
+                    u.click("sidebar/nav_op_1");
+                    u.run(2);
+                    CHECK(handles() == slow, "coming back to an operator did not show its envelope fitted");
+                }
+                u.set("gui.eg_overlay", 1);
+                u.run(2);
+                const uint64_t db = picture();
+                u.click("pages/env_db");
+                CHECK(u.get("gui.eg_db") == 0 && picture() != db, "the dB toggle did not redraw the plot as linear amplitude");
+                u.click("pages/env_db");
+                std::vector<double> before;
+                for (auto i : ids) before.push_back(u.get(id(i)));
+                const uint64_t all = picture();
+                u.click("pages/env_all");
+                std::vector<double> now;
+                for (auto i : ids) now.push_back(u.get(id(i)));
+                CHECK(u.get("gui.eg_overlay") == 0 && picture() != all && now == before, "the overlay toggle did not redraw the plot alone");
+                u.click("pages/env_all");
+            }
+            // Overview page: with Sync on, the eight plots share one time axis.
+            u.click("sidebar/nav_all_envs");
+            Rect one;
+            if (u.rect("pages/env_1", one) && u.rect("pages/env_2", env)) {   // picture() is operator 2's plot now
+                const int ox = one.x + one.w / 2, oy = one.y + one.h / 2;
+                u.set("gui.eg_sync", 1);
+                u.set(id("eg_t4"), 40);
+                u.run(2);
+                uint64_t was = picture();
+                u.set(id("eg_t4"), 99);
+                u.run(2);
+                CHECK(picture() != was, "synced, operator 1's long release did not rescale operator 2's plot");
+                was = picture();
+                u.gui.wheel(ox, oy, 3, false);
+                u.run(2);
+                CHECK(picture() != was, "synced, the wheel over operator 1's plot did not zoom operator 2's");
+                u.click("pages/envs_sync");
+                was = picture();
+                u.set(id("eg_t4"), 40);
+                u.gui.wheel(ox, oy, 3, false);
+                u.run(2);
+                CHECK(u.get("gui.eg_sync") == 0 && picture() == was, "not synced, operator 2's plot still followed operator 1's");
+                u.click("pages/envs_sync");
+            }
+        }
+
         // ---- sliders: the volume knob and Easy's attack fader drag, and a double-click resets ----------
         {
             Rect r;

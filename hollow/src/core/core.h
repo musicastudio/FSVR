@@ -168,8 +168,8 @@ struct Hit;
 // pixels. down returns true to capture the pointer, so drag and up follow; dbl, when set, takes
 // the second press of a double-click instead of down. hover gets a point outside r when the
 // pointer leaves. right gets right presses and releases over the widget. tick runs about 30
-// times a second while the widget is shown (redraws when what it shows changed). Hooks left null
-// do nothing.
+// times a second while the widget is shown (redraws when what it shows changed). wheel takes the
+// mouse wheel over the widget (notches up positive). Hooks left null do nothing.
 struct KindOps {
     void (*draw)(Gui&, Canvas&, const Hit&, Rect r);
     bool (*down)(Gui&, const Hit&, Rect r, int x, int y, bool shift);
@@ -179,6 +179,7 @@ struct KindOps {
     void (*hover)(Gui&, const Hit&, Rect r, int x, int y);
     void (*right)(Gui&, const Hit&, Rect r, int x, int y, bool shift, bool up);
     void (*tick)(Gui&, const Hit&, Rect r);
+    void (*wheel)(Gui&, const Hit&, Rect r, int x, int y, double notches, bool shift);
 };
 const KindOps* findKind(const std::string& kind);   // null: an unknown kind, drawn as its fill
 struct KindState {                                   // what one custom widget keeps between events
@@ -508,6 +509,10 @@ public:
     void setNorm(const Hit& h, double t, int which = 0);
     void setParam(int p, double plain);          // a whole gesture on one param (kinds, menus)
     void setParams(const std::vector<std::pair<int, double>>& values);   // one gesture over several
+    // For kinds that edit params themselves: beginParams starts one host gesture, which ends when the press does.
+    // editParam writes inside it, so a whole drag is one gesture.
+    void beginParams(const std::vector<int>& ps);
+    void editParam(int p, double plain);
     // A param template's params: the one for the current vars, or with "editAll" on and its var in
     // the template, one per listed value.
     std::vector<int> paramsFor(const Node& n, const std::string& tpl) const;

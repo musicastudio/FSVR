@@ -1201,7 +1201,7 @@
     59,
     303,
     720,
-    165
+    130
    ],
    "fill": {
     "colour": "#384243ff"
@@ -1215,7 +1215,7 @@
     59,
     303,
     720,
-    165
+    130
    ],
    "kind": "stage_env",
    "surface": false,
@@ -1244,42 +1244,174 @@
     ]
    ],
    "grid": "#5f7172ff",
-   "area": "#3a4445a5",
+   "area": "#879ea090",
    "curve": "#879ea0ff",
    "handle": "#394344ff",
-   "dots": "#f6f6f6ff"
+   "dots": "#f6f6f6ff",
+   "model": "fs1r.feg",
+   "inputs": {
+    "L1": "voice.filter.eg_l1.{part}",
+    "L2": "voice.filter.eg_l2.{part}",
+    "L3": "voice.filter.eg_l3.{part}",
+    "L4": "voice.filter.eg_l4.{part}",
+    "T1": "voice.filter.eg_t1.{part}",
+    "T2": "voice.filter.eg_t2.{part}",
+    "T3": "voice.filter.eg_t3.{part}",
+    "T4": "voice.filter.eg_t4.{part}",
+    "velocity": "voice.filter.eg_attack_vel.{part}",
+    "timeScale": "voice.filter.eg_time_scale.{part}"
+   },
+   "text": {
+    "font": "tiny_white_8"
+   },
+   "tip": "Drag a point: up and down sets its level and slides it along its slope, sideways its time. The curve is the engine's own, for middle C at velocity 64",
+   "areaBottom": "#879ea005"
   },
   {
    "type": "plate",
-   "name": "feg_t1_label",
+   "name": "env_time_label",
    "rect": [
-    62,
-    474,
-    34,
+    59,
+    453,
+    48,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate_inv"
-   },
+   "layer": 1,
    "text": {
-    "text": "T1",
+    "text": "Time",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "left",
+    "valign": "middle"
    },
    "pad": [
-    1,
     2,
-    1,
-    2
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "env_level_label",
+   "rect": [
+    59,
+    474,
+    48,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "text": "Level",
+    "font": "caption_grey_12",
+    "align": "left",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "env_col_1",
+   "rect": [
+    110,
+    437,
+    167,
+    14
+   ],
+   "layer": 1,
+   "text": {
+    "text": "Attack",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "env_col_2",
+   "rect": [
+    277,
+    437,
+    167,
+    14
+   ],
+   "layer": 1,
+   "text": {
+    "text": "Decay 1",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "env_col_3",
+   "rect": [
+    444,
+    437,
+    167,
+    14
+   ],
+   "layer": 1,
+   "text": {
+    "text": "Decay 2",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "env_col_4",
+   "rect": [
+    612,
+    437,
+    167,
+    14
+   ],
+   "layer": 1,
+   "text": {
+    "text": "Release",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
    ]
   },
   {
    "type": "number",
    "name": "feg_t1",
    "rect": [
-    96,
-    474,
-    49,
+    169,
+    453,
+    50,
     18
    ],
    "fill": {
@@ -1303,36 +1435,12 @@
    "param": "voice.filter.eg_t1.{part}"
   },
   {
-   "type": "plate",
-   "name": "feg_t2_label",
-   "rect": [
-    244,
-    474,
-    34,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate_inv"
-   },
-   "text": {
-    "text": "T2",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
    "type": "number",
    "name": "feg_t2",
    "rect": [
-    278,
-    474,
-    49,
+    336,
+    453,
+    50,
     18
    ],
    "fill": {
@@ -1356,36 +1464,12 @@
    "param": "voice.filter.eg_t2.{part}"
   },
   {
-   "type": "plate",
-   "name": "feg_t3_label",
-   "rect": [
-    426,
-    474,
-    34,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate_inv"
-   },
-   "text": {
-    "text": "T3",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
    "type": "number",
    "name": "feg_t3",
    "rect": [
-    460,
-    474,
-    49,
+    503,
+    453,
+    50,
     18
    ],
    "fill": {
@@ -1409,36 +1493,12 @@
    "param": "voice.filter.eg_t3.{part}"
   },
   {
-   "type": "plate",
-   "name": "feg_t4_label",
-   "rect": [
-    608,
-    474,
-    34,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate_inv"
-   },
-   "text": {
-    "text": "T4",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
    "type": "number",
    "name": "feg_t4",
    "rect": [
-    642,
-    474,
-    49,
+    670,
+    453,
+    50,
     18
    ],
    "fill": {
@@ -1462,36 +1522,12 @@
    "param": "voice.filter.eg_t4.{part}"
   },
   {
-   "type": "plate",
-   "name": "feg_l1_label",
-   "rect": [
-    153,
-    474,
-    34,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate_inv"
-   },
-   "text": {
-    "text": "L1",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
    "type": "number",
    "name": "feg_l1",
    "rect": [
-    187,
+    169,
     474,
-    49,
+    50,
     18
    ],
    "fill": {
@@ -1515,36 +1551,12 @@
    "param": "voice.filter.eg_l1.{part}"
   },
   {
-   "type": "plate",
-   "name": "feg_l2_label",
-   "rect": [
-    335,
-    474,
-    34,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate_inv"
-   },
-   "text": {
-    "text": "L2",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
    "type": "number",
    "name": "feg_l2",
    "rect": [
-    369,
+    336,
     474,
-    49,
+    50,
     18
    ],
    "fill": {
@@ -1568,36 +1580,12 @@
    "param": "voice.filter.eg_l2.{part}"
   },
   {
-   "type": "plate",
-   "name": "feg_l3_label",
-   "rect": [
-    517,
-    474,
-    34,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate_inv"
-   },
-   "text": {
-    "text": "L3",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
    "type": "number",
    "name": "feg_l3",
    "rect": [
-    551,
+    503,
     474,
-    49,
+    50,
     18
    ],
    "fill": {
@@ -1621,36 +1609,12 @@
    "param": "voice.filter.eg_l3.{part}"
   },
   {
-   "type": "plate",
-   "name": "feg_l4_label",
-   "rect": [
-    699,
-    474,
-    34,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate_inv"
-   },
-   "text": {
-    "text": "L4",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
    "type": "number",
    "name": "feg_l4",
    "rect": [
-    733,
+    670,
     474,
-    49,
+    50,
     18
    ],
    "fill": {
@@ -1671,7 +1635,8 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "voice.filter.eg_l4.{part}"
+   "param": "voice.filter.eg_l4.{part}",
+   "tip": "Release level, where the release ends; also the level the envelope starts from"
   }
  ]
 }

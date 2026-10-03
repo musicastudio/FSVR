@@ -14,6 +14,7 @@
 #include "embedded_skin.h"
 #include "audio_fseq.h"
 #include "fs1r.h"
+#include "fsvr/egview.h"
 #include "library.h"
 #include <algorithm>
 #include <array>
@@ -199,6 +200,40 @@ struct Field {
 };
 
 static const char* const kCorner[4] = {"tl", "tr", "bl", "br"};   // A to D, the morph_edit values 0..3
+
+// ---- the EG plots' curves ---------------------------------------------------------------------------
+
+// The models behind the envelope plots, see "The envelopes" in docs/editor.md.
+// fsvr/egview.h calculates the curves; nothing is rendered.
+// Inputs are param values: amp levels 0..99, pitch and filter levels -50..50, part offsets -64..63.
+static const bool kEgModels = [] {
+    auto model = [](int kind) {
+        return [kind](const std::map<std::string, double>& in) {
+            auto get = [&](const std::string& k, double zero) { return (in.count(k) ? in.at(k) : 0) + zero; };
+            egview::Input e;
+            e.egKind = kind;
+            for (int i = 0; i < 4; i++) {
+                e.L[i] = get("L" + std::to_string(i + 1), kind == egview::AMP ? 0 : 50);
+                e.T[i] = get("T" + std::to_string(i + 1), 0);
+            }
+            e.init = get("init", 50);
+            e.hold = get("hold", 0);
+            e.timeScale = (int)get("timeScale", 0), e.velSens = (int)get("velocity", 0), e.range = (int)get("range", 0);
+            static const char* const kAmp[4] = {"attack", "decay", "release", ""};
+            static const char* const kPitch[4] = {"initOffset", "attackOffset", "releaseLevelOffset", "releaseOffset"};
+            for (int i = 0; i < 4; i++) e.part[i] = (int)get(kind == egview::AMP ? kAmp[i] : kPitch[i], 64);
+            egview::EgCurve c = egview::curve(e);
+            hollow::StageCurve out;
+            out.t = std::move(c.t), out.v = std::move(c.v), out.keyOff = c.keyOff, out.corner = std::move(c.corner);
+            out.lo = c.lo, out.hi = c.hi, out.db = kind == egview::AMP;
+            return out;
+        };
+    };
+    hollow::registerStageModel("fs1r.aeg", model(egview::AMP));
+    hollow::registerStageModel("fs1r.peg", model(egview::PITCH));
+    hollow::registerStageModel("fs1r.feg", model(egview::FILTER));
+    return true;
+}();
 
 // ---- the processor ---------------------------------------------------------------------------------
 
