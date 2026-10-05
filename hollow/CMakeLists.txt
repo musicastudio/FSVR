@@ -40,4 +40,6 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND HOLLOW_FORMATS MATCHES "CLAP")
   # spelled in full because GitHub only serves a shallow fetch of a complete one.
   FetchContent_Declare(clap-wrapper GIT_REPOSITORY https://github.com/free-audio/clap-wrapper GIT_TAG fb9d6e4770c18d44b5756296810ac3cf121e000c GIT_SHALLOW TRUE)
   FetchContent_MakeAvailable(clap clap-wrapper)
+  include(cmake/HollowClapWrapperFix.cmake)
+  hollow_fix_clap_wrapper("${clap-wrapper_SOURCE_DIR}")
 endif()
