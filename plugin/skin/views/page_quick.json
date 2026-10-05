@@ -405,7 +405,7 @@
    ],
    "layer": 1,
    "text": {
-    "text": "LFO2 Dep",
+    "text": "LFO2 Depth",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -917,7 +917,7 @@
    ],
    "layer": 1,
    "text": {
-    "text": "LFO2 Spd",
+    "text": "LFO2 Speed",
     "font": "caption_grey_12",
     "align": "center"
    },
