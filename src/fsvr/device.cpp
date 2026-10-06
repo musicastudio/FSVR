@@ -143,6 +143,14 @@ bool Device::fseqFrame(int step, uint8_t out[50]) const {
     return true;
 }
 int Device::fseqPosition() const { return p->s.fseq.valid ? p->s.fseqStep : 0; }
+void Device::operatorWave(int part, int op, float* out, int n) const {
+    OpV v;
+    {
+        std::lock_guard<std::mutex> lk(p->s.mtx);
+        v = p->s.perf.part[clampi(part, 0, 3)].voice.v[clampi(op, 0, 7)];
+    }
+    p->s.op_wave(v, out, n);
+}
 int Device::fseqPart() const { return p->s.fseqPart; }
 double Device::fseqFrameSeconds(int s) { return (VELW[clampi(s, 0, 127)] * 84.0 + 2884.0) * 32.0 / CPU_HZ; }   // fseq_start at ratio 1000
 // word_hz inverted, and a frame level: notes.cpp refresh_regs doubles the byte into the level register, and

@@ -97,6 +97,29 @@ double Synth::op_sample(OpState& s, const OpV& v, double f0, double fop, int rat
     return y;
 }
 
+// Ours, for a display only: the unit has no such readout. Voiced operator v alone, from the same op_sample
+// the channels play, at a nominal 100 Hz with no modulation: n points over two periods, scaled to a peak of
+// 1. The grain forms open their first window a period in, so a period runs first and is dropped. The
+// formant's carrier is put four harmonics up so that its grains show, and its window and the res forms'
+// ratio come from byte 6 as notes.cpp hands them to a channel.
+void Synth::op_wave(const OpV& v, float* out, int n) {
+    OpState s;
+    const double f0 = 100.0, fop = v.form == 7 ? 4 * f0 : f0;
+    s.wl7 = std::min(cal::FRMT_WL_MAX, f0 / (cal::FRMT_BW_HZ0 * fm::exp2(v.bw / cal::FRMT_BW_DB)));
+    const int period = (int)(SR / f0);
+    for (int i = 0; i < period; i++) op_sample(s, v, f0, fop, v.bw, 0, 1);
+    std::vector<double> y(2 * (size_t)period);
+    double peak = 1e-9;
+    for (auto& x : y) peak = std::max(peak, std::fabs(x = op_sample(s, v, f0, fop, v.bw, 0, 1)));
+    for (int i = 0; i < n; i++) {   // each point the largest sample of its share, so a narrow pulse still shows
+        size_t a = (size_t)i * y.size() / std::max(n, 1), b = std::max(a + 1, (size_t)(i + 1) * y.size() / std::max(n, 1));
+        double m = y[a];
+        for (size_t k = a; k < b; k++)
+            if (std::fabs(y[k]) > std::fabs(m)) m = y[k];
+        out[i] = (float)(m / peak);   // the shape, full height
+    }
+}
+
 void Synth::refresh_ctl(Chan& C) {
     const Part& pt = perf.part[C.part]; const Voice& V = pt.voice; const unsigned char* alg = FS1R_ALG[V.alg];
     bool fs = fseq_on(C.part);

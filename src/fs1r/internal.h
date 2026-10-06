@@ -563,6 +563,8 @@ struct Synth {
     // dark above 640 Hz before any smoothing is applied, which is the noise formant's bandwidth law and
     // not this, so they cannot judge a glide; slewing it there only makes them darker.
     inline double op_sample(OpState& s, const OpV& v, double f0, double fop, int ratio, double pm, double gain);
+    // Ours, for a display: voiced operator v alone through op_sample, n points over two periods (ymp706.cpp).
+    void op_wave(const OpV& v, float* out, int n);
     // The per-operator frequency and level maths runs every tuning::CTL_DECIMATION samples rather than
     // every sample. Its inputs only move on the 192 Hz register tick and the voice parameters, and doing
     // it per sample (a dozen pow() calls per operator) was the whole CPU bill. The one input that moves

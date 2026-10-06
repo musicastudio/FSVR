@@ -62,6 +62,9 @@ public:
     // One Fseq frame as its 50 raw bytes, and where playback currently is. For a display only.
     bool fseqFrame(int step, uint8_t out[50]) const;
     int fseqPosition() const;
+    // Voiced operator op (0..7) of a part's voice alone, as the engine's own model makes it: n points over two
+    // periods, -1..1, scaled to fill. For the operator panel's display only.
+    void operatorWave(int part, int op, float* out, int n) const;
     int fseqPart() const;                      // -1 when no part is assigned
     int activeVoices() const;                  // channels still sounding, releases included, for a polyphony readout
     // How long one Fseq frame lasts at 100 % speed for a header speed adjust of 0..127 (fseq_start).

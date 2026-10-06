@@ -637,6 +637,7 @@ private:
                 writeLists();
             }
             if (n % 2 == 0) harmonics();
+            if (n % 3 == 1) waves();
             if (messageTicks && --messageTicks == 0) st.setData("fsvr.message", "");
             if (notify && n % 8 == 0) {   // at most four times a second: a rescan of 3,000 params is not free for a host
                 notify = false;
@@ -1476,6 +1477,22 @@ private:
     }
 
     // ---- the monitor -------------------------------------------------------------------------------
+
+    // Every part's eight voiced operators as the engine makes them, for the operator panel's display: text
+    // data live.wave.p<part>.<op>, 128 points 0..1 with the centre line at 0.5. Live data: never saved.
+    void waves() {
+        float y[128];
+        for (int p = 0; p < 4; ++p)
+            for (int o = 0; o < 8; ++o) {
+                dev.operatorWave(p, o, y, 128);
+                std::string s;
+                for (float v : y) {   // three decimals, written out so that a host's locale has no say
+                    const int k = (int)std::lround(std::clamp(0.5 + 0.45 * v, 0.0, 1.0) * 1000);
+                    s += k >= 1000 ? "1 " : "0." + std::string(k < 100 ? "0" : "") + std::string(k < 10 ? "0" : "") + std::to_string(k) + " ";
+                }
+                st.setData("live.wave.p" + std::to_string(p + 1) + "." + std::to_string(o + 1), s);
+            }
+    }
 
     // The 32 harmonics of the last note played, their level in the output (-60..0 dB as 0..1), for the
     // monitor's harmonic display.
