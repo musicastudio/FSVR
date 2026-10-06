@@ -67,7 +67,7 @@ static void textSize(const Font& f, const std::string& s, int& w, int& h) {
 }
 
 Gui::Gui(const Skin* skin, State& state, Editor::Host* host, const std::string& root)
-    : skin_(skin), state_(state), host_(host), rootName_(root) {
+    : skin_(skin), base_(skin), state_(state), host_(host), rootName_(root) {
     vars_ = skin->vars;
     midiSeen_ = state.midiInCount();
     std::random_device rd;   // Tausworthe seeds must exceed 1, 7 and 15
@@ -778,7 +778,14 @@ bool Gui::activeAction(const Action& a) const {
         }
         return !a.vars.empty();
     }
-    return a.type == Action::Goto && shownIn(a.stack, a.target, a.vars);
+    if (a.type != Action::Goto || !shownIn(a.stack, a.target, a.vars)) return false;
+    for (auto& kv : a.set) {   // and every skin-wide var it sets holds that value
+        const std::string* v = nullptr;
+        for (auto& s : vars_)
+            if (s.first == kv.first) v = &s.second;
+        if (!v || *v != kv.second) return false;
+    }
+    return true;
 }
 
 bool Gui::active(const Node& n, int i) const { return activeAction(n.view->widgets[i].action); }
@@ -813,7 +820,7 @@ std::string Gui::sourceValue(const Widget& w) const {
     case Widget::MidiIn: return Clock::now() < midiUntil_ ? "1" : "0";
     case Widget::Modified: return state_.modified() ? "1" : "0";
     case Widget::Voices: return state_.voices() < 0 ? "" : formatInt(w.format.empty() ? "%d" : w.format, state_.voices());
-    case Widget::Scale: return std::to_string(scale_) + "x";
+    case Widget::Scale: return (base_->scales.empty() ? std::to_string(scale_) : formatNumber("%g", zoom_)) + "x";
     default: return "";
     }
 }
@@ -938,6 +945,16 @@ void Gui::paintWidget(Canvas& c, Node& n, int i, Rect r) {
         std::vector<int> col((size_t)std::max(r.w, 0), 0);
         float vals[256];
         int n = w.source == Widget::Scope ? std::min(state_.scope(vals, 256), 256) : 0;
+        if (!s.key.empty()) {   // "key": the values are the text data's numbers, 0..1, up to 256 of them
+            s.stored = state_.hasData(s.key);
+            s.data = state_.data(s.key);
+            const char *p = s.data.c_str(), *end = p + s.data.size();
+            for (double v; n < 256 && p < end;) {
+                while (p < end && (*p == ' ' || *p == '\n' || *p == ',')) ++p;
+                if (p >= end || !parseNumber(p, end, v)) break;
+                vals[n++] = (float)v;
+            }
+        }
         auto height = [&](float v) { return (int)std::lround(std::clamp(v, 0.0f, 1.0f) * (r.h - 1)); };
         if (n > 0 && w.drawMode == 0) {   // a trace: each column reads the value under it
             for (int x = 0; x < r.w; ++x) col[(size_t)x] = height(vals[(size_t)x * n / r.w]);
@@ -1321,7 +1338,9 @@ void Gui::runAction(Node& n, int i, const Action& action) {
         int k;
         Node* p = findEmbed(root_, a.stack, &k);
         if (!p || !skin_->view(a.target)) return;
+        for (auto& kv : a.set) setVar(vars_, kv.first, kv.second);
         show(*p, k, a.target, a.vars);
+        if (!a.set.empty()) resolve(root_);
         break;
     }
     }
@@ -1874,7 +1893,7 @@ const Binding* Gui::bindingFor(const Action& a) const {
     for (const Binding& b : skin_->keys) {
         const Action& x = b.action;
         if (x.type == a.type) {
-            if (x.type == Action::Set ? x.vars == a.vars : x.target == a.target && x.stack == a.stack && x.vars == a.vars)
+            if (x.type == Action::Set ? x.vars == a.vars : x.target == a.target && x.stack == a.stack && x.vars == a.vars && x.set == a.set)
                 return &b;
         } else if (x.type == Action::Cycle && a.type == Action::Set && a.vars.size() == 1 && a.vars[0].first == x.target &&
                    std::find(x.values.begin(), x.values.end(), a.vars[0].second) != x.values.end()) {
@@ -2288,17 +2307,20 @@ void Gui::contextMenu(const Hit& h, int x, int y, const std::vector<Item>& items
     itemMenu(h, items, {x, y, 0, 0}, style, false);
 }
 
+// The skin's "scales", else 1x to 4x.
 void Gui::scaleMenu(Rect at) {
+    std::vector<double> scales = base_->scales;
+    if (scales.empty()) scales = {1, 2, 3, 4};
     std::vector<MenuEntry> menu;
-    for (int s = 1; s <= 4; ++s) {
+    for (size_t i = 0; i < scales.size(); ++i) {
         MenuEntry e;
-        e.label = std::to_string(s) + "x";
-        e.id = s;
-        e.current = s == scale_;
+        e.label = formatNumber("%g", scales[i]) + "x";
+        e.id = (int)i + 1;
+        e.current = scales[i] == (base_->scales.empty() ? scale_ : zoom_);
         menu.push_back(e);
     }
-    openMenu(std::move(menu), at, "", [this](int id) {
-        if (id > 0) setScale(id);
+    openMenu(std::move(menu), at, "", [this, scales](int id) {
+        if (id > 0) setScale(scales[(size_t)id - 1]);
     });
 }
 
@@ -2727,10 +2749,28 @@ void Gui::resizeWindow() {
     platformSize(window, w_ * scale_, h_ * scale_);
 }
 
-void Gui::setScale(int s) {
-    s = std::clamp(s, 1, 4);
-    if (s == scale_) return;
-    scale_ = s;
+// A skin with "scales" is loaded again at the one nearest s and drawn at that size; any other is drawn at
+// 1x and shown at s (1 to 4) pixel repeats.
+void Gui::setScale(double s) {
+    if (base_->scales.empty()) {
+        int k = std::clamp((int)std::lround(s), 1, 4);
+        if (k == scale_) return;
+        scale_ = k;
+        resizeWindow();
+        saveUi();
+        return;
+    }
+    double z = base_->scales[0];
+    for (double c : base_->scales)
+        if (std::fabs(c - s) < std::fabs(z - s)) z = c;
+    if (z == zoom_) return;
+    std::string ui = uiJson(), err;
+    auto old = std::move(zoomed_);   // the tree still points into it until applyUi rebuilds
+    zoomed_ = z == 1 ? nullptr : scaledSkin(*base_, z, &err);
+    if (z != 1 && !zoomed_) { zoomed_ = std::move(old); return; }
+    zoom_ = z;
+    skin_ = zoomed_ ? zoomed_.get() : base_;
+    applyUi(ui, false);
     resizeWindow();
     saveUi();
 }
@@ -2764,13 +2804,14 @@ void Gui::writeScroll(const Node& n, std::string& o) const {
     for (size_t i = 0; n.view && i < n.w.size(); ++i) {
         const Inst& s = n.w[i];
         if (!s.child) continue;
-        if (s.scroll) o += (o.back() == '{' ? "" : ",") + jsonQuote(s.child->path) + ":" + std::to_string(s.scroll);
+        if (s.scroll)   // in 1x pixels, so it reads back at any scale
+            o += (o.back() == '{' ? "" : ",") + jsonQuote(s.child->path) + ":" + std::to_string((int)std::lround(s.scroll / zoom_));
         writeScroll(*s.child, o);
     }
 }
 
 std::string Gui::uiJson() const {
-    std::string o = "{\"scale\":" + std::to_string(scale_) + ",\"vars\":";
+    std::string o = "{\"scale\":" + (base_->scales.empty() ? std::to_string(scale_) : formatNumber("%g", zoom_)) + ",\"vars\":";
     writeVars(vars_, o);
     o += ",\"embeds\":{";
     writeEmbeds(root_, o);
@@ -2786,12 +2827,12 @@ void Gui::saveUi() {
     state_.setUi(savedUi_);
 }
 
-void Gui::applyUi(const std::string& json) {
+void Gui::applyUi(const std::string& json, bool withScale) {
     Json j;
-    int scale = scale_;
+    double scale = base_->scales.empty() ? scale_ : zoom_;
     vars_ = skin_->vars;
     if (parseJson(json, j) && j.type == Json::Object) {
-        scale = std::clamp(j["scale"].integer(scale), 1, 4);
+        scale = j["scale"].num(scale);
         for (auto& m : j["vars"].members) setVar(vars_, m.first, m.second.str());
     }
     standaloneVar();   // a session saved in the standalone opens in a host without its buttons
@@ -2818,11 +2859,11 @@ void Gui::applyUi(const std::string& json) {
         Node* c = nodeAt(m.first);
         Node* p = c ? c->parent : nullptr;
         for (size_t i = 0; p && i < p->w.size(); ++i)
-            if (p->w[i].child.get() == c) p->w[i].scroll = m.second.integer();
+            if (p->w[i].child.get() == c) p->w[i].scroll = (int)std::lround(m.second.num() * zoom_);
     }
     conds(root_, false);
     relayout();
-    setScale(scale);
+    if (withScale) setScale(scale);
     saveUi();
     syncModal();
 }
@@ -2902,10 +2943,15 @@ void Gui::syncDevices() {
     }
 }
 
+// A new skin at 1x (live reload); a GUI at another scale loads it again at that scale.
 void Gui::setSkin(const Skin* skin) {
-    std::string ui = uiJson();
+    std::string ui = uiJson(), err;
     int w = w_, h = h_;
-    skin_ = skin;
+    auto old = std::move(zoomed_);   // the tree still points into it until applyUi rebuilds
+    base_ = skin;
+    if (zoom_ != 1 && !skin->scales.empty()) zoomed_ = scaledSkin(*skin, zoom_, &err);
+    if (!zoomed_) zoom_ = 1;
+    skin_ = zoomed_ ? zoomed_.get() : base_;
     applyUi(ui);
     if (w != w_ || h != h_) resizeWindow();
 }
@@ -2946,8 +2992,8 @@ void Editor::detach() {
 
 int Editor::width() const { return impl_->gui.width() * impl_->gui.scale(); }
 int Editor::height() const { return impl_->gui.height() * impl_->gui.scale(); }
-int Editor::scale() const { return impl_->gui.scale(); }
-void Editor::setScale(int s) {
+double Editor::scale() const { return impl_->gui.skin().scales.empty() ? impl_->gui.scale() : impl_->gui.zoom(); }
+void Editor::setScale(double s) {
     if (impl_->gui.window) platformHold(impl_->gui.window, true);
     impl_->gui.setScale(s);
     if (impl_->gui.window) platformHold(impl_->gui.window, false);
@@ -2977,12 +3023,14 @@ bool Editor::key(Key k, unsigned character, bool shift, bool ctrl, bool alt) {
     return used;
 }
 
-bool renderView(const Skin& skin, const std::string& view, std::vector<uint8_t>& rgba, int& width, int& height, const std::string& stateBlob) {
+bool renderView(const Skin& skin, const std::string& view, std::vector<uint8_t>& rgba, int& width, int& height, const std::string& stateBlob,
+                double scale) {
     if (!skin.view(view)) return false;
     State state(skin.params);
     if (!stateBlob.empty()) state.load(stateBlob);
     Gui gui(&skin, state, nullptr, view);
     if (!stateBlob.empty()) gui.applyUi(state.ui());   // its vars and pages too
+    if (scale > 0 && !skin.scales.empty()) gui.setScale(scale);
     const std::vector<uint32_t>& px = gui.pixels();
     width = gui.width();
     height = gui.height();

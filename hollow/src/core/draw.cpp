@@ -177,11 +177,12 @@ void drawText(Canvas& c, const Font& f, const std::string& s, Rect r, int align,
         int tw = f.width(line);
         int dx = align == 1 ? (r.w - tw) / 2 : align == 2 ? r.w - tw : 0;
         c.clip = saved & Rect{r.x + dx, r.y + dy, r.w - dx, ymax - r.y - dy};
-        int x = r.x + dx;
-        for (size_t i = 0; i < line.size() && x < c.clip.x + c.clip.w;) {
+        int x0 = r.x + dx, pen = 0;   // pen in 1/64 px, so fractional advances add up
+        for (size_t i = 0; i < line.size() && x0 + (pen >> 6) < c.clip.x + c.clip.w;) {
             unsigned g = nextCode(line, i);
+            int x = x0 + ((pen + 32) >> 6) + f.ox[g];
             blit(c, f.img, {f.x[g], f.top, f.w[g], f.height}, {x, r.y + dy, f.w[g], f.height}, c.clip);
-            x += f.w[g];
+            pen += f.adv[g];
         }
         dy += f.height;
     }

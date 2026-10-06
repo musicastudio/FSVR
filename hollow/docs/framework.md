@@ -79,10 +79,11 @@ Configure and build as in the README; the formats land in `build/<dir>/out/`. `-
 
 - `HOLLOW_SKIN_DIR=<skin folder>` makes any build read the skin from disk and reload it on save, so the editor and a running standalone or host work together.
 - `HOLLOW_KEYLOG=<file>` appends what the keyboard path saw: the window's focus grab and what it took, every key message and whether the editor used it, and every key a host delivered through `Editor::key`. For working out where a host's keys go, which is otherwise guesswork on someone else's machine. Unset, it costs one pointer test and writes nothing.
-- `hollow-render <skin> <view> <out.png> [state file]` renders any view without a window, for checks and documentation; a saved state (`hollow-state 1`: params, text data, UI vars and pages) renders the view as that instance would show it.
-- A button with the action `{ "scale": "menu" }` offers 1x to 4x scaling; the choice is saved with the instance.
+- `hollow-render <skin> <view> <out.png> [state file] [--scale s]` renders any view without a window, for checks and documentation; a saved state (`hollow-state 1`: params, text data, UI vars and pages) renders the view as that instance would show it, and `--scale` at one of the skin's scales.
+- A button with the action `{ "scale": "menu" }` offers the window's scales, and the choice is saved with the instance: the skin's `"scales"`, each a load of the skin at that size with its art from `scales/<scale>/` (FSVR's are 0.5x to 2x, rendered in Blender), else 1x to 4x pixel repeats of the 1x canvas.
 - A test can drive a `Gui` without a window (FSVR's `tools/check_gui.cpp`): skinned menus open without one, `widgetRect` finds a widget by embed path and name, `menuLabels` and `chooseMenu` read and pick the open menu, `modal` names the open modal, `tipOf` gives the tooltip a widget would show (its keyboard shortcut included), and `probes` lists every visible control.
 - For a GUI drawn at a size that is not a whole multiple, set `skin.json` `density` to its pixels per unit so the runtime's own drawings follow (FSVR's skin is 1.5).
+- Text is the skin's fonts: TrueType files named in `skin.json` `"fonts"`, rasterized at the window's scale, or picture fonts (glyph strips).
 - `python tools/overflow.py <skin>` lists text wider than its widget: static captions, every choice a dropdown can show, the widest value a number field can show, and list cells, measured with the skin's own fonts as the runtime measures them.
 
 ## What the framework does for a processor

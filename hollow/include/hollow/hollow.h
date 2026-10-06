@@ -183,8 +183,8 @@ public:
     void detach();
     int width() const;                    // window size in pixels: root view size * scale
     int height() const;
-    int scale() const;                    // 1..4, remembered in State::ui()
-    void setScale(int s);                 // resizes the window and calls Host::resize
+    double scale() const;                 // one of the skin's "scales", else 1..4; remembered in State::ui()
+    void setScale(double s);              // resizes the window and calls Host::resize
     // A key the host delivered through its plug-in API rather than to the window, for the hosts that keep
     // the keyboard to themselves (REAPER's "send all keyboard input to plugin"). `character` is what the key
     // typed, as the host reported it and so as the layout made it, 0 for a key that types nothing; which key
@@ -198,6 +198,7 @@ private:
 
 // Offscreen render of a view (tools and tests): RGBA8 straight alpha, row-major.
 bool renderView(const Skin& skin, const std::string& view, std::vector<uint8_t>& rgba, int& width, int& height,
-                const std::string& stateBlob = {});   // stateBlob: a saved state ("hollow-state 1") to render with
+                const std::string& stateBlob = {},   // stateBlob: a saved state ("hollow-state 1") to render with
+                double scale = 0);                   // one of the skin's "scales" (0: the state's, else 1x)
 
 } // namespace hollow

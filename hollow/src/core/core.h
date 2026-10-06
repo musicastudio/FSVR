@@ -78,11 +78,14 @@ struct Surface {
     int weight[256] = {}, chroma[256] = {};
 };
 
+// A picture font's strip, or a TrueType font (skin.json "fonts") rasterized into one at the skin's scale.
 struct Font {
     Image img;
     int top = 0, height = 0;     // glyph rows in img
     int ink0 = 0, ink1 = 0;      // the cap band: glyph box rows from the cap tops down to the baseline
-    int x[256] = {}, w[256] = {};
+    int x[256] = {}, w[256] = {}; // each glyph's cell in img
+    int ox[256] = {};            // where the cell is drawn from the pen (a TrueType glyph's overhang to the left)
+    int adv[256] = {};           // how far the pen moves, in 1/64 px
     uint32_t colour = 0xffffffff; // average colour of its opaque pixels
     uint32_t caret = 0, selection = 0x803c78d8;   // text entry; caret 0 = colour (skin.json "fonts")
     int width(const std::string& utf8) const;
@@ -110,6 +113,7 @@ struct Action {
                                  // Presets: the data table; Cycle: the var it steps
     std::vector<std::string> values;   // Cycle: the var's values in order, wrapping past the last
     Vars vars;                   // Goto and Set; Data and Modal: text key (may hold {vars}) to text
+    Vars set;                    // Goto and Value: skin-wide vars it sets before it shows the view
     double amount = 0;           // Step; Value: the value it sets
     std::string key, nameKey;    // Presets: the envelope data key, the text key of the name field
     bool save = false;           // Presets: store into the chosen slot instead of loading it
@@ -253,7 +257,7 @@ struct Widget {
     int first = 36, count = 61;  // piano: MIDI note of the first key, number of keys
     int velocity = 0;            // piano: a fixed velocity, 0 = from the height on the key
     bool glide = true;           // piano: dragging across keys plays them
-    int keyImages[9] = {-1, -1, -1, -1, -1, -1, -1, -1, -1};   // piano: c d e f g a b black top
+    int keyImages[10] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1};   // piano: c d e f g a b black top low
     bool surface = true;         // false keeps the skin's surface off all it draws (an embed: its whole view)
     Json json;                   // the whole widget object, for fields only a custom kind reads
 };
@@ -292,6 +296,12 @@ public:
     // menu and tooltip chrome, defaults of pixel fields, drag rates). 1.5 for a skin drawn at 1.5x.
     double density = 1;
     int dp(double v) const { return (int)std::lround(v * density); }   // built-in geometry at this density
+    // skin.json "scales": the window scales the skin is drawn at, each a load of the skin with its geometry,
+    // fonts and density multiplied and its artwork from scales/<scale>/ (or the 1x art resampled). Empty:
+    // the window is the 1x canvas repeated pixel for pixel at 1x to 4x.
+    std::vector<double> scales;
+    double scale = 1;             // the scale this load is at
+    std::shared_ptr<const std::map<std::string, std::string>> files;   // what it was loaded from, for another scale
     int lw() const { return std::max(1, dp(1)); }                     // line width of built-in drawings
     Vars vars;
     std::vector<ParamDef> params;
@@ -320,6 +330,8 @@ public:
 
 // Loads a skin folder; null (and *error) on failure. loadSkin() uses it for HOLLOW_SKIN_DIR.
 std::shared_ptr<Skin> loadSkinDir(const std::string& dir, std::string* error = nullptr);
+// The same skin loaded again at another of its scales.
+std::shared_ptr<Skin> scaledSkin(const Skin& base, double scale, std::string* error = nullptr);
 // Signature of every file's name and modification time under dir, for live reload polling.
 uint64_t skinDirStamp(const std::string& dir);
 
@@ -451,12 +463,13 @@ public:
     Gui(const Skin* skin, State& state, Editor::Host* host, const std::string& root = "");
     ~Gui();
     void setSkin(const Skin* skin);              // live reload: rebuild, keeping the GUI state
-    int width() const { return w_; }             // canvas size (root view, scale 1)
+    int width() const { return w_; }             // canvas size (root view, at the skin's scale)
     int height() const { return h_; }
-    int scale() const { return scale_; }
-    void setScale(int s);
+    int scale() const { return scale_; }         // pixel repeats from canvas to window (1 for a skin with "scales")
+    double zoom() const { return zoom_; }        // the skin's scale the canvas is drawn at
+    void setScale(double s);                     // one of the skin's "scales", else 1 to 4 pixel repeats
     std::string uiJson() const;
-    void applyUi(const std::string& json);
+    void applyUi(const std::string& json, bool withScale = true);   // withScale: its "scale" too
     const std::vector<uint32_t>& pixels();       // repaints what is dirty, then returns the canvas
     void invalidate(Rect r);
     void invalidateAll() { invalidate({0, 0, w_, h_}); }
@@ -542,7 +555,10 @@ private:
         size_t caret = 0, anchor = 0;            // byte offsets; the selection runs between them
         std::function<void(const std::string&)> commit;
     };
-    const Skin* skin_;
+    const Skin* skin_;                           // what is drawn: base_, or zoomed_ at another scale
+    const Skin* base_;                           // the skin at 1x
+    std::shared_ptr<Skin> zoomed_;
+    double zoom_ = 1;
     State& state_;
     Editor::Host* host_;
     std::shared_ptr<Skin> owned_;

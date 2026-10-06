@@ -179,12 +179,16 @@ bool State::hasData(const std::string& key) const {
     return impl_->data.count(key) != 0;
 }
 
+// Text data under a key starting "live." is what a processor shows (a display's points): never saved, and
+// setting it never marks the instance modified.
+static bool isLive(const std::string& key) { return key.compare(0, 5, "live.") == 0; }
+
 void State::setData(const std::string& key, const std::string& value) {
     std::lock_guard<std::mutex> g(impl_->uiLock);
     auto it = impl_->data.find(key);
     if (it != impl_->data.end() && it->second == value) return;
     impl_->data[key] = value;
-    impl_->modified.store(true);
+    if (!isLive(key)) impl_->modified.store(true);
 }
 
 // ---- what the audio side knows ----------------------------------------------------------------
@@ -294,7 +298,8 @@ std::string State::save() const {
     for (size_t i = 0; i < size(); ++i) s += "param " + def(i).id + " " + formatNumber("%.17g", get(i)) + "\n";
     {
         std::lock_guard<std::mutex> g(impl_->uiLock);
-        for (auto& kv : impl_->data) s += "data [" + jsonQuote(kv.first) + "," + jsonQuote(kv.second) + "]\n";
+        for (auto& kv : impl_->data)
+            if (!isLive(kv.first)) s += "data [" + jsonQuote(kv.first) + "," + jsonQuote(kv.second) + "]\n";
     }
     for (auto& cp : midiMap()) s += "cc " + std::to_string(cp.first) + " " + def(cp.second).id + "\n";
     impl_->modified.store(false);
