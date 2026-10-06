@@ -1,48 +1,250 @@
 {
  "size": [
-  1422,
-  843
+  1514,
+  922
  ],
  "fill": {
-  "colour": "#b0b0b0ff"
+  "image": "backgrounds/main"
  },
  "fit": true,
  "widgets": [
-  {
-   "type": "plate",
-   "name": "deco_1",
-   "rect": [
-    17,
-    71,
-    124,
-    30
-   ],
-   "layer": 0,
-   "fill": {
-    "image": "panels/group_box"
-   }
-  },
   {
    "type": "embed",
    "name": "topbar",
    "rect": [
     0,
     0,
-    1422,
+    1514,
     134
    ],
    "view": "topbar"
   },
   {
-   "type": "embed",
-   "name": "sidebar",
+   "type": "button",
+   "name": "tab_browser",
    "rect": [
-    0,
-    134,
-    188,
-    535
+    8,
+    136,
+    164,
+    44
    ],
-   "view": "sidebar",
+   "layer": 4,
+   "fill": {
+    "image": "buttons/tab_browser"
+   },
+   "text": {
+    "text": "Browser",
+    "font": "tab_caption",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    4,
+    2,
+    4,
+    10
+   ],
+   "hoverTiles": true,
+   "action": {
+    "goto": "page_library",
+    "stack": "pages"
+   },
+   "showIf": {
+    "param": "gui.hide_editor",
+    "equals": 0
+   },
+   "tip": "Preset browser: performances, voices and Fseqs"
+  },
+  {
+   "type": "button",
+   "name": "tab_parts",
+   "rect": [
+    172,
+    136,
+    164,
+    44
+   ],
+   "layer": 4,
+   "fill": {
+    "image": "buttons/tab_parts"
+   },
+   "text": {
+    "text": "Parts",
+    "font": "tab_caption",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    4,
+    2,
+    4,
+    10
+   ],
+   "hoverTiles": true,
+   "action": {
+    "goto": "page_parts",
+    "stack": "pages"
+   },
+   "showIf": {
+    "param": "gui.hide_editor",
+    "equals": 0
+   },
+   "tip": "The four parts' settings"
+  },
+  {
+   "type": "button",
+   "name": "tab_performance",
+   "rect": [
+    336,
+    136,
+    164,
+    44
+   ],
+   "layer": 4,
+   "fill": {
+    "image": "buttons/tab_performance"
+   },
+   "text": {
+    "text": "Performance",
+    "font": "tab_caption",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    4,
+    2,
+    4,
+    10
+   ],
+   "hoverTiles": true,
+   "action": {
+    "goto": "page_master",
+    "stack": "pages"
+   },
+   "showIf": {
+    "param": "gui.hide_editor",
+    "equals": 0
+   },
+   "tip": "The performance's global settings"
+  },
+  {
+   "type": "button",
+   "name": "tab_effects",
+   "rect": [
+    500,
+    136,
+    164,
+    44
+   ],
+   "layer": 4,
+   "fill": {
+    "image": "buttons/tab_effects"
+   },
+   "text": {
+    "text": "Effects",
+    "font": "tab_caption",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    4,
+    2,
+    4,
+    10
+   ],
+   "hoverTiles": true,
+   "action": {
+    "goto": "page_fx",
+    "stack": "pages"
+   },
+   "showIf": {
+    "param": "gui.hide_editor",
+    "equals": 0
+   },
+   "tip": "Insertion, variation, reverb and EQ"
+  },
+  {
+   "type": "button",
+   "name": "tab_fseq",
+   "rect": [
+    664,
+    136,
+    164,
+    44
+   ],
+   "layer": 4,
+   "fill": {
+    "image": "buttons/tab_fseq"
+   },
+   "text": {
+    "text": "Fseq",
+    "font": "tab_caption",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    4,
+    2,
+    4,
+    10
+   ],
+   "hoverTiles": true,
+   "action": {
+    "goto": "page_fseq",
+    "stack": "pages"
+   },
+   "showIf": {
+    "param": "gui.hide_editor",
+    "equals": 0
+   },
+   "tip": "Format Sequencing (Fseq)"
+  },
+  {
+   "type": "button",
+   "name": "tab_easy",
+   "rect": [
+    828,
+    136,
+    164,
+    44
+   ],
+   "layer": 4,
+   "fill": {
+    "image": "buttons/tab_easy"
+   },
+   "text": {
+    "text": "Easy",
+    "font": "tab_caption",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    4,
+    2,
+    4,
+    10
+   ],
+   "hoverTiles": true,
+   "action": {
+    "goto": "page_quick",
+    "stack": "pages"
+   },
+   "showIf": {
+    "param": "gui.hide_editor",
+    "equals": 0
+   },
+   "tip": "Quick edits"
+  },
+  {
+   "type": "embed",
+   "name": "pages",
+   "rect": [
+    8,
+    172,
+    1235,
+    536
+   ],
+   "view": "page_library",
    "showIf": {
     "param": "gui.hide_editor",
     "equals": 0
@@ -50,14 +252,14 @@
   },
   {
    "type": "embed",
-   "name": "pages",
+   "name": "opcol",
    "rect": [
-    188,
-    134,
-    1234,
-    535
+    1251,
+    138,
+    255,
+    570
    ],
-   "view": "page_library",
+   "view": "opcol",
    "showIf": {
     "param": "gui.hide_editor",
     "equals": 0
@@ -68,9 +270,9 @@
    "name": "keys",
    "rect": [
     0,
-    669,
-    1422,
-    174
+    708,
+    1514,
+    214
    ],
    "view": "keys",
    "showIf": {
@@ -92,8 +294,8 @@
    "name": "keys_bar",
    "rect": [
     0,
-    669,
-    1422,
+    708,
+    1514,
     6
    ],
    "view": "keys_hidden",
@@ -117,8 +319,8 @@
    "rect": [
     0,
     134,
-    1422,
-    174
+    1514,
+    214
    ],
    "view": "keys",
    "showIf": {
@@ -141,7 +343,7 @@
    "rect": [
     0,
     134,
-    1422,
+    1514,
     6
    ],
    "view": "keys_hidden",
@@ -165,8 +367,8 @@
    "rect": [
     0,
     0,
-    1422,
-    843
+    1514,
+    922
    ],
    "layer": 7,
    "fill": {
@@ -178,8 +380,8 @@
    "type": "embed",
    "name": "about_box",
    "rect": [
-    391,
-    181,
+    437,
+    221,
     640,
     480
    ],

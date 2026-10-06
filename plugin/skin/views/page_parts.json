@@ -3,9 +3,6 @@
   1235,
   536
  ],
- "fill": {
-  "image": "backgrounds/page"
- },
  "widgets": [
   {
    "type": "plate",
@@ -1860,9 +1857,9 @@
    "type": "plate",
    "name": "pan_scale_1_label",
    "rect": [
-    202,
+    199,
     476,
-    58,
+    64,
     18
    ],
    "fill": {
@@ -3762,9 +3759,9 @@
    "type": "plate",
    "name": "pan_scale_2_label",
    "rect": [
-    507,
+    504,
     476,
-    58,
+    64,
     18
    ],
    "fill": {
@@ -5539,9 +5536,9 @@
    "type": "plate",
    "name": "pan_scale_3_label",
    "rect": [
-    812,
+    809,
     476,
-    58,
+    64,
     18
    ],
    "fill": {
@@ -7316,9 +7313,9 @@
    "type": "plate",
    "name": "pan_scale_4_label",
    "rect": [
-    1117,
+    1114,
     476,
-    58,
+    64,
     18
    ],
    "fill": {

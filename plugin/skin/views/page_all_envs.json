@@ -3,9 +3,6 @@
   1235,
   536
  ],
- "fill": {
-  "image": "backgrounds/page"
- },
  "widgets": [
   {
    "type": "plate",
@@ -182,7 +179,7 @@
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "1"
     }
    },
@@ -343,7 +340,7 @@
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "2"
     }
    },
@@ -504,7 +501,7 @@
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "3"
     }
    },
@@ -665,7 +662,7 @@
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "4"
     }
    },
@@ -826,7 +823,7 @@
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "5"
     }
    },
@@ -987,7 +984,7 @@
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "6"
     }
    },
@@ -1148,7 +1145,7 @@
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "7"
     }
    },
@@ -1309,7 +1306,7 @@
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "8"
     }
    },

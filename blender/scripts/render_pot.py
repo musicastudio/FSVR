@@ -1,0 +1,79 @@
+# Renders the pot filmstrips from pot.blend into the skin at every scale: knobs/rotary_large and rotary_small,
+# 128 frames each, frame 0 pointing at 7:30 and frame 127 at 4:30, as the skin's knob kind expects.
+#   In Blender, with pot.blend open (blender/scripts on sys.path): import render_pot; render_pot.run()
+# The groove is shaped for the pot's size at 1x and the frame is only rendered larger or smaller, so every
+# scale shows the same pot.
+import bmesh, math, os, sys
+import bpy
+import numpy as np
+HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+import kit
+
+FRAMES = 128
+# px square at 1x (ortho_scale 2.0 fills the frame either way), then the groove's inner and outer end as a
+# fraction of the half-width. The small pot draws a shorter pointer than a straight scale of the large one,
+# and the same ~2.4 px width at both sizes; the groove keeps both.
+SIZES = {"rotary_large": (56, 0.09, 0.52), "rotary_small": (44, 0.14, 0.50)}
+GROOVE_PX = 2.6     # width across the top of the cap
+GROOVE_DEPTH = 0.12 # scene units
+CAP_TOP = 0.30
+
+
+def shape_groove(cap, cut, px, r0, r1):
+    # a capsule lying along the pointer, sunk so its chord at the cap top is GROOVE_PX wide; built in the cap's
+    # local units since it is parented to the cap
+    hw = GROOVE_PX / px                        # half width in scene units (half-width = px/2)
+    rho = (hw ** 2 + GROOVE_DEPTH ** 2) / (2 * GROOVE_DEPTH)
+    a, b = r0 + hw, r1 - hw
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=48, v_segments=24, radius=rho)
+    s = cap.scale.x
+    for v in bm.verts:
+        v.co.y += b if v.co.y > 0 else a
+        v.co.x /= s
+        v.co.y /= s
+        v.co.z += CAP_TOP + rho - GROOVE_DEPTH
+    bm.to_mesh(cut.data)
+    bm.free()
+
+
+def run(scales=kit.SCALES, samples=96):
+    sc = bpy.context.scene
+    cap = bpy.data.objects["Cap"]
+    cut = bpy.data.objects["PointerGroove"]
+    try:
+        prefs = bpy.context.preferences.addons['cycles'].preferences
+        prefs.compute_device_type = 'OPTIX'
+        prefs.get_devices()
+        for d in prefs.devices:
+            d.use = d.type != 'CPU'
+        sc.cycles.device = 'GPU'
+    except Exception:
+        pass
+    sc.cycles.samples = samples
+    tmp = os.path.join(bpy.app.tempdir, "pot_frame.png")
+    sc.render.image_settings.file_format = 'PNG'
+    sc.render.image_settings.color_mode = 'RGBA'
+    sc.render.filepath = tmp
+    for name, (px, r0, r1) in SIZES.items():
+        shape_groove(cap, cut, px, r0, r1)
+        for s in scales:
+            n = kit.lround(px * s)
+            sc.render.resolution_x = sc.render.resolution_y = n
+            strip = []
+            for k in range(FRAMES):
+                cap.rotation_euler.z = math.radians(135 - 270 * k / (FRAMES - 1))
+                bpy.ops.render.render(write_still=True)
+                img = bpy.data.images.load(tmp)
+                strip.append(np.array(img.pixels[:], dtype=np.float32).reshape(n, n, 4)[::-1].copy())
+                bpy.data.images.remove(img)
+            kit.save(np.concatenate(strip), "knobs/" + name, s)
+        kit.meta("knobs/" + name, tiles=FRAMES, surface=False)
+    cap.rotation_euler.z = 0
+    sc.render.resolution_x = sc.render.resolution_y = 56
+
+
+if __name__ == '__main__':
+    run()

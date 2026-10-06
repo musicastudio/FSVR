@@ -1,7 +1,8 @@
 // check_gui: the FSVR editor end to end without a window. The real skin and the real processor, one Hollow
 // Gui over them, driven as a mouse and a keyboard would drive it: widgets found by name, clicks, drags,
 // right-clicks and typing, then the params, text data, menus and modals checked. The top bar's menus and
-// toggles, the keyboard's lit keys, every Navigator page, the skin's keyboard shortcuts and the tooltips that name them,
+// toggles, the keyboard's lit keys, every page by its tab or the operator column's buttons, the operator panel and
+// the waveform the engine draws for it, the skin's keyboard shortcuts and the tooltips that name them,
 // the browser and its right-click menus, every dialog, the modal's veil,
 // Escape and close X, the close prompt, the LCD's scale menu and the About box; then a sweep of every page's
 // dials, faders, dropdowns and toggles. Exits non-zero on any failure.
@@ -220,11 +221,19 @@ int main() {
         u.click("topbar/knobs_tone");
         CHECK(u.shows("topbar/attack") && !u.shows("topbar/kn1"), "Tone did not show the part's knobs");
 
-        if (u.click("topbar/lcd_scale")) u.menuIs({"1x", "2x", "3x", "4x"}, "the LCD's scale");
+        // The scales are the skin's, each drawn at its own size rather than the 1x canvas magnified.
+        const int wide = u.gui.width();
+        if (u.click("topbar/lcd_scale")) u.menuIs({"0.5x", "0.75x", "1x", "1.5x", "2x"}, "the LCD's scale");
         u.choose("2x");
-        CHECK(u.gui.scale() == 2, "the scale is %dx, not 2x", u.gui.scale());
+        CHECK(u.gui.zoom() == 2 && u.gui.scale() == 1 && u.gui.width() == 2 * wide, "2x drew %d px wide at %gx (%d repeats), not %d",
+              u.gui.width(), u.gui.zoom(), u.gui.scale(), 2 * wide);
+        CHECK(u.ui().find("\"scale\":2,") != std::string::npos, "the session does not keep 2x");
+        u.click("topbar/lcd_scale");
+        u.choose("0.75x");
+        CHECK(u.gui.zoom() == 0.75 && u.shows("tab_parts"), "0.75x did not draw the window");
         u.click("topbar/lcd_scale");
         u.choose("1x");
+        CHECK(u.gui.zoom() == 1 && u.gui.width() == wide, "1x came back %d px wide, not %d", u.gui.width(), wide);
 
         // Right-clicking empty space opens nothing: the scale is the LCD's.
         u.rclickAt(3, 3);
@@ -235,17 +244,28 @@ int main() {
         u.click("about_box/close_x");
         CHECK(u.get("gui.about_open") == 0, "About's X did not close it");
 
-        // ---- every Navigator page -------------------------------------------------------------------
+        // ---- every page: the tabs, and the operator column's buttons ----------------------------------
         const std::pair<const char*, const char*> pages[] = {
-            {"nav_tags", "page_parts"}, {"nav_master", "page_master"}, {"nav_fx", "page_fx"}, {"nav_arp", "page_fseq"},
-            {"nav_quick", "page_quick"}, {"nav_expert", "page_all_ops"}, {"nav_all_envs", "page_all_envs"},
-            {"nav_mod_matrix", "page_mod_matrix"}, {"nav_key_scaling", "page_key_scaling"}, {"nav_spectrum", "page_filter"},
-            {"nav_pitch", "page_pitch"}, {"nav_op_1", "page_operator"}, {"nav_op_8", "page_operator"}, {"nav_library", "page_library"}};
+            {"tab_parts", "page_parts"}, {"tab_performance", "page_master"}, {"tab_effects", "page_fx"}, {"tab_fseq", "page_fseq"},
+            {"tab_easy", "page_quick"}, {"opcol/page_all_ops", "page_all_ops"}, {"opcol/page_all_envs", "page_all_envs"},
+            {"opcol/page_mod", "page_mod_matrix"}, {"opcol/page_keysc", "page_key_scaling"}, {"opcol/page_filter", "page_filter"},
+            {"opcol/page_pitch", "page_pitch"}, {"opcol/edit", "page_operator"}, {"tab_browser", "page_library"}};
         for (auto& p : pages) {
-            u.click(std::string("sidebar/") + p.first);
+            u.click(p.first);
             CHECK(u.ui().find(std::string("\"view\":\"") + p.second + "\"") != std::string::npos || (std::string(p.second) == "page_library" && u.shows("pages/library")),
                   "%s did not open %s", p.first, p.second);
         }
+
+        // ---- the operator panel: it picks the operator the operator page shows, and draws the engine's wave
+        u.click("opcol/op_6");
+        CHECK(u.ui().find("\"op\":\"6\"") != std::string::npos, "the panel's 6 did not pick operator 6");
+        u.click("opcol/edit");
+        CHECK(u.ui().find("\"view\":\"page_operator\"") != std::string::npos && u.shows("pages/fm_matrix/op_6"),
+              "Edit Operator did not open the operator page");
+        CHECK(u.until([&] { return u.data("live.wave.p1.6").size() > 128; }), "the engine drew no wave for operator 6 (\"%s\")",
+              u.data("live.wave.p1.6").substr(0, 40).c_str());
+        CHECK(u.st->save().find("live.wave") == std::string::npos, "the panel's wave went into the saved session");
+        u.click("opcol/op_1");
 
         // ---- the keyboard shortcuts (skin.json "keys", issue #11) -------------------------------------
         {
@@ -293,28 +313,28 @@ int main() {
             // Every shortcut names itself in the tooltip of the control that does the same thing, so the chord
             // is never written out twice and never hides. The wording of a tip is the skin's to change, so
             // only the chord it ends with is checked here, and that it kept the words it had.
-            u.click("sidebar/nav_quick");
+            u.click("tab_easy");
             auto tipEnds = [&](const char* path, const char* chord) {
                 const std::string got = u.gui.tipOf(path), want = std::string(" (") + chord + ")";
                 CHECK(got.size() > want.size() && got.compare(got.size() - want.size(), want.size(), want) == 0,
                       "%s reads \"%s\", not something ending \"%s\"", path, got.c_str(), want.c_str());
             };
-            tipEnds("sidebar/nav_spectrum", "Alt+F");
-            tipEnds("sidebar/nav_fx", "Alt+X");
-            tipEnds("sidebar/nav_library", "Alt+B");
-            tipEnds("sidebar/nav_all_ops", "Alt+O");
-            tipEnds("sidebar/nav_all_envs", "Alt+E");
-            tipEnds("sidebar/nav_mod_matrix", "Alt+M");
-            tipEnds("sidebar/nav_key_scaling", "Alt+K");
-            tipEnds("sidebar/nav_pitch", "Alt+P");
-            tipEnds("sidebar/nav_arp", "Alt+S");
-            tipEnds("sidebar/nav_tags", "Alt+T");
-            tipEnds("sidebar/nav_master", "Alt+R");
-            tipEnds("sidebar/nav_quick", "Alt+Z");
-            tipEnds("sidebar/nav_op_3", "Alt+3");
+            tipEnds("opcol/page_filter", "Alt+F");
+            tipEnds("tab_effects", "Alt+X");
+            tipEnds("tab_browser", "Alt+B");
+            tipEnds("opcol/page_all_ops", "Alt+O");
+            tipEnds("opcol/page_all_envs", "Alt+E");
+            tipEnds("opcol/page_mod", "Alt+M");
+            tipEnds("opcol/page_keysc", "Alt+K");
+            tipEnds("opcol/page_pitch", "Alt+P");
+            tipEnds("tab_fseq", "Alt+S");
+            tipEnds("tab_parts", "Alt+T");
+            tipEnds("tab_performance", "Alt+R");
+            tipEnds("tab_easy", "Alt+Z");
             tipEnds("topbar/part_2", "Shift+2");
+            u.click("opcol/page_all_ops");
+            tipEnds("pages/fm_matrix/op_3", "Alt+3");   // the matrix's box opens the operator's page, as Alt+3 does
             // Alt+N cycles the var, so both buttons that set one of its values own the chord.
-            u.click("sidebar/nav_all_ops");
             tipEnds("pages/voiced", "Alt+N");
             tipEnds("pages/unvoiced", "Alt+N");
         }
@@ -328,7 +348,7 @@ int main() {
             CHECK(u.until([&] { return u.get("gui.edited") == 1; }), "an edit did not mark the performance edited");
             if (u.rect("topbar/volume", r)) u.clickAt(r.x + r.w / 2, r.y + r.h / 2, true);
             CHECK(u.get("perf.volume") == u.st->def((size_t)u.at("perf.volume")).def, "a double-click did not reset Volume (%g)", u.get("perf.volume"));
-            u.click("sidebar/nav_quick");
+            u.click("tab_easy");
             if (u.rect("pages/attack", r)) u.drag(r.x + r.w / 2, r.y + r.h / 2, 0, -300);
             CHECK(u.get("part.attack.p1") == 63, "Easy's Attack fader reached %g, not 63", u.get("part.attack.p1"));
         }
@@ -358,7 +378,7 @@ int main() {
         u.click(M + "cancel");
 
         // ---- Save Current Preset into a new bank, typed into the modal -------------------------------
-        u.click("sidebar/nav_library");
+        u.click("tab_browser");
         CHECK(u.openSave([&] { u.click("topbar/save_menu"); u.choose("Save Current Preset..."); }) && u.data("save.name") == "Zap !",
               "Save Current Preset did not open the Save modal (\"%s\")", u.data("save.name").c_str());
         u.row(M + "banks", 0);
@@ -479,10 +499,10 @@ int main() {
         // ---- every page's controls: each dial and fader drags, each dropdown opens a menu, each toggle flips
         int dials = 0, drops = 0, toggles = 0;
         for (auto& p : pages) {
-            u.click(std::string("sidebar/") + p.first);
+            u.click(p.first);
             for (const auto& w : u.gui.probes()) {
                 const Widget& x = *w.w;
-                const bool here = w.path.rfind("pages/", 0) == 0 || w.path.rfind("topbar/", 0) == 0;
+                const bool here = w.path.rfind("pages/", 0) == 0 || w.path.rfind("topbar/", 0) == 0 || w.path.rfind("opcol/", 0) == 0;
                 if (!here || w.path.find("hollow_modal") != std::string::npos) continue;
                 const int cx = w.r.x + w.r.w / 2, cy = w.r.y + w.r.h / 2;
                 if (x.kind == Kind::Dial && w.param >= 0 && x.midi < 0) {

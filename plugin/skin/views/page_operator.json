@@ -3,9 +3,6 @@
   1235,
   536
  ],
- "fill": {
-  "image": "backgrounds/page"
- },
  "widgets": [
   {
    "type": "plate",
@@ -133,7 +130,7 @@
    "rect": [
     333,
     16,
-    101,
+    105,
     20
    ],
    "layer": 0,

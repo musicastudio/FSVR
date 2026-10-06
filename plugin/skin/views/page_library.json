@@ -3,41 +3,13 @@
   1235,
   536
  ],
- "fill": {
-  "image": "backgrounds/page"
- },
  "widgets": [
-  {
-   "type": "plate",
-   "name": "library_title",
-   "rect": [
-    18,
-    15,
-    97,
-    23
-   ],
-   "layer": 4,
-   "text": {
-    "text": "Browser",
-    "font": "caption_white_12",
-    "align": "left"
-   },
-   "pad": [
-    22,
-    4,
-    22,
-    0
-   ],
-   "fill": {
-    "image": "panels/group_tab_dark"
-   }
-  },
   {
    "type": "embed",
    "name": "library",
    "rect": [
     12,
-    35,
+    16,
     1215,
     472
    ],

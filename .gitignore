@@ -21,3 +21,7 @@ tools/demo_scores.txt
 
 # reference manuals kept in docs/ for reading, not redistributed
 docs/*.pdf
+
+# Blender keeps the previous save beside the file
+*.blend1
+__pycache__/

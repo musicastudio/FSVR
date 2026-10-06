@@ -38,8 +38,9 @@ The header is the unit's front panel: the performance's volume, the LCD, a pod o
 - **Tone and KN.** With Tone lit the four knobs are the part's Attack, Release, Formant and FM; with KN lit they are KN1 to KN4, the control sources the performance's controller sets route.
 - **The monitor** shows the last note's first 32 harmonics and the output level. The top bezel button is panic, all notes off while held; the lower one arms MIDI learn: click a control, move a controller, and that CC drives it from then on. The assignments are saved with the session.
 - **Editor** and **Keys** hide the editor pages and the keyboard, and the window shrinks to what is left.
+- **The keyboard** along the bottom has 88 keys, A0 to C8. The pitch and mod wheels lie on their sides above it: drag right to raise them, so the pitch wheel bends up to the right and springs back when you let go.
 
-The navigator on the left opens the pages: Browser, Parts, Performance, Effects, Fseq, Easy, and the expert pages for the operators (1 to 8, each V for the voiced operator and N for the unvoiced, the noise generator), Ops and Env (all eight at once), Mod (controller sets, LFOs, the Formant and FM routes), KeySc, Filter and Pitch. Values read as the unit's display reads them: -24..+24, L63..R63, C-2..G8, the effect parameters in hertz, milliseconds or their named choices, an operator's frequency as a ratio or in hertz.
+The tabs across the top open the pages: Browser, Parts, Performance, Effects, Fseq and Easy. The operator column on the right is the operator panel: 1 to 8 pick an operator, V and N its voiced or unvoiced (noise generator) half, and it shows the operator's waveform as the engine makes it, with its most used settings and its amplitude EG; Edit Operator opens its whole page. Under it are the expert pages: Operators and Envelopes (all eight at once), Modulation (controller sets, LFOs, the Formant and FM routes), Key Scaling, Filter and Pitch. Values read as the unit's display reads them: -24..+24, L63..R63, C-2..G8, the effect parameters in hertz, milliseconds or their named choices, an operator's frequency as a ratio or in hertz.
 
 The expert pages share the algorithm matrix on the right. Its header holds the algorithm's number, with ▼ and ▲ to step it (or drag it, scroll it or double-click to type one), and the Feedback pot. **Select Algorithm** swaps the matrix for a browser of all 88, drawn as small matrices, 2x2, 3x3 or 4x4 at a time, scrolled with the wheel or the bar, and opened on the current one; click one to take it, or Cancel to keep the one you had.
 
@@ -100,7 +101,7 @@ Notes, bend, aftertouch, controllers, RPN and NRPN, clock and sysex reach the en
 
 ## Sessions
 
-The session holds every param, the engine's own bulk dumps, the morph corners and your MIDI learn assignments, so a project reopens exactly as it was saved. The params hosts see are every FS1R param for all four parts, the morph square, the knobs and the performance, voice and Fseq numbers; the editor's own state (pages, the browser's position, the selected part, the scale) is saved with it but not listed. The window's size, 1x to 4x, is the scale in the LCD's bottom right corner: click it.
+The session holds every param, the engine's own bulk dumps, the morph corners and your MIDI learn assignments, so a project reopens exactly as it was saved. The params hosts see are every FS1R param for all four parts, the morph square, the knobs and the performance, voice and Fseq numbers; the editor's own state (pages, the browser's position, the selected part, the scale) is saved with it but not listed. The window's size, 0.5x to 2x, is the scale in the LCD's bottom right corner: click it. Each size is drawn at its own resolution, not magnified.
 
 ## What is modelled and what is read
 

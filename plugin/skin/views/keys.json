@@ -1,13 +1,153 @@
 {
-  "size": [1422, 174],
-  "fill": {"image": "backgrounds/keys"},
-  "widgets": [
-    {"type": "plate", "name": "pitch_wheel_label", "rect": [39, 14, 61, 19], "layer": 2, "text": {"text": "Pitch", "font": "caption_grey_12", "align": "center"}, "pad": [2, 2, 2, 2]},
-    {"type": "plate", "name": "mod_wheel_label", "rect": [108, 14, 61, 19], "layer": 2, "text": {"text": "Mod", "font": "caption_grey_12", "align": "center"}, "pad": [2, 2, 2, 2]},
-    {"type": "dial", "name": "pitch_wheel", "rect": [61, 39, 17, 92], "image": "faders/wheel", "sensitivity": 0.833333, "fine": 0.2, "wheel": 0.025, "margin": 12, "reset": "zero", "param": "keys.pitch_wheel", "midi": "bend", "spring": 0.5},
-    {"type": "dial", "name": "mod_wheel", "rect": [130, 39, 17, 92], "image": "faders/wheel", "sensitivity": 0.833333, "fine": 0.2, "wheel": 0.025, "margin": 12, "param": "keys.mod_wheel", "midi": "cc1"},
-    {"type": "custom", "name": "piano", "rect": [201, 14, 1197, 160], "kind": "piano", "layer": 3, "first": 36, "count": 73, "velocity": 64, "glide": false, "keyImages": {"c": "keyboard/key_c", "d": "keyboard/key_d", "e": "keyboard/key_e", "f": "keyboard/key_f", "g": "keyboard/key_g", "a": "keyboard/key_a", "b": "keyboard/key_b", "black": "keyboard/key_black", "top": "keyboard/key_c_top"}},
-    {"type": "plate", "name": "keys_shadow_left", "rect": [201, 14, 48, 161], "layer": 4, "fill": {"image": "keyboard/shadow_left"}},
-    {"type": "plate", "name": "keys_shadow_right", "rect": [1350, 14, 48, 161], "layer": 4, "fill": {"image": "keyboard/shadow_right"}}
-  ]
+ "size": [
+  1514,
+  214
+ ],
+ "fill": {
+  "image": "backgrounds/keys"
+ },
+ "widgets": [
+  {
+   "type": "plate",
+   "name": "pitch_wheel_slot",
+   "rect": [
+    68,
+    13,
+    100,
+    25
+   ],
+   "layer": 2,
+   "fill": {
+    "image": "faders/wheel_slot"
+   }
+  },
+  {
+   "type": "plate",
+   "name": "mod_wheel_slot",
+   "rect": [
+    244,
+    13,
+    100,
+    25
+   ],
+   "layer": 2,
+   "fill": {
+    "image": "faders/wheel_slot"
+   }
+  },
+  {
+   "type": "plate",
+   "name": "pitch_wheel_label",
+   "rect": [
+    24,
+    14,
+    44,
+    26
+   ],
+   "layer": 2,
+   "text": {
+    "text": "Pitch",
+    "font": "caption_white_12",
+    "align": "right",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    4,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "mod_wheel_label",
+   "rect": [
+    200,
+    14,
+    44,
+    26
+   ],
+   "layer": 2,
+   "text": {
+    "text": "Mod",
+    "font": "caption_white_12",
+    "align": "right",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    4,
+    0
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "pitch_wheel",
+   "rect": [
+    72,
+    17,
+    92,
+    17
+   ],
+   "image": "faders/wheel_h",
+   "sensitivity": 0.833333,
+   "fine": 0.2,
+   "wheel": 0.025,
+   "margin": 14,
+   "reset": "zero",
+   "param": "keys.pitch_wheel",
+   "midi": "bend",
+   "spring": 0.5,
+   "vertical": false,
+   "tip": "Pitch bend: right bends up, and it springs back"
+  },
+  {
+   "type": "dial",
+   "name": "mod_wheel",
+   "rect": [
+    248,
+    17,
+    92,
+    17
+   ],
+   "image": "faders/wheel_h",
+   "sensitivity": 0.833333,
+   "fine": 0.2,
+   "wheel": 0.025,
+   "margin": 14,
+   "param": "keys.mod_wheel",
+   "midi": "cc1",
+   "vertical": false,
+   "tip": "Modulation wheel (CC 1)"
+  },
+  {
+   "type": "custom",
+   "name": "piano",
+   "rect": [
+    33,
+    43,
+    1448,
+    161
+   ],
+   "kind": "piano",
+   "layer": 3,
+   "first": 21,
+   "count": 88,
+   "velocity": 64,
+   "glide": false,
+   "keyImages": {
+    "c": "keyboard/key_c",
+    "d": "keyboard/key_d",
+    "e": "keyboard/key_e",
+    "f": "keyboard/key_f",
+    "g": "keyboard/key_g",
+    "a": "keyboard/key_a",
+    "b": "keyboard/key_b",
+    "black": "keyboard/key_black",
+    "top": "keyboard/key_c_top",
+    "low": "keyboard/key_a_low"
+   }
+  }
+ ]
 }

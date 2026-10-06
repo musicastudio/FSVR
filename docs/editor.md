@@ -1,16 +1,51 @@
 # The FSVR editor
 
-The plug-in's editor covers everything the Yamaha FS1R has, in hammered aqua chrome: a [Hollow](../hollow/docs/framework.md) skin in `plugin/skin`, drawn by the framework's software renderer, and a processor (`plugin/plugin.cpp`) that answers it out of the engine. This file records the choices where software and the unit part ways, what the processor does for each control the unit never had, and the usability fixes from a sweep of every page. The skin is edited in place with the Hollow project's web editor, and its chrome is burnt into the artwork; [plugin_guide.md](plugin_guide.md) is how to use it.
+The plug-in's editor covers everything the Yamaha FS1R has, in hammered aqua chrome: a [Hollow](../hollow/docs/framework.md) skin in `plugin/skin`, drawn by the framework's software renderer, and a processor (`plugin/plugin.cpp`) that answers it out of the engine. This file records the choices where software and the unit part ways, what the processor does for each control the unit never had, and the usability fixes from a sweep of every page. The skin is edited in place with the Hollow project's web editor, its artwork is rendered in Blender (`blender/`, below) and its text is drawn at run time; [plugin_guide.md](plugin_guide.md) is how to use it.
 
 ## Rules
 
-- **Look.** Hammered aqua chrome over slate panels, with light FS1R touches: the green LCD, the dot font, the graphite pod and dark buttons. The pots, dropdowns and tags share one style across every page, on light translucent plates inside each group, and each group's title is a tab on top of its box, left-aligned with 45 degree sides. Whatever is lit (a toggle, the chosen page, part or operator) lights in the LCD's green, the green of the browser's chosen row. The pots' caps are graphite with a light pointer, and the faders' handle is that cap without its pointer at three quarters, on a disc of the panel's colour, over the track at half its width.
-- **The chrome is in the artwork.** Hollow's runtime can lay a surface texture over a skin's artwork; FSVR's skin has its chrome burnt into the images instead (`hollow-bake`), so every place renders the same pixels with no surface at run time, checked by rendering the window both ways.
+- **Look.** One sheet of hammered aqua chrome with wells cut into it, with light FS1R touches: the green LCD, the dot font, the graphite pod and dark buttons. Every well (the pages, the operator column, the keyboard) has 45 degree walls and a floor of steel brushed at 45 degrees. The page tabs are square-ended raised plates; the chosen one is cut into the chrome with the content well, so the tab and its page are one recessed piece. The pots, dropdowns and tags share one style across every page, on light translucent plates inside each group, and each group's title is a tab on top of its box, left-aligned with 45 degree sides. Whatever is lit (a toggle, the chosen page, part or operator) lights in the LCD's green, the green of the browser's chosen row. The pots' caps are graphite with a light pointer, and the faders' handle is that cap without its pointer at three quarters, on a disc of the panel's colour, over the track at half its width.
+- **The artwork is rendered, at every scale.** Every image in the skin is a render of a Blender component (`blender/`, below), rendered again for each scale the window offers (0.5x, 0.75x, 1x, 1.5x and 2x) rather than magnified, so each scale is drawn at its own resolution.
+- **No text in the artwork.** Every caption, value, name and number is drawn at run time from the skin's TrueType fonts: Saira Semi Condensed (SIL Open Font License, `plugin/skin/fonts/OFL.txt`) for the interface, and FSVR LCD, the LCD's 5 x 7 dot font as square dots, for the LCDs. The wordmarks are artwork, not text. The About box sets its text in Saira rather than the installer's Analog Whispers, which stays out of the repository.
 - **Limits from the unit's memory or panel go.** Software has no battery-backed RAM to share out and no physical knobs, so a limit that exists only for those reasons is dropped from the GUI.
 - **Limits from the unit's data formats stay.** FSVR reads and writes the FS1R's own sysex, so four parts, eight voiced and eight unvoiced operators, one Fseq per performance, the insertion, variation, reverb and EQ chain, and the name lengths all keep the format's shape.
 - **Limits in the engine stay in the GUI until the engine lifts them.** The engine runs the FS1R's own firmware, rewritten from the decompiled ROM, so its 32-note allocation is real. The GUI keeps the unit's note reserve controls rather than promising voices the engine won't play.
 - **Unit-only settings keep their params.** A setting with no meaning in software loses its control but keeps its host param and sysex mapping, so a dump round-trips unchanged.
 - **The processor never models synthesis.** Every param is a sysex parameter change into the engine at the address `plugin/skin/data/fs1r_sysex.json` gives it, and what the engine holds comes back into the params out of its own bulk dumps.
+
+## The window
+
+The window is 1514 x 922 at 1x (`blender/scripts/layout.py` has every rect, and `plugin/skin/views/main.json` follows it).
+
+- **The top bar** keeps its controls: the LCD, Save, Import, Editor and Keys in that order, the part buttons, the knob mode switch and its four pots, and the monitor, whose harmonic numbers are drawn text now.
+- **The page tabs** run across the top of the content well: Browser, Parts, Performance, Effects, Fseq and Easy. They were the Navigator's page buttons; the chosen tab sinks into the well (above). The page itself is the well's floor, so pages draw no ground of their own.
+- **The operator column** on the right holds the operator panel and, under it, the expert pages as buttons with an icon and the page's full name: Operators, Envelopes, Modulation, Key Scaling, Filter and Pitch. An expert page shows in the content well with no tab chosen, and its button lights.
+- **The keyboard** spans the window: 88 keys, A0 to C8, in a well of its own, with the pitch and mod wheels lying on their sides in a strip above it. Dragging a wheel right raises it, so pitch bends up to the right; the pitch wheel springs back to the centre.
+- **Scales.** The LCD's scale readout opens the scales, 0.5x to 2x. Each is the skin loaded again with every rect, pad and font size multiplied and its art taken from `plugin/skin/scales/<scale>/`, and the choice is saved with the session.
+
+## The operator panel
+
+The operator column's panel is the operator page's most used settings, on whichever page is up.
+
+- **Which operator.** 1 to 8 and V/N pick the operator and the layer. They set the skin-wide `op` and `layer` vars, which the operator page, the matrix's operator boxes and Alt+1 to Alt+8 also set, so all of them agree on one operator. Edit Operator opens its page.
+- **The waveform** is the operator's output alone, two periods of it, from the engine itself: `fs1r::Device::operatorWave` runs the same `op_sample` the channels play, at a nominal 100 Hz with no modulation, and scales it to fill. The processor publishes every part's eight operators about three times a second as text data `live.wave.p<part>.<op>`, which Hollow neither saves with the session nor counts as an edit. An unvoiced operator shows NOISE BAND in its place. The form's name and the operator's frequency (a ratio, or hertz in fixed mode) sit over the trace.
+- **The controls.** Coarse, Fine, Detune and Level, then the spectral form and Ratio/Fixed with Skirt and Band Ratio; for an unvoiced operator Bandwidth, the pitch mode (Normal, Link FO, Link FF) and Resonance take their places. The amplitude EG is the operator page's own envelope, dragged the same way.
+
+## The art: Blender
+
+`blender/` holds the skin's artwork as Blender components, `blender/scripts/` the scripts that build and render them, and `blender/textures/` the textures they use. Each script's header says how to run it; `kit.py` is what they share (the studio, the materials, and writing a render into the skin at every scale with its tiles and nine-slice bands recorded in `skin.json`).
+
+| File | What it renders |
+|---|---|
+| `chrome.blend` | The window's chrome: the sheet, its wells, the page tabs raised and sunk (`build_chrome.py`, `render_chrome.py`) |
+| `buttons.blend`, `panels.blend`, `displays.blend`, `glyphs.blend` | The buttons, plates, LCDs, meters, tags and icons (`sprites.py`, with the icons as strokes in `icons.py`) |
+| `pot.blend`, `slider.blend`, `wheel.blend`, `keys.blend` | The pots, the faders and tracks, the wheels and the 88 keys (`render_pot.py`, `render_slider.py`, `render_wheel.py`, `render_keys.py`) |
+| `logos.blend` | The FSVR wordmark from `blender/logos/fsvr_wordmark.svg` and the musica.studio wordmark (`render_logos.py`) |
+
+- **The blue mottled texture** is the old skin's chrome, isolated: `extract_aqua.py` divided each of the old window's backgrounds by its panel's lightness, stitched them across their seams and filled the gaps, giving `aqua_mottle.png` (the texture over the old window), `aqua_env.png` (its soft part, the blurred room it reflects) and `aqua_grain.png` (its hammered speckle, tileable). The chrome material lays `aqua_env` across the window and bends it with the surface's slope, as the old runtime's surface did, and adds the grain as both colour and dents, so it stays sharp at 2x.
+- **Lighting.** The new components are lit by two sun lamps from the old components' directions, Key from above the window's top edge and Rim low from its lower right, which light a big panel evenly whatever frame is rendered; lamps are kept out of reflections, which see a sky that is lighter towards the window's top. A shadow catcher under each sprite puts its soft shadow into the image's alpha.
+- **Sizes.** A sprite's size at a scale is its 1x size times the scale, rounded the way the runtime rounds (`std::lround`). The keys are rendered once at 4x and each is cut at its slot and box-filtered to the slot the piano kind places it in at that scale.
+- **PNGs** are written by `pngpack.py`: libpng's row filter heuristic, deflate level 9, RGB when opaque.
 
 ## The bank manager
 
@@ -91,7 +126,7 @@ The Fseq page's Import Audio makes an Fseq of your own out of a WAV, AIFF, MP3, 
 
 ### Keybindings
 
-The unit has no keyboard, so these are ours (issue #11): a way to reach any page without the mouse. They are `skin.json`'s `"keys"`, a Hollow facility ([skin-format.md](../hollow/docs/skin-format.md)), so each binding carries the same action as its Navigator button and the two cannot drift apart.
+The unit has no keyboard, so these are ours (issue #11): a way to reach any page without the mouse. They are `skin.json`'s `"keys"`, a Hollow facility ([skin-format.md](../hollow/docs/skin-format.md)), so each binding carries the same action as its tab or button and the two cannot drift apart.
 
 | Chord | Where it goes |
 |---|---|
@@ -105,14 +140,14 @@ The unit has no keyboard, so these are ours (issue #11): a way to reach any page
 
 - **The editor holds the keyboard while its window is up** and consumes only these chords; every other key goes on to the host, so a DAW keeps its own. A click in the editor takes the keyboard back after the host has had it.
 - **A dialog, or a field being typed into, takes every key**, space included, and no chord fires until it is done. That is what lets a preset be named "Hall 1 Pad" without a letter or a space going astray.
-- **Alt+1 to Alt+8 open the Operator page**, since `{op}` is read by that page alone; the other chords are their Navigator buttons. Alt+N steps the shared `layer` var, which the Operator, Ops and Env pages show, so pressing it elsewhere decides what those pages show when you next reach them. The issue asked for Alt+U; N is the mark the unit itself puts on an unvoiced operator, and the buttons say N, so the chord does too.
-- **Each chord names itself in the tooltip** of the control that does the same thing, which is where the Navigator's twelve page buttons got the tooltips they had been missing. Help > Keyboard Shortcuts, a page listing them all, is still to come: there is no Help menu yet to hang it on.
+- **Alt+1 to Alt+8 open the Operator page** on that operator, as a click on the matrix's operator box does: both set the skin-wide `op` the operator panel shows too; the other chords are their tabs and the operator column's page buttons. Alt+N steps the shared `layer` var, which the Operator, Ops and Env pages show, so pressing it elsewhere decides what those pages show when you next reach them. The issue asked for Alt+U; N is the mark the unit itself puts on an unvoiced operator, and the buttons say N, so the chord does too.
+- **Each chord names itself in the tooltip** of the control that does the same thing: the tabs, the operator column's page buttons and the matrix's operator boxes. Help > Keyboard Shortcuts, a page listing them all, is still to come: there is no Help menu yet to hang it on.
 - **Hosts take the keyboard off a plug-in's window, and the fix is a message hook.** A host may handle keys in its own message loop, where its accelerators are, so the editor's window never sees them however well it holds focus, and a plug-in that seems to need a click first is usually meeting this rather than a focus bug. So on Windows a skin with bindings hooks the host's message queue (`WH_GETMESSAGE`, `hollow/src/platform/win32.cpp`), takes the chords it uses and passes everything else on, which is what JUCE does and for the same reason. It needs nothing of the host or of the format, so every format works in every host tested, with no setting to turn on and no click first.
 - **The plug-in interface is the second route, and the cooperative one.** A host may also offer keys through the plug-in's own API rather than to the window, and Hollow answers VST2's `effEditKeyDown` through `Editor::key`. VST3 has such a call too, but the wrapper FSVR's VST3 is built with stubs it out, and CLAP has no key event and never will, deliberately: keyboard focus is the window system's job in its view, and VST2's and VST3's key APIs are the mistake, hosts having taken the keyboard away in the first place. So the hook above is what serves those two, and on Windows it makes this route redundant for all three. macOS and Linux need neither: the responder chain and X11 input focus deliver keys without a host in front of them, which is why JUCE hooks on Windows alone.
 
 ### Modals
 
-Every dialog but the About box is a Hollow modal: a view named `dialog_*`, opened by a `modal` action or by the processor through the text data `hollow.modal`, drawn centred over the window behind a dimming veil, with the keyboard (Escape closes it). They share one frame: a dark title bar with the title and a close X, the page's hammered aqua around the browser's dark stripes, a dark rim, dark buttons along the bottom right, text fields dark on a thin light rim, and lists in the browser's colours. The window grows to hold a modal when the editor is hidden.
+Every dialog but the About box is a Hollow modal: a view named `dialog_*`, opened by a `modal` action or by the processor through the text data `hollow.modal`, drawn centred over the window behind a dimming veil, with the keyboard (Escape closes it). They share one frame: a dark title bar with the title and a close X, the content well's brushed floor around the browser's dark stripes, a dark rim, dark buttons along the bottom right, text fields dark on a thin light rim, and lists in the browser's colours. The window grows to hold a modal when the editor is hidden.
 
 | Modal | Opened by |
 |---|---|
@@ -126,7 +161,7 @@ Every dialog but the About box is a Hollow modal: a view named `dialog_*`, opene
 
 ### Text overflow
 
-Hollow's `tools/overflow.py` measures text against its widget with the skin's own font strips, the way the runtime measures it: every static caption, every choice a dropdown can show, every label or the widest number a number field can show, and every list cell. It found 25 overflows in the pages as they stood, and a few more in the new controls as they went in; the skin has none. The fixes:
+Hollow's `tools/overflow.py` measures text against its widget with the skin's own fonts, the way the runtime measures it (for a TrueType font, its advances at its size plus its tracking): every static caption, every choice a dropdown can show, every label or the widest number a number field can show, and every list cell. It found 25 overflows in the pages as they stood, and a few more in the new controls as they went in; the skin has none. The fixes:
 
 - **Dropdowns.** The text pad cleared 14 px on the right while the arrow reaches 19 px in, so long choices ("Performance", "Int Voice 128") ran under the arrow. The pad is 21 px.
 - **Centred tags.** The label plates' text pad is 1 px each side (was 3 and 2), giving captions like "Transpose", "Bandwidth" and "Resonance" the room they need on the operator page.

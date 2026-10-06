@@ -29,16 +29,20 @@
    ],
    "layer": 4,
    "kind": "matrix_op",
-   "image": "buttons/matrix_op_1",
+   "image": "buttons/matrix_op",
    "letter": "1",
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "1"
     }
    },
-   "tip": "Operator 1"
+   "tip": "Operator 1",
+   "text": {
+    "text": "",
+    "font": "value_dark_12"
+   }
   },
   {
    "type": "custom",
@@ -51,16 +55,20 @@
    ],
    "layer": 4,
    "kind": "matrix_op",
-   "image": "buttons/matrix_op_2",
+   "image": "buttons/matrix_op",
    "letter": "2",
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "2"
     }
    },
-   "tip": "Operator 2"
+   "tip": "Operator 2",
+   "text": {
+    "text": "",
+    "font": "value_dark_12"
+   }
   },
   {
    "type": "custom",
@@ -73,16 +81,20 @@
    ],
    "layer": 4,
    "kind": "matrix_op",
-   "image": "buttons/matrix_op_3",
+   "image": "buttons/matrix_op",
    "letter": "3",
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "3"
     }
    },
-   "tip": "Operator 3"
+   "tip": "Operator 3",
+   "text": {
+    "text": "",
+    "font": "value_dark_12"
+   }
   },
   {
    "type": "custom",
@@ -95,16 +107,20 @@
    ],
    "layer": 4,
    "kind": "matrix_op",
-   "image": "buttons/matrix_op_4",
+   "image": "buttons/matrix_op",
    "letter": "4",
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "4"
     }
    },
-   "tip": "Operator 4"
+   "tip": "Operator 4",
+   "text": {
+    "text": "",
+    "font": "value_dark_12"
+   }
   },
   {
    "type": "custom",
@@ -117,16 +133,20 @@
    ],
    "layer": 4,
    "kind": "matrix_op",
-   "image": "buttons/matrix_op_5",
+   "image": "buttons/matrix_op",
    "letter": "5",
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "5"
     }
    },
-   "tip": "Operator 5"
+   "tip": "Operator 5",
+   "text": {
+    "text": "",
+    "font": "value_dark_12"
+   }
   },
   {
    "type": "custom",
@@ -139,16 +159,20 @@
    ],
    "layer": 4,
    "kind": "matrix_op",
-   "image": "buttons/matrix_op_6",
+   "image": "buttons/matrix_op",
    "letter": "6",
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "6"
     }
    },
-   "tip": "Operator 6"
+   "tip": "Operator 6",
+   "text": {
+    "text": "",
+    "font": "value_dark_12"
+   }
   },
   {
    "type": "custom",
@@ -161,16 +185,20 @@
    ],
    "layer": 4,
    "kind": "matrix_op",
-   "image": "buttons/matrix_op_7",
+   "image": "buttons/matrix_op",
    "letter": "7",
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "7"
     }
    },
-   "tip": "Operator 7"
+   "tip": "Operator 7",
+   "text": {
+    "text": "",
+    "font": "value_dark_12"
+   }
   },
   {
    "type": "custom",
@@ -183,16 +211,20 @@
    ],
    "layer": 4,
    "kind": "matrix_op",
-   "image": "buttons/matrix_op_8",
+   "image": "buttons/matrix_op",
    "letter": "8",
    "action": {
     "goto": "page_operator",
     "stack": "pages",
-    "vars": {
+    "set": {
      "op": "8"
     }
    },
-   "tip": "Operator 8"
+   "tip": "Operator 8",
+   "text": {
+    "text": "",
+    "font": "value_dark_12"
+   }
   },
   {
    "type": "custom",
@@ -210,7 +242,7 @@
    "first": 1
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "fb_1_1",
    "rect": [
     17,
@@ -218,8 +250,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_7_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "voice.feedback.{part}",
+   "sensitivity": 0.077,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -352,15 +402,10 @@
      }
     ]
    },
-   "tip": "Feedback",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Feedback"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "fb_2_2",
    "rect": [
     59,
@@ -368,8 +413,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_7_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "voice.feedback.{part}",
+   "sensitivity": 0.077,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -378,15 +441,10 @@
      }
     ]
    },
-   "tip": "Feedback",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Feedback"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "fb_3_3",
    "rect": [
     101,
@@ -394,8 +452,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_7_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "voice.feedback.{part}",
+   "sensitivity": 0.077,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -496,15 +572,10 @@
      }
     ]
    },
-   "tip": "Feedback",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Feedback"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "fb_4_3",
    "rect": [
     143,
@@ -512,8 +583,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_7_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "voice.feedback.{part}",
+   "sensitivity": 0.077,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -522,15 +611,10 @@
      }
     ]
    },
-   "tip": "Feedback",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Feedback"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "fb_4_4",
    "rect": [
     143,
@@ -538,8 +622,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_7_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "voice.feedback.{part}",
+   "sensitivity": 0.077,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -576,15 +678,10 @@
      }
     ]
    },
-   "tip": "Feedback",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Feedback"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "fb_5_3",
    "rect": [
     185,
@@ -592,8 +689,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_7_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "voice.feedback.{part}",
+   "sensitivity": 0.077,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -602,15 +717,10 @@
      }
     ]
    },
-   "tip": "Feedback",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Feedback"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "fb_5_5",
    "rect": [
     185,
@@ -618,8 +728,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_7_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "voice.feedback.{part}",
+   "sensitivity": 0.077,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -632,15 +760,10 @@
      }
     ]
    },
-   "tip": "Feedback",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Feedback"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "fb_6_6",
    "rect": [
     227,
@@ -648,8 +771,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_7_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "voice.feedback.{part}",
+   "sensitivity": 0.077,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -678,15 +819,10 @@
      }
     ]
    },
-   "tip": "Feedback",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Feedback"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "fb_7_7",
    "rect": [
     269,
@@ -694,8 +830,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_7_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "voice.feedback.{part}",
+   "sensitivity": 0.077,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -740,15 +894,10 @@
      }
     ]
    },
-   "tip": "Feedback",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Feedback"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "1_to_2",
    "rect": [
     17,
@@ -756,8 +905,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.1.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -854,15 +1021,10 @@
      }
     ]
    },
-   "tip": "Operator 1 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 1 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "1_to_3",
    "rect": [
     17,
@@ -870,8 +1032,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.1.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -928,15 +1108,10 @@
      }
     ]
    },
-   "tip": "Operator 1 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 1 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "1_to_4",
    "rect": [
     17,
@@ -944,8 +1119,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.1.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -970,15 +1163,10 @@
      }
     ]
    },
-   "tip": "Operator 1 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 1 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "1_to_5",
    "rect": [
     17,
@@ -986,8 +1174,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.1.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -996,15 +1202,10 @@
      }
     ]
    },
-   "tip": "Operator 1 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 1 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "1_to_8",
    "rect": [
     17,
@@ -1012,8 +1213,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.1.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1022,15 +1241,10 @@
      }
     ]
    },
-   "tip": "Operator 1 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 1 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "1_to_out",
    "rect": [
     17,
@@ -1038,8 +1252,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.1.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1256,15 +1488,10 @@
      }
     ]
    },
-   "tip": "Operator 1 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 1 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "2_to_3",
    "rect": [
     59,
@@ -1272,8 +1499,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.2.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1358,15 +1603,10 @@
      }
     ]
    },
-   "tip": "Operator 2 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 2 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "2_to_4",
    "rect": [
     59,
@@ -1374,8 +1614,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.2.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1400,15 +1658,10 @@
      }
     ]
    },
-   "tip": "Operator 2 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 2 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "2_to_5",
    "rect": [
     59,
@@ -1416,8 +1669,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.2.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1426,15 +1697,10 @@
      }
     ]
    },
-   "tip": "Operator 2 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 2 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "2_to_6",
    "rect": [
     59,
@@ -1442,8 +1708,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.2.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1452,15 +1736,10 @@
      }
     ]
    },
-   "tip": "Operator 2 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 2 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "2_to_7",
    "rect": [
     59,
@@ -1468,8 +1747,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.2.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1478,15 +1775,10 @@
      }
     ]
    },
-   "tip": "Operator 2 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 2 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "2_to_8",
    "rect": [
     59,
@@ -1494,8 +1786,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.2.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1508,15 +1818,10 @@
      }
     ]
    },
-   "tip": "Operator 2 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 2 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "2_to_out",
    "rect": [
     59,
@@ -1524,8 +1829,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.2.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1786,15 +2109,10 @@
      }
     ]
    },
-   "tip": "Operator 2 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 2 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "3_to_4",
    "rect": [
     101,
@@ -1802,8 +2120,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.3.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -1964,15 +2300,10 @@
      }
     ]
    },
-   "tip": "Operator 3 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 3 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "3_to_5",
    "rect": [
     101,
@@ -1980,8 +2311,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.3.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2050,15 +2399,10 @@
      }
     ]
    },
-   "tip": "Operator 3 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 3 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "3_to_6",
    "rect": [
     101,
@@ -2066,8 +2410,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.3.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2100,15 +2462,10 @@
      }
     ]
    },
-   "tip": "Operator 3 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 3 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "3_to_7",
    "rect": [
     101,
@@ -2116,8 +2473,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.3.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2142,15 +2517,10 @@
      }
     ]
    },
-   "tip": "Operator 3 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 3 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "3_to_8",
    "rect": [
     101,
@@ -2158,8 +2528,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.3.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2192,15 +2580,10 @@
      }
     ]
    },
-   "tip": "Operator 3 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 3 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "3_to_out",
    "rect": [
     101,
@@ -2208,8 +2591,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.3.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2318,15 +2719,10 @@
      }
     ]
    },
-   "tip": "Operator 3 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 3 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "4_to_5",
    "rect": [
     143,
@@ -2334,8 +2730,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.4.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2484,15 +2898,10 @@
      }
     ]
    },
-   "tip": "Operator 4 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 4 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "4_to_6",
    "rect": [
     143,
@@ -2500,8 +2909,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.4.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2542,15 +2969,10 @@
      }
     ]
    },
-   "tip": "Operator 4 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 4 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "4_to_7",
    "rect": [
     143,
@@ -2558,8 +2980,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.4.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2592,15 +3032,10 @@
      }
     ]
    },
-   "tip": "Operator 4 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 4 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "4_to_8",
    "rect": [
     143,
@@ -2608,8 +3043,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.4.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2658,15 +3111,10 @@
      }
     ]
    },
-   "tip": "Operator 4 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 4 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "4_to_out",
    "rect": [
     143,
@@ -2674,8 +3122,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.4.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2804,15 +3270,10 @@
      }
     ]
    },
-   "tip": "Operator 4 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 4 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "5_to_6",
    "rect": [
     185,
@@ -2820,8 +3281,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.5.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -2966,15 +3445,10 @@
      }
     ]
    },
-   "tip": "Operator 5 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 5 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "5_to_7",
    "rect": [
     185,
@@ -2982,8 +3456,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.5.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -3004,15 +3496,10 @@
      }
     ]
    },
-   "tip": "Operator 5 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 5 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "5_to_8",
    "rect": [
     185,
@@ -3020,8 +3507,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.5.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -3086,15 +3591,10 @@
      }
     ]
    },
-   "tip": "Operator 5 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 5 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "5_to_out",
    "rect": [
     185,
@@ -3102,8 +3602,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.5.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -3244,15 +3762,10 @@
      }
     ]
    },
-   "tip": "Operator 5 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 5 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "6_to_7",
    "rect": [
     227,
@@ -3260,8 +3773,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.6.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -3410,15 +3941,10 @@
      }
     ]
    },
-   "tip": "Operator 6 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 6 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "6_to_8",
    "rect": [
     227,
@@ -3426,8 +3952,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.6.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -3528,15 +4072,10 @@
      }
     ]
    },
-   "tip": "Operator 6 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 6 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "6_to_out",
    "rect": [
     227,
@@ -3544,8 +4083,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.6.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -3678,15 +4235,10 @@
      }
     ]
    },
-   "tip": "Operator 6 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 6 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "7_to_8",
    "rect": [
     269,
@@ -3694,8 +4246,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.7.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -3948,15 +4518,10 @@
      }
     ]
    },
-   "tip": "Operator 7 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 7 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "7_to_out",
    "rect": [
     269,
@@ -3964,8 +4529,26 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.7.v.level.{part}",
+   "sensitivity": 1.089,
+   "fine": 0.2,
+   "wheel": 0.02,
    "showIf": {
     "any": [
      {
@@ -4074,15 +4657,10 @@
      }
     ]
    },
-   "tip": "Operator 7 level",
-   "sensitivity": 2.2,
-   "fine": 0.2,
-   "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 7 level"
   },
   {
-   "type": "dial",
+   "type": "number",
    "name": "8_to_out",
    "rect": [
     311,
@@ -4090,14 +4668,27 @@
     40,
     29
    ],
-   "image": "displays/amount_tag_99_inv",
+   "layer": 4,
+   "fill": {
+    "image": "displays/amount_tag"
+   },
+   "text": {
+    "text": "",
+    "font": "tag_white",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    1,
+    2,
+    4
+   ],
    "param": "op.8.v.level.{part}",
-   "tip": "Operator 8 level",
-   "sensitivity": 2.2,
+   "sensitivity": 1.089,
    "fine": 0.2,
    "wheel": 0.02,
-   "margin": 12,
-   "layer": 4
+   "tip": "Operator 8 level"
   },
   {
    "type": "plate",

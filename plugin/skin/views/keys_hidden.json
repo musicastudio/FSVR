@@ -1,7 +1,10 @@
 {
-  "size": [1422, 6],
-  "fill": {"colour": "#000000ff"},
-  "widgets": [
-
-  ]
+ "size": [
+  1514,
+  6
+ ],
+ "fill": {
+  "colour": "#000000ff"
+ },
+ "widgets": []
 }
