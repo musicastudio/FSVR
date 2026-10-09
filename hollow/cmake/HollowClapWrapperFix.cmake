@@ -4,7 +4,7 @@
 # edit and sends what it read back to the processor: a choice made in the editor (a performance, a
 # voice bank) jumped back to the one before. A VST3 editor sets the controller's value first and then
 # calls performEdit(), and this makes the wrapper do the same (wrapasvst3.cpp, ClapAsVst3::onIdle).
-# v0.16.0 and the next-branch commit pinned above (fb9d6e4) both have it unchanged; drop this file
+# v0.16.0 and the next-branch commit pinned above (527a374) both have it unchanged; drop this file
 # once a release stores the value itself.
 #
 # A one-line replace rather than a patch file: Windows checkouts with core.autocrlf turn the fetched
