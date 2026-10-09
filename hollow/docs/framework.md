@@ -114,4 +114,4 @@ Two Win32 details are what stop a used chord **flashing the title bar**, which i
 
 ## Custom widgets
 
-The built-in `custom` kinds (pad, morph pad, piano, envelope, key scaling curve, waveform, spectrum, matrix wires and operator boxes) live in `framework/src/core/kinds.cpp`, each behind a small table of hooks (draw, mouse down, drag, up, double-click, hover) plus one line in `findKind()`. A product that needs a new display adds a kind there without touching the rest of the runtime. Kinds read tables from the skin's `data/` folder and keep shapes in the instance's text data.
+The built-in `custom` kinds (pad, morph pad, piano, envelope, key scaling curve, waveform, spectrum, matrix wires and operator boxes) live in `framework/src/core/kinds.cpp`, each behind a small table of hooks (draw, mouse down, drag, up, double-click, hover, right-click, tick, wheel) plus one line in `findKind()`. A product that needs a new display adds a kind there without touching the rest of the runtime. Kinds read tables from the skin's `data/` folder and keep shapes in the instance's text data.

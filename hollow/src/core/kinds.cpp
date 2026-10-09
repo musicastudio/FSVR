@@ -6,6 +6,8 @@
 #include <array>
 #include <cmath>
 #include <cstdio>
+#include <functional>
+#include <map>
 
 namespace hollow {
 
@@ -1828,6 +1830,18 @@ void presetMenu(Gui& g, const Hit& h, const Action& a) {
 // 25), "minTime" (the least time shown across the width, default 150), colours grid (the zero line),
 // area, curve, handle (a point's inside) and dots (the key-off marker). Dragging a point moves its
 // time along x and its level along y; Shift is fine.
+//
+// With "model" naming a registered StageModel (hollow.h), the widget draws that model's curve instead,
+// on a time axis in seconds. Each handle sits where the curve reaches its point.
+// "points" still names the params a handle drags. Extra fields:
+//   "inputs"       {name: param id or number}, passed to the model
+//   "minSpan"      shortest time across the width, in seconds (default 0.1)
+//   "dbParam"      a param; while off, a dB model is shown as linear amplitude
+//   "overlay"      {"var", "values", "param"}: also draws the model for the var's other values while param is on
+//   "overlayCurve" the overlay's colour
+//   "syncParam"    a param; while on, the view's stage_envs naming it share one time axis
+//   text.font      labels the time grid
+// Dragging keeps the handle under the pointer. The curve is drawn from unrounded values during the drag.
 struct StageVal {
     int param = -1;
     double v = 0;
@@ -1846,9 +1860,30 @@ struct SigState : KindState {
     std::vector<double> sig;   // the values of every param the widget's fields name, at the last draw
 };
 
+using StageIn = std::map<std::string, double>;
+
+struct StageAxis {
+    double keyOff = 0, span = 1;   // in seconds: where key off is drawn, and the width of the fitted plot
+};
+
+struct StageZoom {
+    bool on = false;               // zoomed or panned by the user
+    double v0 = 0, span = 1;       // first second shown, and how many
+};
+
 struct StageState : SigState {
     int drag = -1, x0 = 0, y0 = 0;
     double t0 = 0, l0 = 0;
+    bool pinned = false;           // freeze the axis during a drag
+    StageAxis pin;
+    double grabX = 0, grabY = 0;   // handle minus pointer, at the press
+    std::map<int, double> fine;    // unrounded values while dragging, by param
+    StageZoom zoom;
+    bool pan = false;              // dragging empty plot
+    int panX = 0;
+    double panV0 = 0;
+    double fitSpan = 0;            // last fitted width, see stageFit
+    std::vector<int> shown;        // the params last drawn; refit when they change
 };
 
 static void fieldValues(Gui& g, const Hit& h, const Json& j, std::vector<double>& out) {
@@ -1926,8 +1961,369 @@ static StageGeo stageGeo(Gui& g, const Hit& h, Rect r) {
     return e;
 }
 
+// ---- the model path
+
+static std::map<std::string, StageModel>& stageModels() {
+    static std::map<std::string, StageModel> m;
+    return m;
+}
+
+void registerStageModel(const std::string& name, StageModel model) { stageModels()[name] = std::move(model); }
+
+static const StageModel* stageModel(const Widget& w) {
+    auto it = stageModels().find(w.json["model"].str());
+    return it == stageModels().end() ? nullptr : &it->second;
+}
+
+// Replaces {var} in a param template with val.
+static std::string withVar(std::string s, const std::string& var, const std::string& val) {
+    if (var.empty()) return s;
+    std::string key = "{" + var + "}";
+    for (size_t pos; (pos = s.find(key)) != std::string::npos;) s.replace(pos, key.size(), val);
+    return s;
+}
+
+static std::string jsonText(const Json& v) { return v.type == Json::String ? v.s : formatNumber("%g", v.num()); }
+
+// The widget's "inputs": each one's value, and the param it comes from (-1 for a number).
+struct StageInputs {
+    StageIn in;
+    std::map<std::string, int> param;
+};
+
+static StageInputs stageInputs(Gui& g, const Hit& h, const std::string& var = "", const std::string& val = "") {
+    StageInputs s;
+    for (auto& m : g.wid(h).json["inputs"].members) {
+        int p = -1;
+        double v = m.second.num();
+        if (m.second.type == Json::String) {
+            p = g.paramOf(h, withVar(m.second.s, var, val));
+            v = p >= 0 ? g.state().get(p) : 0;
+        }
+        s.in[m.first] = v;
+        s.param[m.first] = p;
+    }
+    return s;
+}
+
+static StageCurve stageCurve(Gui& g, const Hit& h, const StageIn& in) { return (*stageModel(g.wid(h)))(in); }
+
+static double stageTime(const StageCurve& c, size_t i, const StageAxis& a) { return (int)i < c.keyOff ? c.t[i] : a.keyOff + c.t[i]; }
+static double stageNote(const StageCurve& c) { return c.t[(size_t)c.keyOff - 1]; }
+static double stageRelease(const StageCurve& c) { return c.t.back(); }
+
+// Fits the time axis to the longest curve, with 20% spare.
+// Keeps the previous width while the curves still fill at least a quarter of it,
+// so small edits don't rescale the plot.
+static StageAxis stageFit(const std::vector<StageCurve>& cs, double minSpan, double keep) {
+    double note = 0, rel = 0;
+    for (auto& c : cs) note = std::max(note, stageNote(c)), rel = std::max(rel, stageRelease(c));
+    StageAxis a;
+    a.span = std::max(minSpan, (note + rel) * 1.2);
+    if (a.span <= keep && a.span * 4 > keep) a.span = keep;
+    a.keyOff = std::max(note, a.span - rel);
+    return a;
+}
+
+struct StageView {
+    Rect in;
+    StageAxis a;
+    double v0 = 0, span = 1; // seconds shown: from v0, span wide
+    double lo = 0, hi = 1;   // level axis
+    bool lin = false;        // dB curve drawn as linear amplitude
+    double xs = 1;           // pixels per second
+    double X(double t) const { return in.x + (t - v0) * xs; }
+    double T(double x) const { return v0 + (x - in.x) / xs; }
+    double Y(const StageCurve& c, double v) const {
+        double d = c.db && lin ? (v <= -150 ? 0.0 : std::pow(10.0, v / 20.0)) : std::clamp(v, lo, hi);
+        return in.y + (in.h - 1) - (d - lo) / (hi - lo) * (in.h - 1);
+    }
+    int Y(double d) const { return in.y + (in.h - 1) - (int)std::lround((d - lo) / (hi - lo) * (in.h - 1)); }
+    // Pixel position of point i on a curve. False if the curve never reaches it.
+    bool corner(const StageCurve& c, int i, double& x, double& y) const {
+        if (i < 0 || i >= (int)c.corner.size() || c.corner[(size_t)i] < 0) return false;
+        const size_t at = (size_t)c.corner[(size_t)i];
+        x = X(stageTime(c, at, a)), y = Y(c, c.v[at]);
+        return true;
+    }
+};
+
+struct StageModelGeo {
+    StageView vw;
+    StageInputs own;
+    StageCurve curve;                 // this widget's
+    std::vector<StageCurve> others;   // overlay curves
+    std::vector<StageVal> t, l;       // each point's time and level
+    std::vector<int> hx, hy, hi;      // handles in view, and which point each is
+    const Font* font = nullptr;       // for the time labels
+};
+
+static bool stageOverlayOn(Gui& g, const Hit& h) {
+    const Json& ov = g.wid(h).json["overlay"];
+    if (!ov.has("var")) return false;
+    int p = ov.has("param") ? g.paramOf(h, ov["param"].str()) : -1;
+    return p < 0 || g.state().get(p) > g.state().def(p).min;
+}
+
+// The other stage_envs in this view with the same "syncParam", if it is on.
+static std::vector<Hit> stagePeers(Gui& g, const Hit& h) {
+    std::vector<Hit> peers;
+    const std::string sync = g.wid(h).json["syncParam"].str();
+    int p = sync.empty() ? -1 : g.paramOf(h, sync);
+    if (p < 0 || g.state().get(p) <= g.state().def(p).min) return peers;
+    for (int i = 0; i < (int)h.node->w.size(); ++i) {
+        Hit o{h.node, i, h.gen};
+        if (i != h.i && g.wid(o).ops == g.wid(h).ops && g.wid(o).json["syncParam"].str() == sync) peers.push_back(o);
+    }
+    return peers;
+}
+
+static StageModelGeo stageModelGeo(Gui& g, const Hit& h, Rect r) {
+    const Json& j = g.wid(h).json;
+    StageModelGeo e;
+    StageState& st = kindState<StageState>(g, h);
+    e.own = stageInputs(g, h);
+    std::vector<int> shown;
+    for (auto& kv : e.own.param) {
+        shown.push_back(kv.second);
+        if (st.fine.count(kv.second)) e.own.in[kv.first] = st.fine[kv.second];   // unrounded during a drag
+    }
+    if (shown != st.shown) st.shown = shown, st.zoom = {}, st.fitSpan = 0;
+    e.curve = stageCurve(g, h, e.own.in);
+    std::vector<StageCurve> all = {e.curve};
+    if (stageOverlayOn(g, h)) {
+        const Json& ov = j["overlay"];
+        std::string var = ov["var"].str(), cur = g.subst(*h.node, "{" + var + "}");
+        for (auto& v : ov["values"].items)
+            if (jsonText(v) != cur) e.others.push_back(stageCurve(g, h, stageInputs(g, h, var, jsonText(v)).in));
+        all.insert(all.end(), e.others.begin(), e.others.end());
+    }
+    const std::vector<Hit> peers = stagePeers(g, h);
+    for (auto& o : peers) all.push_back(stageCurve(g, o, stageInputs(g, o).in));
+    for (auto& p : j["points"].items) {
+        e.t.push_back(stageVal(g, h, p[0]));
+        e.l.push_back(stageVal(g, h, p[1]));
+    }
+    StageView& vw = e.vw;
+    if (g.wid(h).text.font >= 0) e.font = &g.skin().fonts[(size_t)g.wid(h).text.font];
+    int pad = g.skin().dp(6), top = e.font ? e.font->height + g.skin().dp(4) : pad;   // room for the time labels above the plot
+    vw.in = {r.x + pad, r.y + top, r.w - 2 * pad, r.h - top - pad};
+    vw.a = stageFit(all, j["minSpan"].num(0.1), st.fitSpan);
+    st.fitSpan = vw.a.span;
+    for (auto& o : peers) kindState<StageState>(g, o).fitSpan = vw.a.span;   // keep synced plots the same width
+    if (st.pinned) {   // grows only if the dragged curve no longer fits
+        vw.a.keyOff = std::max(st.pin.keyOff, stageNote(e.curve));
+        vw.a.span = std::max(st.pin.span, vw.a.keyOff + stageRelease(e.curve));
+    }
+    int dbp = j.has("dbParam") ? g.paramOf(h, j["dbParam"].str()) : -1;
+    vw.lin = e.curve.db && dbp >= 0 && g.state().get(dbp) <= g.state().def(dbp).min;
+    vw.lo = vw.lin ? 0 : e.curve.lo;
+    vw.hi = vw.lin ? 1 : e.curve.hi;
+    vw.span = st.zoom.on ? std::min(st.zoom.span, vw.a.span) : vw.a.span;   // can't zoom out past the fit
+    vw.v0 = st.zoom.on ? std::min(st.zoom.v0, vw.a.span - vw.span) : 0;
+    vw.xs = (vw.in.w - 1) / vw.span;
+    for (size_t i = 0; i < e.t.size(); ++i) {
+        double x, y;
+        if ((e.t[i].param < 0 && e.l[i].param < 0) || !vw.corner(e.curve, (int)i, x, y)) continue;
+        if (x < vw.in.x || x >= vw.in.x + vw.in.w) continue;   // out of view
+        e.hx.push_back((int)std::lround(x)), e.hy.push_back((int)std::lround(y)), e.hi.push_back((int)i);
+    }
+    return e;
+}
+
+static uint32_t mixColour(uint32_t a, uint32_t b, double t) {
+    uint32_t o = 0;
+    for (int sh = 0; sh < 32; sh += 8) {
+        double ca = (a >> sh) & 255, cb = (b >> sh) & 255;
+        o |= (uint32_t)std::lround(ca + (cb - ca) * t) << sh;
+    }
+    return o;
+}
+
+// Draws one curve, clipped to the plot.
+// With `area` set it also fills between the curve and `base`, fading to areaBottom at the base.
+static void stageTrace(Canvas& cv, const StageView& vw, const StageCurve& c, uint32_t col, int k, uint32_t area, uint32_t areaBottom, int base) {
+    const double left = vw.in.x - 1, right = vw.in.x + vw.in.w;
+    std::vector<uint32_t> row((size_t)std::max(0, vw.in.h));   // fill colour per row
+    if (area >> 24) {
+        double reach = std::max(1, std::max(base - vw.in.y, vw.in.y + vw.in.h - 1 - base));
+        for (int y = 0; y < vw.in.h; ++y) row[(size_t)y] = mixColour(areaBottom, area, std::min(1.0, std::abs(vw.in.y + y - base) / reach));
+    }
+    Rect saved = cv.clip;
+    cv.clip = cv.clip & Rect{vw.in.x, cv.clip.y, vw.in.w, cv.clip.h};
+    for (size_t i = 0; i + 1 < c.t.size(); ++i) {
+        double x0 = vw.X(stageTime(c, i, vw.a)), x1 = vw.X(stageTime(c, i + 1, vw.a));
+        double y0 = vw.Y(c, c.v[i]), y1 = vw.Y(c, c.v[i + 1]);
+        if (x1 < left || x0 > right) continue;
+        if (x1 > x0) {   // clip, so we don't walk a long line pixel by pixel
+            auto at = [&](double x) { return y0 + (y1 - y0) * (x - x0) / (x1 - x0); };
+            if (x0 < left) y0 = at(left), x0 = left;
+            if (x1 > right) y1 = at(right), x1 = right;
+            if (area >> 24)
+                for (int x = (int)std::ceil(x0); x < (int)std::ceil(x1); ++x) {
+                    int y = (int)std::lround(at(x));
+                    for (int yy = std::max(vw.in.y, std::min(y, base)); yy < std::min(vw.in.y + vw.in.h, std::max(y, base)); ++yy) pixel(cv, x, yy, row[(size_t)(yy - vw.in.y)]);
+                }
+        }
+        line(cv, (int)std::lround(x0), (int)std::lround(y0), (int)std::lround(x1), (int)std::lround(y1), col, k);
+    }
+    cv.clip = saved;
+}
+
+static std::string stageSeconds(double s) {
+    if (s < 1) return formatNumber(s < 0.01 ? "%.1f ms" : "%.0f ms", s * 1000);
+    return formatNumber(s < 10 && s != std::floor(s) ? "%.1f s" : "%.0f s", s);
+}
+
+static void stageModelDraw(Gui& g, Canvas& c, const Hit& h, Rect r, const StageModelGeo& e) {
+    const Widget& w = g.wid(h);
+    const StageView& vw = e.vw;
+    const int k = g.skin().lw();
+    uint32_t grid = colourField(w, "grid", 0xffc3c3c3), area = colourField(w, "area", 0xa5fbffff), curve = colourField(w, "curve", 0xff888888),
+             inside = colourField(w, "handle", 0xfffdfdfd), dots = colourField(w, "dots", 0xff0c0c0c),
+             faint = colourField(w, "overlayCurve", (curve & 0x00ffffff) | 0x60000000),
+             areaBottom = colourField(w, "areaBottom", (area & 0x00ffffff) | ((uint32_t)((area >> 24) * 0.15) << 24));
+    Rect saved = c.clip;
+    c.clip = c.clip & r;
+    // Time grid: a dotted line at a round step, roughly every 80 px.
+    static const double kSteps[] = {0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100};
+    double step = kSteps[sizeof kSteps / sizeof *kSteps - 1];
+    for (double s : kSteps)
+        if (s * vw.xs >= g.skin().dp(80)) {
+            step = s;
+            break;
+        }
+    for (long long i = std::max(1LL, (long long)std::ceil(vw.v0 / step)); (double)i * step < vw.v0 + vw.span; ++i) {
+        int x = (int)std::lround(vw.X((double)i * step));
+        for (int y = vw.in.y; y < vw.in.y + vw.in.h; y += 3 * k) fillRect(c, {x, y, k, k}, grid);
+        const std::string label = stageSeconds((double)i * step);
+        const int lx = x + g.skin().dp(3);
+        if (e.font && lx + e.font->width(label) <= r.x + r.w) drawText(c, *e.font, label, {lx, r.y + g.skin().dp(2), r.w, e.font->height}, 0, 0, false);
+    }
+    if (e.curve.db && !vw.lin)   // every 24 dB
+        for (double d = vw.hi - 24; d > vw.lo; d -= 24) hline(c, vw.in.x, vw.Y(d), vw.in.w, (grid & 0x00ffffff) | 0x50000000);
+    int zero = vw.lo < 0 && vw.hi > 0 ? vw.Y(0.0) : -1;
+    if (zero >= 0) hline(c, vw.in.x, zero, vw.in.w, grid);
+    int base = zero >= 0 ? zero : vw.in.y + vw.in.h - 1;
+    for (auto& o : e.others) stageTrace(c, vw, o, faint, 1, 0, 0, base);
+    stageTrace(c, vw, e.curve, curve, k, area, areaBottom, base);
+    int ko = (int)std::lround(vw.X(vw.a.keyOff));
+    if (ko >= vw.in.x && ko < vw.in.x + vw.in.w)
+        for (int y = vw.in.y; y < vw.in.y + vw.in.h; y += 2 * k) fillRect(c, {ko, y, k, k}, dots);
+    StageState& st = kindState<StageState>(g, h);
+    int s = g.skin().dp(7), a = s / 2;
+    for (size_t i = 0; i < e.hx.size(); ++i) {
+        bool sel = st.drag == e.hi[i];
+        fillRect(c, {e.hx[i] - a, e.hy[i] - a, s, s}, sel ? 0xffc80800 : inside);
+        if (!sel) frame(c, e.hx[i] - a, e.hy[i] - a, s, s, 0xffc80800, k);
+    }
+    c.clip = saved;
+}
+
+static bool stageModelDown(Gui& g, const Hit& h, int x, int y, const StageModelGeo& e) {
+    StageState& st = kindState<StageState>(g, h);
+    int best = -1, reach = g.skin().dp(8);
+    for (size_t i = 0; i < e.hx.size(); ++i) {   // the nearest handle in reach; the later one on a tie
+        int d = std::max(std::abs(x - e.hx[i]), std::abs(y - e.hy[i]));
+        if (d > reach) continue;
+        best = e.hi[i], reach = d;
+        st.grabX = e.hx[i] - x, st.grabY = e.hy[i] - y;
+    }
+    st.drag = best;
+    st.pan = best < 0;
+    if (st.pan) {
+        st.panX = x, st.panV0 = e.vw.v0;
+        return true;
+    }
+    st.x0 = x, st.y0 = y;
+    st.pinned = true, st.pin = e.vw.a;
+    g.beginParams({e.t[(size_t)best].param, e.l[(size_t)best].param});
+    return true;
+}
+
+// Copies this widget's zoom to the widgets it is synced with.
+static void stageShare(Gui& g, const Hit& h) {
+    const StageState& st = kindState<StageState>(g, h);
+    for (auto& o : stagePeers(g, h)) {
+        StageState& peer = kindState<StageState>(g, o);
+        peer.zoom = st.zoom, peer.fitSpan = st.fitSpan;
+        g.invalidate(g.rectOf(*o.node, o.i));
+    }
+}
+
+// Sets the view after a zoom or pan, limited to the fitted range.
+// Zooming all the way out goes back to the fit.
+static void stageZoom(Gui& g, const Hit& h, const StageView& vw, double v0, double span) {
+    StageState& st = kindState<StageState>(g, h);
+    span = std::clamp(span, 0.002, vw.a.span);
+    st.zoom = {span < vw.a.span, std::clamp(v0, 0.0, vw.a.span - span), span};
+    if (!st.zoom.on) st.fitSpan = 0;   // refit tightly
+    stageShare(g, h);
+}
+
+// Moves the dragged point to the pointer.
+// Level first, then time: each is solved by bisection through the model, as a fractional param value.
+// This assumes the point moves monotonically with the param.
+// The curve is drawn from the fractional values; the params get them rounded.
+static void stageModelDrag(Gui& g, const Hit& h, int x, int y, bool shift, const StageModelGeo& e) {
+    StageState& st = kindState<StageState>(g, h);
+    const double f = shift ? 0.1 : 1;
+    const Rect& r = e.vw.in;
+    const double px = std::clamp(st.x0 + (x - st.x0) * f + st.grabX, (double)r.x, (double)(r.x + r.w - 1));
+    const double py = std::clamp(st.y0 + (y - st.y0) * f + st.grabY, (double)r.y, (double)(r.y + r.h - 1));
+    StageIn in = e.own.in;
+    // Where the point ends up, along x or y. Far away if the curve never reaches it.
+    auto land = [&](bool alongX) {
+        double cx = 1e9, cy = 1e9;
+        e.vw.corner(stageCurve(g, h, in), st.drag, cx, cy);
+        return alongX ? cx : cy;
+    };
+    // Finds the value of param p that puts the point at goal. Skipped if p doesn't move the point.
+    auto solve = [&](int p, double goal, bool alongX) {
+        double* v = nullptr;
+        for (auto& kv : e.own.param)
+            if (p >= 0 && kv.second == p) v = &in[kv.first];
+        if (!v) return;
+        const ParamDef& d = g.state().def(p);
+        const double now = *v;
+        double a = d.min, b = d.max;
+        const double fa = (*v = a, land(alongX)), fb = (*v = b, land(alongX));
+        for (int n = 0; n < 24 && fa != fb; ++n) {
+            *v = (a + b) / 2;
+            ((land(alongX) < goal) == (fa < fb) ? a : b) = *v;
+        }
+        st.fine[p] = *v = fa != fb ? (a + b) / 2 : now;
+        if (std::round(*v) != g.state().get(p)) g.editParam(p, std::round(*v));
+    };
+    solve(e.l[(size_t)st.drag].param, py, false);
+    solve(e.t[(size_t)st.drag].param, px, true);
+}
+
+// Redraws when a param changes: the widget's own, a synced widget's or an overlay curve's.
+static void stageTick(Gui& g, const Hit& h, Rect r) {
+    std::vector<double> v;
+    const Json& j = g.wid(h).json;
+    fieldValues(g, h, j, v);
+    if (stageModel(g.wid(h))) {
+        for (auto& o : stagePeers(g, h)) fieldValues(g, o, g.wid(o).json["inputs"], v);
+        const Json& ov = j["overlay"];
+        std::string var = ov["var"].str();
+        v.push_back((double)std::hash<std::string>()(g.subst(*h.node, "{" + var + "}")));
+        for (auto& val : ov["values"].items)
+            for (auto& kv : stageInputs(g, h, var, jsonText(val)).in) v.push_back(kv.second);
+    }
+    StageState& st = kindState<StageState>(g, h);
+    if (v != st.sig) {
+        st.sig = v;
+        g.invalidate(r);
+    }
+}
+
+// ---- the hooks: the model path if the widget has a model, else the legacy drawing
+
 static void stageDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
     const Widget& w = g.wid(h);
+    if (stageModel(w)) return stageModelDraw(g, c, h, r, stageModelGeo(g, h, r));
     StageGeo e = stageGeo(g, h, r);
     const int k = g.skin().lw();
     uint32_t grid = colourField(w, "grid", 0xffc3c3c3), area = colourField(w, "area", 0xa5fbffff), curve = colourField(w, "curve", 0xff888888),
@@ -1957,6 +2353,10 @@ static void stageDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
 }
 
 static bool stageDown(Gui& g, const Hit& h, Rect r, int x, int y, bool) {
+    if (stageModel(g.wid(h))) {
+        g.invalidate(r);
+        return stageModelDown(g, h, x, y, stageModelGeo(g, h, r));
+    }
     StageGeo e = stageGeo(g, h, r);
     StageState& st = kindState<StageState>(g, h);
     int best = -1, reach = g.skin().dp(8);
@@ -1975,6 +2375,13 @@ static bool stageDown(Gui& g, const Hit& h, Rect r, int x, int y, bool) {
 // ponytail: every move is a whole host gesture per param; one gesture per drag if a host minds.
 static void stageDrag(Gui& g, const Hit& h, Rect r, int x, int y, bool shift) {
     StageState& st = kindState<StageState>(g, h);
+    if (stageModel(g.wid(h))) {
+        StageModelGeo m = stageModelGeo(g, h, r);
+        if (st.pan) stageZoom(g, h, m.vw, st.panV0 - (x - st.panX) / m.vw.xs, m.vw.span);
+        else stageModelDrag(g, h, x, y, shift, m);
+        g.invalidate(r);
+        return;
+    }
     if (st.drag < 0) return;
     StageGeo e = stageGeo(g, h, r);
     double f = shift ? 0.1 : 1;
@@ -1992,7 +2399,28 @@ static void stageDrag(Gui& g, const Hit& h, Rect r, int x, int y, bool shift) {
 }
 
 static void stageUp(Gui& g, const Hit& h, Rect r, int, int) {
-    kindState<StageState>(g, h).drag = -1;
+    StageState& st = kindState<StageState>(g, h);
+    st.drag = -1;
+    st.pinned = st.pan = false;
+    st.fine.clear();   // back to the rounded values
+    g.invalidate(r);
+}
+
+// Double-click: back to the fit. Model path only.
+static void stageDbl(Gui& g, const Hit& h, Rect r, int, int) {
+    if (!stageModel(g.wid(h))) return;
+    StageState& st = kindState<StageState>(g, h);
+    st.zoom = {}, st.fitSpan = 0;
+    stageShare(g, h);
+    g.invalidate(r);
+}
+
+// Wheel: zoom around the pointer, 1.25x per notch. Shift+wheel: pan a tenth of the view per notch. Model path only.
+static void stageWheel(Gui& g, const Hit& h, Rect r, int x, int, double notches, bool shift) {
+    if (!stageModel(g.wid(h))) return;
+    const StageView vw = stageModelGeo(g, h, r).vw;
+    const double span = shift ? vw.span : std::min(vw.span / std::pow(1.25, notches), vw.a.span);
+    stageZoom(g, h, vw, shift ? vw.v0 - notches * 0.1 * vw.span : vw.T(x) - (vw.T(x) - vw.v0) * span / vw.span, span);
     g.invalidate(r);
 }
 
@@ -2106,7 +2534,7 @@ const KindOps* findKind(const std::string& kind) {
     static const KindOps box          = {boxDraw,          boxDown,   nullptr,   nullptr, boxDbl,     nullptr, boxRight, nullptr};
     static const KindOps envelope     = {envDraw,          envDown,   envDrag,   envUp,   envFit,     nullptr, envRight, envTick};
     static const KindOps keyscale     = {ksDraw,           ksDown,    ksDrag,    ksUp,    ksFit,      nullptr, ksRight,  ksTick};
-    static const KindOps stage        = {stageDraw,        stageDown, stageDrag, stageUp, nullptr,    nullptr, nullptr,  sigTick<StageState>};
+    static const KindOps stage        = {stageDraw,        stageDown, stageDrag, stageUp, stageDbl,   nullptr, nullptr,  stageTick, stageWheel};
     static const KindOps fseq         = {fseqDraw,         nullptr,   nullptr,   nullptr, nullptr,    nullptr, nullptr,  sigTick<SigState>};
     static const KindOps levelScale   = {levelScaleDraw,   nullptr,   nullptr,   nullptr, nullptr,    nullptr, nullptr,  sigTick<SigState>};
     if (kind == "pad") return &pad;

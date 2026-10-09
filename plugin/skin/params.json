@@ -36427,6 +36427,45 @@
   "host": false
  },
  {
+  "id": "gui.eg_db",
+  "name": "EG Plot in dB",
+  "min": 0,
+  "max": 1,
+  "steps": 1,
+  "labels": [
+   "Linear",
+   "dB"
+  ],
+  "default": 1,
+  "host": false
+ },
+ {
+  "id": "gui.eg_overlay",
+  "name": "EG Plot Shows All Operators",
+  "min": 0,
+  "max": 1,
+  "steps": 1,
+  "labels": [
+   "Off",
+   "On"
+  ],
+  "default": 1,
+  "host": false
+ },
+ {
+  "id": "gui.eg_sync",
+  "name": "EG Plots Share a Time Axis",
+  "min": 0,
+  "max": 1,
+  "steps": 1,
+  "labels": [
+   "Off",
+   "On"
+  ],
+  "default": 1,
+  "host": false
+ },
+ {
   "id": "gui.midi_learn",
   "name": "MIDI Learn",
   "min": 0,

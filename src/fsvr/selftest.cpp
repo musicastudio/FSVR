@@ -1,6 +1,7 @@
 // fsvr/selftest.cpp - the engine self check. Ours, not the hardware's.
 #include "fs1r/internal.h"
 #include "display.h"
+#include "egview.h"
 #include <cstring>
 
 // ------------------------------------------------------------------------------------------ self test
@@ -519,6 +520,54 @@ int selftest(Synth& S) {
       ck("a released note goes on counting while its release runs", S.active_chans() == 1);
       int blocks = 0; while (S.active_chans() && ++blocks < 200) S.render(l.data(), r.data(), 1024);
       ck("and stops counting once the release is over", S.active_chans() == 0);
+      S.all_off(); init_perf(S.perf); }
+
+    // fsvr/egview.h calculates the editor's EG curves without stepping the engine, so check it against the engine.
+    // Step copies of a note's EGs and compare when each stage ends:
+    // within half a tick per stage for pitch and filter, within 1 ms or 1% for amplitude.
+    { init_perf(S.perf); S.init_system(); Voice& V = S.perf.part[0].voice; Part& pt = S.perf.part[0];
+      init_default_voice(V);
+      pt.p[1] = 2; pt.p[4] = 0x10; pt.p[0x1A] = 70; pt.p[0x1B] = 58; pt.p[0x1C] = 64; pt.p[0x20] = 60; pt.p[0x21] = 70; pt.p[0x22] = 64; pt.p[0x23] = 64;
+      const int L[4] = {99, 70, 40, 0}, T[4] = {20, 45, 60, 50}, pL[5] = {30, 80, 40, 40, 50}, pT[4] = {30, 40, 50, 60}, fL[4] = {100, 20, 70, 50}, fT[4] = {30, 40, 50, 60};
+      for (int i = 0; i < 4; i++) V.v[0].L[i] = L[i], V.v[0].T[i] = T[i], V.pegT[i] = pT[i], V.fltL[i] = fL[i], V.fltT[i] = fT[i];
+      for (int i = 0; i < 5; i++) V.pegL[i] = pL[i];
+      V.v[0].hold = 30; V.v[0].tscale = 7; V.pegVel = 1; V.pegRange = 1; V.pegTscale = 3; V.fltAtkVel = 3; V.fltTscale = 2;
+      S.all_off();
+      S.midi_in(0x90, 72, 100);
+      Chan* c = nullptr; for (auto& x : S.ch) if (x.active && x.note == 72) c = &x;
+      ck("egview: a note to hold it to", c != nullptr);
+      if (c) {
+          egview::Input in; in.note = c->noteP; in.vel = c->vel;
+          // The times (in seconds) of the first n stage changes of a stepped EG.
+          auto ends = [](auto step, auto stage, double rate, size_t n) {
+              std::vector<double> at;
+              int s = stage();
+              for (long long k = 1; k < 30 * rate && at.size() < n; ++k) { step(); if (stage() != s) s = stage(), at.push_back(k / rate); }
+              return at;
+          };
+          auto agree = [&](const char* what, const egview::EgCurve& g, const std::vector<double>& at, double tol) {
+              bool ok = at.size() >= 3;
+              for (size_t i = 0; ok && i < at.size(); i++) ok = std::fabs(g.t[(size_t)g.corner[i]] - at[i]) <= std::max(tol * (i + 1), at[i] * 0.01);
+              ck(what, ok);
+          };
+          in.egKind = egview::AMP; in.hold = 30; in.timeScale = 7; in.part[0] = 70; in.part[1] = 58; in.part[2] = 64;
+          for (int i = 0; i < 4; i++) in.L[i] = L[i], in.T[i] = T[i];
+          EG e = c->op[0].eg;
+          agree("egview: the amplitude EG ends its hold and stages where the engine does", egview::curve(in),
+                ends([&] { e.tick(); }, [&] { return e.stage; }, SR, 3), 0.001);
+          in = egview::Input(); in.note = c->noteP; in.vel = c->vel;
+          in.egKind = egview::PITCH; in.init = pL[0]; in.velSens = 1; in.range = 1; in.timeScale = 3; in.part[0] = 60; in.part[1] = 70;
+          for (int i = 0; i < 4; i++) in.L[i] = pL[i + 1], in.T[i] = pT[i];
+          Chan pc = *c;
+          agree("egview: the pitch EG ends its stages where the engine does", egview::curve(in),
+                ends([&] { S.peg_tick(pc); }, [&] { return pc.pegStage; }, TICK_HZ, 3), 0.51 / TICK_HZ);
+          in = egview::Input(); in.note = c->noteP; in.vel = c->vel;
+          in.egKind = egview::FILTER; in.velSens = 3; in.timeScale = 2;
+          for (int i = 0; i < 4; i++) in.L[i] = fL[i], in.T[i] = fT[i];
+          StepEG f = c->feg;
+          agree("egview: the filter EG ends its stages where the engine does", egview::curve(in),
+                ends([&] { f.tick(); }, [&] { return f.stage; }, TICK_HZ, 3), 0.51 / TICK_HZ);
+      }
       S.all_off(); init_perf(S.perf); }
 
     // fsvr/display.h, the transcribed display tables, against values the Data List and the manual give.

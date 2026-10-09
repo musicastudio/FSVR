@@ -624,6 +624,26 @@ void Gui::setParams(const std::vector<std::pair<int, double>>& values) {
     update();
 }
 
+void Gui::beginParams(const std::vector<int>& ps) {
+    for (int p : ps)
+        if (p >= 0 && host_ && state_.def(p).host && std::find(editing_.begin(), editing_.end(), p) == editing_.end()) {
+            host_->beginEdit(p);
+            editing_.push_back(p);
+        }
+}
+
+// Outside a gesture this is the same as setParam.
+void Gui::editParam(int p, double v) {
+    if (std::find(editing_.begin(), editing_.end(), p) == editing_.end()) {
+        setParam(p, v);
+        return;
+    }
+    double old = state_.get(p);
+    state_.set(p, v);
+    if (state_.get(p) != old) host_->edit(p, state_.get(p));
+    update();
+}
+
 double Gui::defaultOf(const Hit& h, int which) const {
     int p = which ? inst(h).param2 : inst(h).param;
     if (p >= 0) return state_.def(p).def;
@@ -1191,7 +1211,7 @@ Hit Gui::hit(Node& n, int x, int y) {
         bool input = w.kind == Kind::Button || w.kind == Kind::Dropdown || w.kind == Kind::Dial || w.kind == Kind::Number ||
                      w.kind == Kind::Veil || w.kind == Kind::List || !w.context.empty() ||
                      (w.kind == Kind::Textbox && w.editable && !w.key.empty()) ||
-                     (w.kind == Kind::Custom && w.ops && (w.ops->down || w.ops->dbl || w.ops->right));
+                     (w.kind == Kind::Custom && w.ops && (w.ops->down || w.ops->dbl || w.ops->right || w.ops->wheel));
         if (input) return {&n, i, gen_};
     }
     return {};
@@ -1755,6 +1775,10 @@ void Gui::wheel(int x, int y, double notches, bool shift) {
     if (live(press_) || !menus_.empty()) return;
     hideTip(true);
     Hit h = hit(x, y);
+    if (h && wid(h).kind == Kind::Custom && wid(h).ops && wid(h).ops->wheel) {
+        wid(h).ops->wheel(*this, h, rectOf(*h.node, h.i), x, y, notches, shift);
+        return;
+    }
     if (h && (wid(h).kind == Kind::Dial || wid(h).kind == Kind::Number) && wid(h).wheel > 0) {
         const Widget& w = wid(h);
         int steps = stepsOf(*h.node, h.i);
