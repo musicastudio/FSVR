@@ -116,9 +116,18 @@ struct Ui {   // one instance and its editor, run a block and a GUI tick at a ti
         gui.mouseUp(x + dx, y + dy, false);
         run(2);
     }
-    void type(const std::string& text) {   // into the field being edited: all of it replaced, then Enter
+    // Into the field being edited: all of it replaced, then Enter. A character is delivered the way a
+    // platform delivers it, the key first and then the character it typed, which only arrives because the
+    // key left it to come (charPending): a key the editor spends takes its character with it.
+    void type(const std::string& text) {
         gui.keyDown(KeySelectAll, false, true);
-        for (char c : text) gui.keyChar((unsigned char)c);
+        for (char c : text) {
+            const unsigned ch = c >= 'a' && c <= 'z' ? (unsigned)(c - 'a' + 'A')   // the key, as a platform reports it
+                              : (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ? (unsigned)c : 0;
+            gui.keyDown(KeyNone, false, false, false, ch);
+            CHECK(gui.charPending(), "typing \"%s\": the key for '%c' took its own character", text.c_str(), c);
+            if (gui.charPending()) gui.keyChar((unsigned char)c);
+        }
         gui.keyDown(KeyEnter, false, false);
         run(2);
     }
@@ -189,6 +198,9 @@ int main() {
         CHECK(u.gui.menuLabels().empty(), "Escape left the Save menu open");
         if (u.click("topbar/import_menu")) u.menuIs({"Import FSVR Preset...", "Import FS1R SysEx to New Bank..."}, "Import");
         u.gui.keyDown(KeyEscape, false, false);
+        // With nothing of ours open, Escape is nobody's: the platform forwards exactly what keyDown refuses,
+        // and a host closing the plug-in's window on Escape is what that forwarding is for.
+        CHECK(!u.gui.keyDown(KeyEscape, false, false), "Escape with nothing open was taken from the host");
         CHECK(!u.shows("topbar/audio_settings"), "MIDI/Aud shows outside the standalone");
 
         const int tall = u.gui.height();
@@ -367,9 +379,22 @@ int main() {
         // takes every key, space included, so Alt+F types nothing and moves no page behind it.
         CHECK(u.altKey('F'), "a modal let Alt+F through to the host");
         CHECK(u.ui().find("\"view\":\"page_filter\"") == std::string::npos, "Alt+F changed the page behind a modal");
+        const std::string was = u.data("save.name");
         u.click(M + "name");
         CHECK(u.altKey('F'), "a text field being edited let Alt+F through to the host");
         CHECK(u.ui().find("\"view\":\"page_filter\"") == std::string::npos, "Alt+F changed the page while a text field was being edited");
+        u.gui.keyDown(KeyEnter, false, false);   // commits, so what the chord did or did not type shows up
+        u.run(2);
+        CHECK(u.data("save.name") == was, "Alt+F typed into the field being edited: \"%s\"", u.data("save.name").c_str());
+        // Escape abandons the edit, and is the editor's: a host that closes the plug-in's window on Escape
+        // must not also see this one. The next Escape, with no edit to cancel, is the one that reaches it.
+        u.click(M + "name");
+        u.gui.keyDown(KeyNone, false, false, false, 'X');
+        u.gui.keyChar('X');
+        CHECK(u.gui.keyDown(KeyEscape, false, false), "Escape in a text field being edited was left to the host");
+        u.run(2);
+        CHECK(u.data("save.name") == was, "Escape did not abandon the edit: \"%s\"", u.data("save.name").c_str());
+        u.click(M + "name");
         u.type("Zap Edit");
         u.click(M + "bank_name");
         u.type("GUI Bank");

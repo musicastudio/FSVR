@@ -475,6 +475,12 @@ public:
     bool keyDown(Key k, bool shift = false, bool ctrl = false, bool alt = false, unsigned ch = 0, bool fromHost = false);
     void keyChar(unsigned codepoint);
     bool wantsKeys() const;
+    // After keyDown, whether the character that key types is still to come, so the platform has to let it
+    // through rather than take it along with the key. True for a printable key while text entry has the
+    // keyboard: the character is the whole of such a key, keyDown does nothing with it on its own, and it
+    // still says the key was used so that the host never sees it. A named key (Enter, Escape, an arrow) is
+    // used by the entry itself and spends the character its key would have typed.
+    bool charPending() const;
     void releaseKeys();                          // hands the keyboard back, unless the skin has shortcuts
     void focusLost();                            // commits text entry, closes menus, drops list focus
     void tick();                                 // about 30 Hz: automation, repeats, tooltips, caret, animation
@@ -577,6 +583,7 @@ private:
     int statusParam_ = -1;
     Edit edit_;
     bool editing_on_ = false, caretOn_ = true, editDrag_ = false;
+    bool charPending_ = false;                   // the last key's character is still to come (charPending)
     Hit listFocus_;                              // a list with a selected row takes Delete
     Hit learnTarget_;                            // MIDI learn: the widget whose param learns
     bool learnOn_ = false;

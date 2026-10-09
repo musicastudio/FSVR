@@ -559,7 +559,7 @@
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Indiv Out",
+    "text": "Individual Out",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -620,14 +620,14 @@
    "rect": [
     375,
     50,
-    120,
+    140,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Perf Channel",
+    "text": "Performance Channel",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -642,9 +642,9 @@
    "type": "dropdown",
    "name": "midi_0",
    "rect": [
-    499,
+    519,
     50,
-    150,
+    130,
     18
    ],
    "fill": {
@@ -749,7 +749,7 @@
    "rect": [
     375,
     78,
-    120,
+    140,
     18
    ],
    "fill": {
@@ -771,9 +771,9 @@
    "type": "dropdown",
    "name": "midi_1",
    "rect": [
-    499,
+    519,
     78,
-    150,
+    130,
     18
    ],
    "fill": {
@@ -813,7 +813,7 @@
    "rect": [
     375,
     106,
-    120,
+    140,
     18
    ],
    "fill": {
@@ -835,9 +835,9 @@
    "type": "dropdown",
    "name": "midi_2",
    "rect": [
-    499,
+    519,
     106,
-    150,
+    130,
     18
    ],
    "fill": {
@@ -881,14 +881,14 @@
    "rect": [
     375,
     134,
-    120,
+    140,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Device",
+    "text": "Device ID",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -903,9 +903,9 @@
    "type": "dropdown",
    "name": "midi_3",
    "rect": [
-    499,
+    519,
     134,
-    150,
+    130,
     18
    ],
    "fill": {
@@ -1013,7 +1013,7 @@
     "image": "buttons/toggle_row"
    },
    "text": {
-    "text": "Send the knobs' KN1 to KN4 as MIDI",
+    "text": "Transmit KN1-KN4 via MIDI",
     "font": "caption_grey_12",
     "valign": "middle"
    },
@@ -1164,7 +1164,7 @@
     "image": "buttons/toggle_row"
    },
    "text": {
-    "text": "KN1 to KN4 from MIDI",
+    "text": "Receive KN1-KN4 via MIDI",
     "font": "caption_grey_12",
     "valign": "middle"
    },
@@ -1498,7 +1498,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_kn1",
-   "tip": "KN1's controller number"
+   "tip": "KN1 controller number"
   },
   {
    "type": "plate",
@@ -1552,7 +1552,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_kn2",
-   "tip": "KN2's controller number"
+   "tip": "KN2 controller number"
   },
   {
    "type": "plate",
@@ -1606,7 +1606,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_kn3",
-   "tip": "KN3's controller number"
+   "tip": "KN3 controller number"
   },
   {
    "type": "plate",
@@ -1660,7 +1660,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_kn4",
-   "tip": "KN4's controller number"
+   "tip": "KN4 controller number"
   },
   {
    "type": "plate",
@@ -1714,7 +1714,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_mc1",
-   "tip": "MC1's controller number"
+   "tip": "MC1 controller number"
   },
   {
    "type": "plate",
@@ -1768,7 +1768,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_mc2",
-   "tip": "MC2's controller number"
+   "tip": "MC2 controller number"
   },
   {
    "type": "plate",
@@ -1822,7 +1822,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_mc3",
-   "tip": "MC3's controller number"
+   "tip": "MC3 controller number"
   },
   {
    "type": "plate",
@@ -1876,7 +1876,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_mc4",
-   "tip": "MC4's controller number"
+   "tip": "MC4 controller number"
   },
   {
    "type": "plate",
@@ -1930,7 +1930,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_fc",
-   "tip": "FC's controller number"
+   "tip": "FC controller number"
   },
   {
    "type": "plate",
@@ -1984,7 +1984,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_bc",
-   "tip": "BC's controller number"
+   "tip": "BC controller number"
   },
   {
    "type": "plate",
@@ -2038,7 +2038,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_formant",
-   "tip": "Formant's controller number"
+   "tip": "Formant controller number"
   },
   {
    "type": "plate",
@@ -2092,7 +2092,7 @@
    "reset": false,
    "editable": true,
    "param": "sys.cc_fm",
-   "tip": "FM's controller number"
+   "tip": "FM controller number"
   }
  ]
 }

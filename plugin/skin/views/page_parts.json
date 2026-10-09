@@ -1869,7 +1869,7 @@
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Pan Scl",
+    "text": "Pan Scale",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -3771,7 +3771,7 @@
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Pan Scl",
+    "text": "Pan Scale",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -5548,7 +5548,7 @@
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Pan Scl",
+    "text": "Pan Scale",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -7325,7 +7325,7 @@
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Pan Scl",
+    "text": "Pan Scale",
     "font": "caption_grey_12",
     "align": "center"
    },

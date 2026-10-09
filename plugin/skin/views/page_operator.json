@@ -1781,7 +1781,7 @@
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Fq Vel",
+    "text": "Freq Vel",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -1887,7 +1887,7 @@
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Fq Bias",
+    "text": "Freq Bias",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -1986,14 +1986,14 @@
    "rect": [
     446,
     167,
-    60,
+    70,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Note Scl",
+    "text": "Note Scale",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -2010,7 +2010,7 @@
    "rect": [
     446,
     189,
-    60,
+    70,
     20
    ],
    "fill": {
@@ -2037,16 +2037,16 @@
    "type": "plate",
    "name": "sens_eg_time_scale_label",
    "rect": [
-    510,
+    520,
     167,
-    60,
+    70,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Time Scl",
+    "text": "Time Scale",
     "font": "caption_grey_12",
     "align": "center"
    },
@@ -2061,9 +2061,9 @@
    "type": "number",
    "name": "sens_eg_time_scale",
    "rect": [
-    510,
+    520,
     189,
-    60,
+    70,
     20
    ],
    "fill": {

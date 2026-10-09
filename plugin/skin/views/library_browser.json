@@ -50,6 +50,7 @@
     2,
     0
    ],
+   "tip": "A performance loads all four parts",
    "action": {
     "set": {
      "browse": "perf"
@@ -85,6 +86,7 @@
     2,
     0
    ],
+   "tip": "A voice loads into the selected part",
    "action": {
     "set": {
      "browse": "voice"
@@ -120,85 +122,11 @@
     2,
     0
    ],
+   "tip": "Formant Sequences load into the Performance's Formant Sequence part",
    "action": {
     "set": {
      "browse": "fseq"
     }
-   }
-  },
-  {
-   "type": "plate",
-   "name": "hint_perf",
-   "rect": [
-    380,
-    3,
-    412,
-    29
-   ],
-   "text": {
-    "text": "A performance loads all four parts",
-    "font": "library_row_white_12",
-    "valign": "middle"
-   },
-   "pad": [
-    4,
-    0,
-    2,
-    0
-   ],
-   "showIf": {
-    "var": "browse",
-    "equals": "perf"
-   }
-  },
-  {
-   "type": "plate",
-   "name": "hint_voice",
-   "rect": [
-    380,
-    3,
-    412,
-    29
-   ],
-   "text": {
-    "text": "A voice loads into the selected part",
-    "font": "library_row_white_12",
-    "valign": "middle"
-   },
-   "pad": [
-    4,
-    0,
-    2,
-    0
-   ],
-   "showIf": {
-    "var": "browse",
-    "equals": "voice"
-   }
-  },
-  {
-   "type": "plate",
-   "name": "hint_fseq",
-   "rect": [
-    380,
-    3,
-    412,
-    29
-   ],
-   "text": {
-    "text": "The Fseq plays on the performance's Fseq part",
-    "font": "library_row_white_12",
-    "valign": "middle"
-   },
-   "pad": [
-    4,
-    0,
-    2,
-    0
-   ],
-   "showIf": {
-    "var": "browse",
-    "equals": "fseq"
    }
   },
   {
@@ -244,7 +172,7 @@
    "pad": [
     5,
     0,
-    2,
+    0,
     2
    ]
   },
@@ -355,7 +283,7 @@
    "pad": [
     5,
     0,
-    2,
+    0,
     2
    ],
    "showIf": {
@@ -584,9 +512,9 @@
    "name": "head_code",
    "rect": [
     355,
-    44,
+    42,
     100,
-    21
+    25
    ],
    "layer": 5,
    "text": {
@@ -605,9 +533,9 @@
    "name": "head_name",
    "rect": [
     419,
-    44,
+    42,
     100,
-    21
+    25
    ],
    "layer": 5,
    "text": {
@@ -626,9 +554,9 @@
    "name": "head_category",
    "rect": [
     611,
-    44,
+    42,
     100,
-    21
+    25
    ],
    "layer": 5,
    "text": {
@@ -647,9 +575,9 @@
    "name": "head_parts",
    "rect": [
     741,
-    44,
+    42,
     100,
-    21
+    25
    ],
    "layer": 5,
    "text": {
@@ -672,9 +600,9 @@
    "name": "head_channels",
    "rect": [
     993,
-    44,
+    42,
     100,
-    21
+    25
    ],
    "layer": 5,
    "text": {
