@@ -40,6 +40,87 @@ static void line(Canvas& c, int x0, int y0, int x1, int y1, uint32_t col, int k 
     }
 }
 
+// A polyline through points in canvas pixels (centres at .5), `width` px wide, antialiased: each pixel takes
+// the line's colour by how much of it the nearest segment covers, so joints never blend twice.
+void drawPolyline(Canvas& c, const std::vector<std::pair<double, double>>& pts, uint32_t col, double width) {
+    if (pts.size() < 2) return;
+    double x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9, half = width / 2;
+    for (auto& p : pts) x0 = std::min(x0, p.first), y0 = std::min(y0, p.second), x1 = std::max(x1, p.first), y1 = std::max(y1, p.second);
+    Rect box = Rect{(int)std::floor(x0 - half - 1), (int)std::floor(y0 - half - 1), 0, 0};
+    box.w = (int)std::ceil(x1 + half + 1) - box.x + 1;
+    box.h = (int)std::ceil(y1 + half + 1) - box.y + 1;
+    box = box & c.clip;
+    if (box.empty()) return;
+    std::vector<float> cover((size_t)box.w * box.h, 0.0f);
+    for (size_t s = 0; s + 1 < pts.size(); ++s) {
+        double ax = pts[s].first, ay = pts[s].second, bx = pts[s + 1].first, by = pts[s + 1].second;
+        double dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy;
+        int sx0 = std::max(box.x, (int)std::floor(std::min(ax, bx) - half - 1)), sx1 = std::min(box.x + box.w - 1, (int)std::ceil(std::max(ax, bx) + half + 1));
+        int sy0 = std::max(box.y, (int)std::floor(std::min(ay, by) - half - 1)), sy1 = std::min(box.y + box.h - 1, (int)std::ceil(std::max(ay, by) + half + 1));
+        for (int y = sy0; y <= sy1; ++y)
+            for (int x = sx0; x <= sx1; ++x) {
+                double px = x + 0.5 - ax, py = y + 0.5 - ay;
+                double t = len2 > 0 ? std::clamp((px * dx + py * dy) / len2, 0.0, 1.0) : 0;
+                double d = std::hypot(px - t * dx, py - t * dy);
+                float k = (float)std::clamp(half + 0.5 - d, 0.0, 1.0);
+                float& m = cover[(size_t)(y - box.y) * box.w + (x - box.x)];
+                m = std::max(m, k);
+            }
+    }
+    for (int y = 0; y < box.h; ++y)
+        for (int x = 0; x < box.w; ++x)
+            if (float k = cover[(size_t)y * box.w + x]; k > 0)
+                fillRect(c, {box.x + x, box.y + y, 1, 1}, (uint32_t)std::lround((col >> 24) * k) << 24 | (col & 0xffffff));
+}
+
+// A disc of radius rad centred at (cx, cy) in canvas pixels, antialiased.
+static void disc(Canvas& c, double cx, double cy, double rad, uint32_t col) {
+    if (!(col >> 24) || rad <= 0) return;
+    for (int y = (int)std::floor(cy - rad - 1); y <= (int)std::ceil(cy + rad + 1); ++y)
+        for (int x = (int)std::floor(cx - rad - 1); x <= (int)std::ceil(cx + rad + 1); ++x)
+            if (double k = std::clamp(rad + 0.5 - std::hypot(x + 0.5 - cx, y + 0.5 - cy), 0.0, 1.0); k > 0)
+                fillRect(c, {x, y, 1, 1}, (uint32_t)std::lround((col >> 24) * k) << 24 | (col & 0xffffff));
+}
+
+// A triangle filled in col, antialiased by 4 x 4 samples a pixel.
+static void fillTriangle(Canvas& c, double ax, double ay, double bx, double by, double cx, double cy, uint32_t col) {
+    auto side = [](double px, double py, double x0, double y0, double x1, double y1) { return (x1 - x0) * (py - y0) - (y1 - y0) * (px - x0); };
+    for (int y = (int)std::floor(std::min({ay, by, cy})); y <= (int)std::ceil(std::max({ay, by, cy})); ++y)
+        for (int x = (int)std::floor(std::min({ax, bx, cx})); x <= (int)std::ceil(std::max({ax, bx, cx})); ++x) {
+            int in = 0;
+            for (int s = 0; s < 16; ++s) {
+                double px = x + (s % 4 + 0.5) / 4, py = y + (s / 4 + 0.5) / 4;
+                double d0 = side(px, py, ax, ay, bx, by), d1 = side(px, py, bx, by, cx, cy), d2 = side(px, py, cx, cy, ax, ay);
+                in += (d0 >= 0 && d1 >= 0 && d2 >= 0) || (d0 <= 0 && d1 <= 0 && d2 <= 0);
+            }
+            if (in) fillRect(c, {x, y, 1, 1}, (uint32_t)((col >> 24) * in / 16) << 24 | (col & 0xffffff));
+        }
+}
+
+// A curve's point handle: a dot in `fill` ringed in `ring` (the screen's colour, so the curve parts around
+// it), and while it is dragged a halo of the fill.
+static void handleDot(Gui& g, Canvas& c, double x, double y, uint32_t fill, uint32_t ring, bool held) {
+    const double d = g.skin().density;
+    if (held) disc(c, x, y, 5 * d, (fill & 0xffffff) | (fill >> 24) / 4 << 24);
+    disc(c, x, y, 3 * d, ring);
+    disc(c, x, y, 2 * d, fill);
+}
+
+static uint32_t mixColour(uint32_t a, uint32_t b, double t) {   // per channel, ARGB
+    uint32_t out = 0;
+    for (int s = 0; s < 32; s += 8)
+        out |= (uint32_t)std::lround((a >> s & 255) + ((int)(b >> s & 255) - (int)(a >> s & 255)) * t) << s;
+    return out;
+}
+
+// The area under a curve in column x from row top down to row base, its colour running from `area` at the
+// plot's top row y0 to `area2` at its bottom row y1 (a fade; the same colour fills flat).
+static void areaColumn(Canvas& c, int x, int top, int base, int y0, int y1, uint32_t area, uint32_t area2) {
+    if (top > base) std::swap(top, base);
+    if (area == area2) return vline(c, x, top, base - top, area);
+    for (int y = top; y < base; ++y) fillRect(c, {x, y, 1, 1}, mixColour(area, area2, std::clamp(double(y - y0) / std::max(1, y1 - y0), 0.0, 1.0)));
+}
+
 // ---- scopes: plot widgets and the display kinds -------------------------------------------------
 
 void drawScope(Canvas& c, Rect r, const std::vector<int>& v, int mode, uint32_t c1, uint32_t c2, int thick) {
@@ -1931,6 +2012,14 @@ static StageGeo stageGeo(Gui& g, const Hit& h, Rect r) {
     return e;
 }
 
+// A curve through canvas points, `width` design units wide, over its glow (a line four times as wide, if
+// the glow colour is set).
+static void drawCurve(Gui& g, Canvas& c, const std::vector<std::pair<double, double>>& pts, uint32_t col, uint32_t glow, double width) {
+    double lw = std::max(1.0, width * g.skin().density);
+    if (glow >> 24) drawPolyline(c, pts, glow, 4 * lw);
+    drawPolyline(c, pts, col, lw);
+}
+
 static void stageDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
     const Widget& w = g.wid(h);
     StageGeo e = stageGeo(g, h, r);
@@ -1941,22 +2030,23 @@ static void stageDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
     c.clip = c.clip & r;
     if (e.zero >= 0) hline(c, e.in.x, e.zero, e.in.w, grid);
     int base = e.zero >= 0 ? e.zero : e.in.y + e.in.h - 1;
+    uint32_t area2 = colourField(w, "area2", area);
     for (size_t i = 0; i + 1 < e.x.size(); ++i)   // the area between the curve and its base, column by column
         for (int x = e.x[i]; x < e.x[i + 1]; ++x) {
             int y = e.y[i] + (int)std::lround((e.y[i + 1] - e.y[i]) * double(x - e.x[i]) / std::max(1, e.x[i + 1] - e.x[i]));
-            vline(c, x, std::min(y, base), std::abs(base - y), area);
+            areaColumn(c, x, y, base, e.in.y, e.in.y + e.in.h - 1, area, area2);
         }
-    if (e.keyOff >= 0)
-        for (int y = e.in.y; y < e.in.y + e.in.h; y += 2 * k) fillRect(c, {e.keyOff, y, k, k}, dots);
-    for (size_t i = 0; i + 1 < e.x.size(); ++i) line(c, e.x[i], e.y[i], e.x[i + 1], e.y[i + 1], curve, k);
-    dot(c, e.x.back(), e.y.back(), curve, k);
+    if (e.keyOff >= 0)   // key off: a fine dashed line
+        for (int y = e.in.y; y < e.in.y + e.in.h; y += 2 * k) fillRect(c, {e.keyOff, y, 1, k}, dots);
+    std::vector<std::pair<double, double>> pts;   // the curve, smooth
+    for (size_t i = 0; i < e.x.size(); ++i) pts.push_back({e.x[i] + 0.5, e.y[i] + 0.5});
+    if (pts.size() == 1) pts.push_back(pts[0]);
+    drawCurve(g, c, pts, curve, colourField(w, "glow", 0), w.json["width"].num(1));
     StageState& st = kindState<StageState>(g, h);
-    int s = g.skin().dp(7), a = s / 2;
+    uint32_t ring = colourField(w, "ring", 0);
     for (size_t i = 0; i < e.hx.size(); ++i) {
         if (e.t[i].param < 0 && e.l[i].param < 0) continue;
-        bool sel = st.drag == (int)i;
-        fillRect(c, {e.hx[i] - a, e.hy[i] - a, s, s}, sel ? 0xffc80800 : inside);
-        if (!sel) frame(c, e.hx[i] - a, e.hy[i] - a, s, s, 0xffc80800, k);
+        handleDot(g, c, e.hx[i] + 0.5, e.hy[i] + 0.5, inside, ring, st.drag == (int)i);
     }
     c.clip = saved;
 }
@@ -2092,9 +2182,267 @@ static void levelScaleDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
         return mid - (int)std::lround(v * (r.h / 2 - k));
     };
     auto X = [&](int note) { return r.x + (int)std::lround(note * (r.w - 1) / 127.0); };
-    for (int n = 0; n < 127; ++n) line(c, X(n), Y(n), X(n + 1), Y(n + 1), col, k);
+    std::vector<std::pair<double, double>> pts;
+    for (int n = 0; n <= 127; ++n) pts.push_back({X(n) + 0.5, Y(n) + 0.5});
+    drawPolyline(c, pts, col, std::max(1.0, g.skin().density));
     int bx = X((int)std::lround(bp));
     for (int y = r.y; y < r.y + r.h; y += 2 * k) fillRect(c, {bx, y, k, k}, dots);
+}
+
+// ---- key_range: a part's note range on a small keyboard, and its note shift -----------------------
+
+// Fields: "low", "high" (params, MIDI notes), "shift" (a param in semitones, optional), "first" and "count"
+// (the keys shown, default 0 and 128), colours white, black, range (white keys inside the range), rangeBlack,
+// gap (between keys), arrow (the shift's triangle and label) and rail. Dragging a key moves the nearer end of
+// the range to it. With "shift" a strip over the keys is its slider: a rail under the keys the shift's range
+// reaches from "centre" (default 60, middle C), a tick at no shift, and a triangle over the key the centre
+// moves to, labelled +1, -12 and so on in the widget's text font on the side it moved to, but never left of
+// "labelLeft" (skin px from the widget's left, clear of a caption there). A press on the rail puts the triangle
+// there and a drag slides it; the strip either side of the rail is the skin's.
+struct KeyRangeState : SigState {
+    int drag = 0;   // 1 low, 2 high, 3 shift
+};
+
+static void keyRangeDrag(Gui& g, const Hit& h, Rect r, int x, int y, bool);
+
+struct KeyGeo {
+    Rect kb;              // the keys
+    int strip = 0;        // the shift slider's height over them
+    int band = 0, track = 0;   // in the strip: the triangle and label's band (its top, then its height), the track's row
+    int first = 0, count = 128;
+    std::vector<int> wx;  // each white key's left edge, then the right edge of the last
+    double semitone = 1;  // px per semitone across the keys
+};
+
+static bool blackKey(int n) { int k = n % 12; return k == 1 || k == 3 || k == 6 || k == 8 || k == 10; }
+
+static KeyGeo keyGeo(Gui& g, const Hit& h, Rect r) {
+    const Json& j = g.wid(h).json;
+    KeyGeo k;
+    k.first = std::clamp(j["first"].integer(0), 0, 127);
+    k.count = std::clamp(j["count"].integer(128), 1, 128 - k.first);
+    int font = g.wid(h).text.font;
+    if (j.has("shift") && font >= 0) {   // a margin, the band as tall as the label's capitals, a gap, the rail, a gap
+        const Font& f = g.skin().fonts[font];
+        k.band = std::max(f.ink1 - f.ink0 + 1, g.skin().dp(4));
+        k.track = g.skin().dp(2) + k.band + g.skin().dp(1.5);
+        k.strip = k.track + g.skin().lw() + g.skin().dp(2.5);
+    }
+    k.kb = {r.x, r.y + k.strip, r.w, r.h - k.strip};
+    int whites = 0;
+    for (int n = k.first; n < k.first + k.count; ++n) whites += !blackKey(n);
+    for (int i = 0; i <= whites; ++i) k.wx.push_back(k.kb.x + (int)std::lround(double(i) * k.kb.w / std::max(whites, 1)));
+    k.semitone = double(k.kb.w) / k.count;
+    return k;
+}
+
+// A key's rect: a white key its column less a pixel of gap, a black key 3/5 of a white one over the seam.
+static Rect keyRect(const KeyGeo& k, int n) {
+    int w = 0;
+    for (int m = k.first; m < n; ++m) w += !blackKey(m);
+    if (!blackKey(n)) return {k.wx[(size_t)w], k.kb.y, std::max(1, k.wx[(size_t)w + 1] - k.wx[(size_t)w] - 1), k.kb.h};
+    int seam = k.wx[(size_t)std::min(w, (int)k.wx.size() - 1)], bw = std::max(1, (int)std::lround((k.wx[1] - k.wx[0]) * 0.6));
+    return {seam - bw / 2, k.kb.y, bw, k.kb.h * 3 / 5};
+}
+
+static int keyAt(const KeyGeo& k, int x, int y) {
+    x = std::clamp(x, k.kb.x, k.kb.x + k.kb.w - 1);
+    for (int n = k.first; n < k.first + k.count; ++n)   // the black keys lie over the white ones
+        if (blackKey(n) && keyRect(k, n).contains(x, std::max(y, k.kb.y))) return n;
+    for (int n = k.first; n < k.first + k.count; ++n)
+        if (!blackKey(n)) {
+            Rect kr = keyRect(k, n);
+            if (x < kr.x + kr.w + 1) return n;
+        }
+    return k.first + k.count - 1;
+}
+
+static double paramValue(Gui& g, const Hit& h, const char* key, double def) {
+    int p = g.paramOf(h, g.wid(h).json[key].str());
+    return p >= 0 ? g.state().get(p) : def;
+}
+
+static void putParam(Gui& g, const Hit& h, const char* key, double v) {
+    int p = g.paramOf(h, g.wid(h).json[key].str());
+    if (p < 0) return;
+    v = std::clamp(std::round(v), g.state().def(p).min, g.state().def(p).max);
+    if (v != g.state().get(p)) g.setParam(p, v);
+}
+
+// The shift's rail: from the centre's key less the shift's range to the centre's key plus it, in canvas x.
+static std::pair<double, double> shiftRail(Gui& g, const Hit& h, const KeyGeo& k) {
+    const Json& j = g.wid(h).json;
+    int sp = g.paramOf(h, j["shift"].str());
+    double centre = j["centre"].num(60), lo = sp >= 0 ? g.state().def(sp).min : -24, hi = sp >= 0 ? g.state().def(sp).max : 24;
+    auto X = [&](double note) { return k.kb.x + (note - k.first + 0.5) * k.semitone; };
+    return {X(centre + lo), X(centre + hi)};
+}
+
+static void keyRangeDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
+    const Widget& w = g.wid(h);
+    KeyGeo k = keyGeo(g, h, r);
+    int lo = (int)paramValue(g, h, "low", 0), hi = (int)paramValue(g, h, "high", 127);
+    if (hi < lo) std::swap(lo, hi);
+    uint32_t white = colourField(w, "white", 0xffe6ecee), black = colourField(w, "black", 0xff1d2224), range = colourField(w, "range", 0xff82ca9c),
+             rangeBlack = colourField(w, "rangeBlack", 0xff3f7a55), gap = colourField(w, "gap", 0xff0c1112), arrow = colourField(w, "arrow", 0xff17301f);
+    fillRect(c, k.kb, gap);
+    for (int pass = 0; pass < 2; ++pass)
+        for (int n = k.first; n < k.first + k.count; ++n)
+            if (blackKey(n) == (pass == 1)) {
+                bool in = n >= lo && n <= hi;
+                fillRect(c, keyRect(k, n), pass ? (in ? rangeBlack : black) : (in ? range : white));
+            }
+    if (!k.strip) return;
+    int shift = (int)std::lround(paramValue(g, h, "shift", 0));
+    double centre = w.json["centre"].num(60);
+    auto X = [&](double note) { return k.kb.x + (note - k.first + 0.5) * k.semitone; };
+    auto [x0, x1] = shiftRail(g, h, k);
+    uint32_t rail = colourField(w, "rail", (arrow & 0xffffff) | 0x66000000);
+    double ty = r.y + k.track, lw = g.skin().lw(), tick = g.skin().dp(2);
+    fillRect(c, {(int)std::lround(x0), (int)ty, (int)std::lround(x1 - x0), (int)lw}, rail);
+    fillRect(c, {(int)X(centre), (int)ty, (int)lw, (int)(tick + lw)}, rail);   // no shift: a tick under the rail, clear of the label
+    double tx = X(centre + shift), half = g.skin().dp(3), bottom = r.y + g.skin().dp(2) + k.band;   // the triangle points down at the track
+    fillTriangle(c, tx - half, bottom - g.skin().dp(4.5), tx + half, bottom - g.skin().dp(4.5), tx, bottom, arrow);
+    if (!shift || w.text.font < 0) return;
+    const Font& f = g.skin().fonts[w.text.font];
+    std::string label = (shift > 0 ? "+" : "") + std::to_string(shift);
+    int tw = f.width(label), gapPx = g.skin().dp(2.5);
+    int after = (int)(tx + half) + gapPx, before = (int)(tx - half) - gapPx - tw;   // the side it moved to, else the other
+    int minX = r.x + (int)std::lround(w.json["labelLeft"].num(0) * g.skin().scale);
+    int lx = shift < 0 ? (before >= minX ? before : after) : (after + tw <= r.x + r.w ? after : before);
+    drawText(c, f, label, {lx, r.y + g.skin().dp(2), tw + 1, k.band}, 0, 1, false);
+}
+
+static bool keyRangeDown(Gui& g, const Hit& h, Rect r, int x, int y, bool) {
+    KeyGeo k = keyGeo(g, h, r);
+    KeyRangeState& st = kindState<KeyRangeState>(g, h);
+    if (y < k.kb.y) {   // the shift's slider: the triangle to a press on its rail
+        auto [x0, x1] = shiftRail(g, h, k);
+        double reach = g.skin().dp(6);
+        if (x < x0 - reach || x > x1 + reach) return false;
+        st.drag = 3;
+        keyRangeDrag(g, h, r, x, y, false);
+        return true;
+    }
+    int n = keyAt(k, x, y), lo = (int)paramValue(g, h, "low", 0), hi = (int)paramValue(g, h, "high", 127);
+    st.drag = n <= lo ? 1 : n >= hi ? 2 : n - lo < hi - n ? 1 : 2;
+    putParam(g, h, st.drag == 1 ? "low" : "high", n);
+    g.invalidate(r);
+    return true;
+}
+
+static void keyRangeDrag(Gui& g, const Hit& h, Rect r, int x, int y, bool) {
+    KeyGeo k = keyGeo(g, h, r);
+    KeyRangeState& st = kindState<KeyRangeState>(g, h);
+    if (st.drag == 3) {
+        double note = k.first + (x - k.kb.x) / std::max(k.semitone, 1e-9) - 0.5;
+        putParam(g, h, "shift", note - g.wid(h).json["centre"].num(60));
+    } else if (st.drag) {
+        int n = keyAt(k, x, k.kb.y + k.kb.h - 1);   // along the white keys, wherever the pointer is
+        if (st.drag == 1) putParam(g, h, "low", std::min(n, (int)paramValue(g, h, "high", 127)));
+        else putParam(g, h, "high", std::max(n, (int)paramValue(g, h, "low", 0)));
+    }
+    g.invalidate(r);
+}
+
+static void keyRangeUp(Gui& g, const Hit& h, Rect r, int, int) {
+    kindState<KeyRangeState>(g, h).drag = 0;
+    g.invalidate(r);
+}
+
+static void keyRangeDbl(Gui& g, const Hit& h, Rect r, int x, int y) {   // on the rail: no shift; on the keys, as a press
+    KeyGeo k = keyGeo(g, h, r);
+    if (y >= k.kb.y) return (void)keyRangeDown(g, h, r, x, y, false);
+    auto [x0, x1] = shiftRail(g, h, k);
+    if (x >= x0 - g.skin().dp(6) && x <= x1 + g.skin().dp(6)) putParam(g, h, "shift", 0);
+}
+
+// ---- velocity: a part's velocity range and sense, as the curve from velocity in to velocity out ----
+
+// Fields: "low", "high" (the range a note's velocity must fall in), "depth" and "offset" (params), colours
+// grid, area, curve, handle and off (over the velocities outside the range). Out is the FS1R's velocity sense,
+// depth * in / 64 + (offset - 64) * 2, clamped to 1..127 (FSVR's src/fs1r/firmware/notes.cpp, note_on, with
+// the system's normal curve). The curve's two ends are handles: the left one drags the range's low end and,
+// up and down, the offset; the right one the high end and the depth.
+struct VelState : SigState {
+    int drag = 0, x0 = 0, y0 = 0;   // 1 the low end, 2 the high end
+    double v0 = 0;
+};
+
+struct VelGeo {
+    Rect in;
+    double lo = 1, hi = 127, depth = 64, offset = 64;
+    double out(double v) const { return std::clamp(depth * v / 64 + (offset - 64) * 2, 1.0, 127.0); }
+    double X(double v) const { return in.x + 0.5 + (v - 1) * (in.w - 1) / 126; }
+    double Y(double v) const { return in.y + 0.5 + (in.h - 1) - (v - 1) * (in.h - 1) / 126; }
+};
+
+static VelGeo velGeo(Gui& g, const Hit& h, Rect r) {
+    VelGeo e;
+    int pad = g.skin().dp(6);
+    e.in = {r.x + pad, r.y + pad, r.w - 2 * pad, r.h - 2 * pad};
+    e.lo = paramValue(g, h, "low", 1), e.hi = paramValue(g, h, "high", 127);
+    e.depth = paramValue(g, h, "depth", 64), e.offset = paramValue(g, h, "offset", 64);
+    return e;
+}
+
+static void velDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
+    const Widget& w = g.wid(h);
+    VelGeo e = velGeo(g, h, r);
+    uint32_t grid = colourField(w, "grid", 0xff5d8a5a), area = colourField(w, "area", 0x4017301f), curve = colourField(w, "curve", 0xff17301f),
+             inside = colourField(w, "handle", 0xff9fd8b0), off = colourField(w, "off", 0x3017301f);
+    Rect saved = c.clip;
+    c.clip = c.clip & r;
+    drawPolyline(c, {{e.X(1), e.Y(1)}, {e.X(127), e.Y(127)}}, grid, 1);   // the diagonal: out as in, for reference
+    double lo = std::min(e.lo, e.hi), hi = std::max(e.lo, e.hi);
+    int xl = (int)e.X(lo), xh = (int)e.X(hi);
+    fillRect(c, {r.x, r.y, xl - r.x, r.h}, off);
+    fillRect(c, {xh + 1, r.y, r.x + r.w - xh - 1, r.h}, off);
+    uint32_t area2 = colourField(w, "area2", area);
+    std::vector<std::pair<double, double>> pts;
+    for (int x = xl; x <= xh; ++x) {
+        double v = 1 + (x + 0.5 - e.in.x - 0.5) * 126 / std::max(1, e.in.w - 1), y = e.Y(e.out(v));
+        areaColumn(c, x, (int)y, e.in.y + e.in.h, e.in.y, e.in.y + e.in.h - 1, area, area2);
+        pts.push_back({x + 0.5, y});
+    }
+    drawCurve(g, c, pts, curve, colourField(w, "glow", 0), w.json["width"].num(1));
+    VelState& st = kindState<VelState>(g, h);
+    for (int i = 1; i <= 2; ++i) {
+        double v = i == 1 ? e.lo : e.hi;
+        handleDot(g, c, e.X(v), e.Y(e.out(v)), inside, colourField(w, "ring", 0), st.drag == i);
+    }
+    c.clip = saved;
+}
+
+static bool velDown(Gui& g, const Hit& h, Rect r, int x, int y, bool) {
+    VelGeo e = velGeo(g, h, r);
+    VelState& st = kindState<VelState>(g, h);
+    double dl = std::hypot(x - e.X(e.lo), y - e.Y(e.out(e.lo))), dh = std::hypot(x - e.X(e.hi), y - e.Y(e.out(e.hi)));
+    st.drag = dl <= dh ? 1 : 2;   // the nearer end, wherever the press
+    st.x0 = x, st.y0 = y, st.v0 = st.drag == 1 ? e.offset : e.depth;
+    g.invalidate(r);
+    return true;
+}
+
+static void velDrag(Gui& g, const Hit& h, Rect r, int x, int y, bool shift) {
+    VelState& st = kindState<VelState>(g, h);
+    if (!st.drag) return;
+    VelGeo e = velGeo(g, h, r);
+    double v = std::clamp(1 + (x - e.in.x) * 126.0 / std::max(1, e.in.w - 1), 1.0, 127.0);
+    double dOut = -(y - st.y0) * 126.0 / std::max(1, e.in.h - 1) * (shift ? 0.1 : 1);   // velocity units, up positive
+    if (st.drag == 1) {
+        putParam(g, h, "low", std::min(v, e.hi));
+        putParam(g, h, "offset", st.v0 + dOut / 2);
+    } else {
+        putParam(g, h, "high", std::max(v, e.lo));
+        putParam(g, h, "depth", st.v0 + dOut * 64 / std::max(e.hi, 1.0));
+    }
+    g.invalidate(r);
+}
+
+static void velUp(Gui& g, const Hit& h, Rect r, int, int) {
+    kindState<VelState>(g, h).drag = 0;
+    g.invalidate(r);
 }
 
 // ---- the table ------------------------------------------------------------------------------------
@@ -2114,6 +2462,8 @@ const KindOps* findKind(const std::string& kind) {
     static const KindOps stage        = {stageDraw,        stageDown, stageDrag, stageUp, nullptr,    nullptr, nullptr,  sigTick<StageState>};
     static const KindOps fseq         = {fseqDraw,         nullptr,   nullptr,   nullptr, nullptr,    nullptr, nullptr,  sigTick<SigState>};
     static const KindOps levelScale   = {levelScaleDraw,   nullptr,   nullptr,   nullptr, nullptr,    nullptr, nullptr,  sigTick<SigState>};
+    static const KindOps keyRange     = {keyRangeDraw, keyRangeDown, keyRangeDrag, keyRangeUp, keyRangeDbl, nullptr, nullptr, sigTick<KeyRangeState>};
+    static const KindOps velocity     = {velDraw,          velDown,   velDrag,   velUp,   nullptr,    nullptr, nullptr,  sigTick<VelState>};
     if (kind == "pad") return &pad;
     if (kind == "morph_pad") return &morph;
     if (kind == "piano") return &piano;
@@ -2127,6 +2477,8 @@ const KindOps* findKind(const std::string& kind) {
     if (kind == "stage_env") return &stage;
     if (kind == "fseq") return &fseq;
     if (kind == "level_scale") return &levelScale;
+    if (kind == "key_range") return &keyRange;
+    if (kind == "velocity") return &velocity;
     return nullptr;   // "fx_chain" and unknown kinds: the fill only
 }
 

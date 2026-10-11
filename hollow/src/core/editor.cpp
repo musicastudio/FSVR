@@ -596,6 +596,24 @@ void Gui::setNorm(const Hit& h, double t, int which) {
     setPlain(h, p >= 0 ? state_.fromNormal(p, t) : w.kind == Kind::Custom ? t : w.rangeMin + t * (w.rangeMax - w.rangeMin), which);
 }
 
+// A number's steppers: the skin's "steppers" for the plate it is drawn on, unless it opts out or takes no input.
+const Skin::Stepper* Gui::stepperOf(const Node& n, int i) const {
+    const Widget& w = n.view->widgets[i];
+    if (w.kind != Kind::Number || !w.stepper || w.fill.image < 0 || (!w.dragOn && !w.editable)) return nullptr;
+    auto it = skin_->steppers.find(w.fill.image);
+    return it == skin_->steppers.end() || 2 * it->second.width >= n.w[i].r.w ? nullptr : &it->second;
+}
+
+void Gui::stepNumber(const Hit& h, int dir) {
+    const Widget& w = wid(h);
+    int p = inst(h).param;
+    double lo = p >= 0 ? state_.def(p).min : std::min(w.rangeMin, w.rangeMax), hi = p >= 0 ? state_.def(p).max : std::max(w.rangeMin, w.rangeMax);
+    int steps = p >= 0 ? state_.def(p).steps : w.steps;
+    double unit = (hi - lo) / (steps > 0 ? steps : 100);
+    if (w.hasRange && p >= 0) lo = std::max(lo, std::min(w.rangeMin, w.rangeMax)), hi = std::min(hi, std::max(w.rangeMin, w.rangeMax));
+    setPlain(h, std::clamp(plain(*h.node, h.i) + dir * unit, lo, hi));
+}
+
 void Gui::setParam(int p, double v) {
     if (p < 0) return;
     bool host = host_ && state_.def(p).host;
@@ -805,7 +823,8 @@ int Gui::buttonTile(const Node& n, int i) const {
     bool pressed = w.pressedTiles && live(press_) && press_ == me;
     bool hovered = w.hoverTiles && live(hover_) && hover_ == me;
     int group = pressed ? 1 : hovered ? 1 + w.pressedTiles : 0;
-    int value = w.source == Widget::MidiIn || w.source == Widget::Modified ? sourceValue(w) == "1"
+    int value = w.onIf.op != Cond::None ? test(n, w.onIf, w.onIf.param.empty() ? -1 : state_.indexOf(subst(n, w.onIf.param)))
+              : w.source == Widget::MidiIn || w.source == Widget::Modified ? sourceValue(w) == "1"
               : w.action.type == Action::Goto || w.action.type == Action::Set ? active(n, i)
               : w.action.type == Action::Value ? n.w[i].param >= 0 && state_.get(n.w[i].param) == w.action.amount
               : w.action.type == Action::Step ? 0 : index(n, i);
@@ -930,11 +949,26 @@ void Gui::paintWidget(Canvas& c, Node& n, int i, Rect r) {
             drawImage(c, img, tile, r, false, surf());
         }
         break;
-    case Kind::Number:
+    case Kind::Number: {
         drawFill(c, w.fill, r, 0);
+        int pad[4] = {w.pad[0], w.pad[1], w.pad[2], w.pad[3]};
+        if (const Skin::Stepper* st = stepperOf(n, i)) {   // down at the left end, up at the right, lit while held
+            bool held = live(press_) && press_ == Hit{&n, i} && stepDir_ != 0;
+            for (int k = 0; k < 2; ++k) {
+                int img = k ? st->up : st->down;
+                if (img < 0) continue;
+                const Image& im = skin_->images[img];
+                Rect t = im.tile(0);
+                int x = k ? r.x + r.w - st->width + (st->width - t.w) / 2 : r.x + (st->width - t.w) / 2;
+                drawImage(c, im, held && stepDir_ == (k ? 1 : -1) ? 1 : 0, {x, r.y + (r.h - t.h) / 2, t.w, t.h});
+            }
+            pad[0] = std::max(pad[0], st->width);
+            pad[2] = std::max(pad[2], st->width);
+        }
         if (editing(n, i)) paintEdit(c);
-        else drawCaption(c, w.text, numberText(n, i), r, w.pad, 0, 0, false);
+        else drawCaption(c, w.text, numberText(n, i), r, pad, 0, 0, false);
         break;
+    }
     case Kind::Textbox:
         drawFill(c, w.fill, r, 0);
         if (editing(n, i)) paintEdit(c);
@@ -956,6 +990,15 @@ void Gui::paintWidget(Canvas& c, Node& n, int i, Rect r) {
             }
         }
         auto height = [&](float v) { return (int)std::lround(std::clamp(v, 0.0f, 1.0f) * (r.h - 1)); };
+        if (n > 1 && w.drawMode == 0) {   // a trace through the values, smooth, "width" design units wide, over its "glow"
+            std::vector<std::pair<double, double>> pts;
+            double lw = std::max(1.0, w.json["width"].num(1) * skin_->density), inner = r.h - lw;
+            for (int k = 0; k < n; ++k)
+                pts.push_back({r.x + 0.5 + (r.w - 1) * double(k) / (n - 1), r.y + lw / 2 + inner * (1 - std::clamp((double)vals[k], 0.0, 1.0))});
+            if (uint32_t glow = parseColour(w.json["glow"].str(), 0); glow >> 24) drawPolyline(c, pts, glow, 4 * lw);
+            drawPolyline(c, pts, w.line, lw);
+            break;
+        }
         if (n > 0 && w.drawMode == 0) {   // a trace: each column reads the value under it
             for (int x = 0; x < r.w; ++x) col[(size_t)x] = height(vals[(size_t)x * n / r.w]);
         } else if (n > 0) {               // bars: one per value, centred on its share of the width
@@ -1434,6 +1477,7 @@ void Gui::releasePress() {
     if (!live(press_)) return;
     Hit h = press_;
     press_ = {};
+    stepDir_ = 0;
     const Widget& w = wid(h);
     if (w.kind == Kind::Custom && w.ops->up) w.ops->up(*this, h, rectOf(*h.node, h.i), INT_MIN / 2, INT_MIN / 2);
     if (w.kind == Kind::Dial && w.spring >= 0) setNorm(h, w.spring);
@@ -1579,6 +1623,14 @@ void Gui::mouseDown(int x, int y, bool right, bool dbl, bool shift) {
         }
         break;
     case Kind::Number:
+        if (const Skin::Stepper* st = stepperOf(*h.node, h.i); st && (x < r.x + st->width || x >= r.x + r.w - st->width)) {
+            stepDir_ = x < r.x + st->width ? -1 : 1;   // a press on a stepper: one step now, more while held
+            press_ = h;
+            begin(h);
+            stepNumber(h, stepDir_);
+            nextRepeat_ = Clock::now() + ms(400);
+            break;
+        }
         if (dbl && w.editable) {
             startEdit(h, false, x, y);
             break;
@@ -1620,7 +1672,7 @@ void Gui::mouseMove(int x, int y, bool shift) {
     }
     if (live(press_)) {
         const Widget& w = wid(press_);
-        if (w.kind == Kind::Dial || w.kind == Kind::Number) {
+        if (w.kind == Kind::Dial || (w.kind == Kind::Number && !stepDir_)) {
             drag(press_, x, y, shift, false);
         } else if (w.kind == Kind::Custom && w.ops->drag) {
             w.ops->drag(*this, press_, rectOf(*press_.node, press_.i), x, y, shift);
@@ -1689,6 +1741,7 @@ void Gui::mouseUp(int x, int y, bool shift) {
     }
     Hit h = press_;
     press_ = {};
+    stepDir_ = 0;
     const Widget& w = wid(h);
     Rect r = rectOf(*h.node, h.i);
     invalidate(r);
@@ -2674,6 +2727,10 @@ void Gui::tick() {
             nextRepeat_ = now + ms(100);
             runAction(*press_.node, press_.i, wid(press_).action);
         }
+    }
+    if (live(press_) && stepDir_ && now >= nextRepeat_) {   // a held stepper repeats as a repeat button does
+        nextRepeat_ = now + ms(100);
+        stepNumber(press_, stepDir_);
     }
     if (state_.ui() != savedUi_) {   // the host loaded a state
         loaded = true;

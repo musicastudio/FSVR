@@ -193,6 +193,8 @@ void presetMenu(Gui& g, const Hit& h, const Action& a); // the "presets" action 
 // Scope buffers (plot and the scope kinds): one height per column from the bottom, -1 = a gap.
 // mode 0 trace, 1 bars, 2 bars then trace, 3 bars from the centre then trace.
 void drawScope(Canvas& c, Rect r, const std::vector<int>& v, int mode, uint32_t c1, uint32_t c2, int thick = 1);
+// An antialiased polyline, width px wide, through points in canvas pixels (a pixel's centre at .5).
+void drawPolyline(Canvas& c, const std::vector<std::pair<double, double>>& pts, uint32_t col, double width);
 
 struct Widget {
     Kind kind = Kind::Plate;
@@ -201,6 +203,8 @@ struct Widget {
     int layer = 3;
     bool hidden = false, disabled = false;
     Cond showIf, enableIf;
+    Cond onIf;                   // button: drawn lit while this holds, instead of by its action
+    bool stepper = true;         // number: false keeps the skin's "steppers" off this box
     double value = 0;
     Fill fill;
     Text text, header, row, selectRow;   // selectRow: the selected row of a list, when it has a font
@@ -324,6 +328,10 @@ public:
     Cond closeIf;                                  // first, while this holds
     std::string settingsView;                      // skin.json "standalone": its audio and MIDI settings as a modal
     std::vector<Binding> keys;                     // skin.json "keys": keyboard shortcuts, in the order given
+    // skin.json "steppers": a number drawn on one of these plates gets a down button at its left end and an
+    // up button at its right, each `width` px wide; the images are two tiles, at rest and held.
+    struct Stepper { int down = -1, up = -1, width = 0; };
+    std::map<int, Stepper> steppers;               // by the plate's image index
     const View* view(const std::string& name) const;
     const Json& table(const std::string& name) const;   // Null when missing
 };
@@ -604,6 +612,9 @@ private:
     std::string modalShown_;                     // the view it shows, "" when closed
     bool closing_ = false;                       // the standalone closes without asking
     double deviceSent_[6] = {-1, -1, -1, -1, -1, -1};   // the settings modal: each device param as last read
+    int stepDir_ = 0;                            // a number's stepper held: -1 down, 1 up
+    const Skin::Stepper* stepperOf(const Node& n, int i) const;
+    void stepNumber(const Hit& h, int dir);      // one step of the param (or a hundredth of a continuous one)
 
     void rebuild();
     void build(Node& n, const std::string& view, Node* parent, const std::string& path, int depth);
