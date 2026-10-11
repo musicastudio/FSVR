@@ -928,9 +928,9 @@
    "type": "number",
    "name": "lcd_channel",
    "rect": [
-    326,
+    338,
     71,
-    36,
+    48,
     16
    ],
    "text": {

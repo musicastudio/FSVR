@@ -668,7 +668,8 @@ private:
         for (int p = 0; p < 4; ++p) userVoice[p] = (int)get(partUser[p]);
     }
 
-    // Each part's voice by its name, "off" for a part with no voice bank: the Parts page's Voice and the LCD
+    // Each part's voice by its name, "off" for a part with no voice bank, its bank and number for one whose voice
+    // has no name (an empty internal slot reads "Int 14"): the Parts page's Voice and the LCD
     // show the voice itself, whatever bank or number it came from.
     void voiceNames() {
         for (int p = 0; p < 4; ++p) {
@@ -677,6 +678,13 @@ private:
                 n.clear();
                 for (int k = 0; k < 10; ++k) n += model.voice[p][k] >= 32 && model.voice[p][k] < 127 ? (char)model.voice[p][k] : ' ';
                 while (!n.empty() && n.back() == ' ') n.pop_back();
+                if (n.empty()) {   // no voice came back named (an empty internal slot): the bank and number, as the browser writes them
+                    const int b = (int)get(partBank[p]), num = (int)get(partProgram[p]);
+                    char code[16];
+                    if (b == 1) std::snprintf(code, sizeof code, "Int %d", num);
+                    else std::snprintf(code, sizeof code, "%c%03d", 'A' + b - 2, num);
+                    n = code;
+                }
             }
             if (n != voiceShown[p]) st.setData("part.voice.p" + std::to_string(p + 1), voiceShown[p] = n);
         }
@@ -693,6 +701,7 @@ private:
     // A session came back: the engine as it was saved, the corners too, and every param as the host holds it.
     void restore(unsigned loads) {
         loadsSeen = loads;
+        for (auto& v : voiceShown) v.assign(1, '\0');   // the session brought back the names it saved, maybe stale: publish ours again
         const std::vector<uint8_t> eng = unb64(st.data("fsvr.engine"));
         // const std::vector<uint8_t> mor = unb64(st.data("fsvr.morph"));
         for (size_t i = 0; i < st.size(); ++i) sel[i] = st.get(i);

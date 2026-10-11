@@ -228,10 +228,14 @@ int main() {
     a.set("perf.volume", 101);
     a.run(4);
     a.proc->saving();
+    const std::string named = a.data("part.voice.p4");
+    a.st->setData("part.voice.p4", "");   // as a session saved before the names were published has it
     const std::string blob = a.st->save();
+    a.st->setData("part.voice.p4", named);
     {
         Rig b;
-        b.st->load(blob);
+        CHECK(b.until([&] { return b.data("part.voice.p4") == "off"; }), "a fresh instance's part 4 reads \"%s\"", b.data("part.voice.p4").c_str());
+        b.st->load(blob);   // part 4 is off in both: the name it published already is the one the session wants
         CHECK(b.is("op.1.v.level.p1", 57) && b.is("perf.volume", 101), "the session's params did not come back (level %g, volume %g)",
               b.get("op.1.v.level.p1"), b.get("perf.volume"));
         b.proc->saving();
@@ -240,6 +244,8 @@ int main() {
         b.run(20);
         b.proc->saving();
         CHECK(b.data("fsvr.engine") == a.data("fsvr.engine"), "the engine changed after the session came back");
+        CHECK(b.until([&] { return b.data("part.voice.p4") == "off"; }), "a session that saved part 4's voice name empty kept it \"%s\"",
+              b.data("part.voice.p4").c_str());
     }
 
     // Import SysEx: a DX7 bank becomes a bank of its own, named after the file, and its first voice loads.
