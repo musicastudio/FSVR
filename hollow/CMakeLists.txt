@@ -46,4 +46,6 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND HOLLOW_FORMATS MATCHES "CLAP")
   # reachable, so the pin keeps meaning what it says.
   FetchContent_Declare(clap-wrapper GIT_REPOSITORY https://github.com/free-audio/clap-wrapper GIT_TAG 527a37461dd0480562d110e857cf9538fecd8b98)
   FetchContent_MakeAvailable(clap clap-wrapper)
+  include(cmake/HollowClapWrapperFix.cmake)
+  hollow_fix_clap_wrapper("${clap-wrapper_SOURCE_DIR}")
 endif()
