@@ -4,9 +4,10 @@ The plug-in's editor covers everything the Yamaha FS1R has, in hammered aqua chr
 
 ## Rules
 
-- **Look.** One sheet of hammered aqua chrome with wells cut into it, with light FS1R touches: the green LCD, the dot font, the graphite pod and dark buttons. Every well (the pages, the operator column, the keyboard) has 45 degree walls and a floor of steel brushed at 45 degrees. The page tabs are square-ended raised plates; the chosen one is cut into the chrome with the content well, so the tab and its page are one recessed piece. The pots, dropdowns and tags share one style across every page, on light translucent plates inside each group, and each group's title is a tab on top of its box, left-aligned with 45 degree sides. Whatever is lit (a toggle, the chosen page, part or operator) lights in the LCD's green, the green of the browser's chosen row. The pots' caps are graphite with a light pointer, and the faders' handle is that cap without its pointer at three quarters, on a disc of the panel's colour, over the track at half its width.
+- **Look.** One sheet of hammered aqua chrome with wells cut into it, with light FS1R touches: the green LCD, the dot font, the graphite pod and dark buttons. Every well (the pages, the operator column, the keyboard) has 45 degree walls and a floor of steel brushed at 45 degrees. The page tabs are raised folder tabs, open at the foot where they meet the content well's lip and casting no shadow; the chosen one is cut into the chrome with the well, so the tab and its page are one recessed piece. The first tab starts at the well's left edge and the well's corner there is square, so the Browser tab's wall runs straight down into the well's. The pots, dropdowns and tags share one style across every page, on light translucent plates inside each group, and each group's title is a tab on top of its box, left-aligned with 45 degree sides. Whatever is lit (a toggle, the chosen page, part or operator) lights in the LCD's green, the green of the browser's chosen row, and a green underline sits under its caption, never through it. The pots' caps are graphite with a light pointer (the operator panel's are sunset orange with the pointer groove painted dark, so its controls stand off the grey and their positions read at a glance), and the faders' handle is that cap without its pointer at three quarters, on a disc of the panel's colour, over the track at half its width.
 - **The artwork is rendered, at every scale.** Every image in the skin is a render of a Blender component (`blender/`, below), rendered again for each scale the window offers (0.5x, 0.75x, 1x, 1.5x and 2x) rather than magnified, so each scale is drawn at its own resolution.
-- **No text in the artwork.** Every caption, value, name and number is drawn at run time from the skin's TrueType fonts: Saira Semi Condensed (SIL Open Font License, `plugin/skin/fonts/OFL.txt`) for the interface, and FSVR LCD, the LCD's 5 x 7 dot font as square dots, for the LCDs. The wordmarks are artwork, not text. The About box sets its text in Saira rather than the installer's Analog Whispers, which stays out of the repository.
+- **No text in the artwork.** Every caption, value, name and number is drawn at run time from the skin's TrueType fonts: Saira Semi Condensed (SIL Open Font License, `plugin/skin/fonts/OFL.txt`) for the interface, and FSVR LCD, the LCD's 5 x 7 dot font as square dots, for the LCDs. The wordmarks are artwork, not text. The About box sets its text in the installer's Analog Whispers as glyph strips, one per scale (`blender/scripts/aw_font.py` rasterizes them from the font files beside the Installer, which stay out of the repository), so it is as sharp at 2x as at 1x.
+- **Choices of two are radio buttons, numbers have steppers.** A setting with two values (Ratio or Fixed, Poly or Mono, V or N, Fingered or Fulltime) is a pair of the silver keys the operator panel's V and N are, not a menu of two; the Effects page's are still menus, for a rework of their own. Every number box has a down stepper at its left end and an up stepper at its right (skin.json `"steppers"`), one step a press, repeating while held.
 - **Limits from the unit's memory or panel go.** Software has no battery-backed RAM to share out and no physical knobs, so a limit that exists only for those reasons is dropped from the GUI.
 - **Limits from the unit's data formats stay.** FSVR reads and writes the FS1R's own sysex, so four parts, eight voiced and eight unvoiced operators, one Fseq per performance, the insertion, variation, reverb and EQ chain, and the name lengths all keep the format's shape.
 - **Limits in the engine stay in the GUI until the engine lifts them.** The engine runs the FS1R's own firmware, rewritten from the decompiled ROM, so its 32-note allocation is real. The GUI keeps the unit's note reserve controls rather than promising voices the engine won't play.
@@ -15,21 +16,27 @@ The plug-in's editor covers everything the Yamaha FS1R has, in hammered aqua chr
 
 ## The window
 
-The window is 1514 x 922 at 1x (`blender/scripts/layout.py` has every rect, and `plugin/skin/views/main.json` follows it).
+The window is 1514 x 952 at 1x (`blender/scripts/layout.py` has every rect, and `plugin/skin/views/main.json` follows it).
 
-- **The top bar** keeps its controls: the LCD, Save, Import, Editor and Keys in that order, the part buttons, the knob mode switch and its four pots, and the monitor, whose harmonic numbers are drawn text now.
-- **The page tabs** run across the top of the content well: Browser, Parts, Performance, Effects, Fseq and Easy. They were the Navigator's page buttons; the chosen tab sinks into the well (above). The page itself is the well's floor, so pages draw no ground of their own.
-- **The operator column** on the right holds the operator panel and, under it, the expert pages as buttons with an icon and the page's full name: Operators, Envelopes, Modulation, Key Scaling, Filter and Pitch. An expert page shows in the content well with no tab chosen, and its button lights.
+- **The top bar** keeps its controls: Volume, the LCD, Save, Import, Editor and Keys in that order, the part buttons, the knob mode switch and its four pots, and the monitor, whose harmonic numbers are drawn text now. Its five groups stand with equal gaps between them and the same margin at each end.
+- **The LCD** shows the performance (a user one by its name), the part and its voice by name, the part's channel, POLY and CPU, on its 25 x 3 grid of dot cells, which with the marks column is centred in the glass. Every character stands on a cell: the rows are 16 px apart as the glass's are, and the window size takes the top row's last five cells (it used to end in the marks column, where the glass has none).
+- **The page tabs** run across the top of the content well: Browser, Parts, Operators, Performance, Effects, Fseq and Quick Control. They were the Navigator's page buttons; the chosen tab sinks into the well (above). The page itself is the well's floor, so pages draw no ground of their own.
+- **The Operators tab** holds the seven expert pages: Operator (the operator the panel picks, which Edit Operator opens), All Operators, Envelopes, Modulation, Key Scaling, Filter and Pitch, as sub-tabs along its top in the browser's style (`views/ops_tabs.json`, embedded at the top of each). The tab lights for any of them (its `onIf`), the sub-tab for the one showing.
+- **The operator column** on the right holds the operator panel and, under it, the expert pages as buttons with an icon and the page's full name: Operators, Envelopes, Modulation, Key Scaling, Filter and Pitch. They open the same pages as the Operators tab's sub-tabs, and light with them.
 - **The keyboard** spans the window: 88 keys, A0 to C8, in a well of its own, with the pitch and mod wheels lying on their sides in a strip above it. Dragging a wheel right raises it, so pitch bends up to the right; the pitch wheel springs back to the centre.
-- **Scales.** The LCD's scale readout opens the scales, 0.5x to 2x. Each is the skin loaded again with every rect, pad and font size multiplied and its art taken from `plugin/skin/scales/<scale>/`, and the choice is saved with the session.
+- **Scales.** The LCD's window size, top right, opens the scales, 0.5x to 2x. Each is the skin loaded again with every rect, pad and font size multiplied and its art taken from `plugin/skin/scales/<scale>/`, and the choice is saved with the session.
 
 ## The operator panel
 
 The operator column's panel is the operator page's most used settings, on whichever page is up.
 
 - **Which operator.** 1 to 8 and V/N pick the operator and the layer. They set the skin-wide `op` and `layer` vars, which the operator page, the matrix's operator boxes and Alt+1 to Alt+8 also set, so all of them agree on one operator. Edit Operator opens its page.
-- **The waveform** is the operator's output alone, two periods of it, from the engine itself: `fs1r::Device::operatorWave` runs the same `op_sample` the channels play, at a nominal 100 Hz with no modulation, and scales it to fill. The processor publishes every part's eight operators about three times a second as text data `live.wave.p<part>.<op>`, which Hollow neither saves with the session nor counts as an edit. An unvoiced operator shows NOISE BAND in its place. The form's name and the operator's frequency (a ratio, or hertz in fixed mode) sit over the trace.
-- **The controls.** Coarse, Fine, Detune and Level, then the spectral form and Ratio/Fixed with Skirt and Band Ratio; for an unvoiced operator Bandwidth, the pitch mode (Normal, Link FO, Link FF) and Resonance take their places. The amplitude EG is the operator page's own envelope, dragged the same way.
+- **The screen** is dark glass, as every curve's screen is (the envelopes, the Parts page's velocity), with the curves in mint, antialiased, over a fading fill, and their points as round handles that halo while dragged.
+- **Form is the screen's header**, a dark bar across its top that names the operator's spectral form and opens the forms; an unvoiced operator's bar reads Noise.
+- **The waveform** is the operator's output alone, two periods of it, from the engine itself: `fs1r::Device::operatorWave` runs the same `op_sample` the channels play, at a nominal 100 Hz with no modulation, and scales it to fill. Under it, its first 16 harmonics as bars, -48 to 0 dB, worked out from the same samples: that is what tells the spectral forms apart, where the trace of a Formant is a burst that says little (a sine is one line, All 1 a group from the operator's own frequency up, Odd the odd lines of it, Res a group with a peak, Formant a band of harmonics centred on the operator's frequency, as wide as Width, the way a voice's formant is). The processor publishes every part's eight operators about three times a second as text data `live.wave.p<part>.<op>` and `live.harmonics.p<part>.<op>`, which Hollow neither saves with the session nor counts as an edit. An unvoiced operator's screen says it is a band of noise.
+- **The knob beside Skirt says what it is.** Voice byte 6 is two parameters (`docs/skirt.md`): the formant's bandwidth and the Res forms' resonance, and the other forms read neither. So the knob reads Width for Formant and Reson for Res 1 and 2, and is disabled for the forms that ignore it; Skirt is disabled for Sine, the one form it does not shape.
+- **The frequency is a control, not a printout.** Under Ratio and Fixed, a box shows what Coarse and Fine make of the operator's frequency, a multiple of the note's (Frequency ratio) or hertz (Frequency, Hz), from the tables the operator page uses; dragging it or its steppers moves Coarse, and Fine sets what lies between.
+- **The controls.** Coarse, Fine, Detune and Level, then Ratio/Fixed and the frequency with Skirt and Band Ratio; for an unvoiced operator Bandwidth, the pitch mode (Normal, Link FO, Link FF) and Resonance take their places. The amplitude EG is the operator page's own envelope, dragged the same way.
 
 ## The art: Blender
 
@@ -59,11 +66,12 @@ The unit holds 128 internal performances, 128 voices (or 64 and six Fseqs). FSVR
 - **Right-click on a bank**: a heading ("Bank: CYBER"), then Rename and Delete. A deleted bank's file moves to the library's `Deleted` folder rather than going for good; renaming renames the file. Yamaha FS1R is read only.
 - **Edited.** `gui.edited` is on once a param reaches the engine after a performance loaded or saved, and the LCD's edit mark shows it. Closing the standalone while it is on asks whether to save first (Windows; macOS and Linux close without asking).
 - **A user bank in the browser** lists its performances, voices and Fseqs, each with its U number, filtered by the Category column (the factory lists are static in the skin; a user bank's rows are the processor's). A row loads what it names; a voice goes into the selected part.
-- **Numbers.** Every user item has a U number, the banks' items one after another: U1, U2 and so on, as many as there are (up to 16,384, a host param's fixed range, exact through a host's 32-bit normalized value). A user performance is Performance Bank User with `perf.user`; a user voice is a part's bank Int with `part.user.pN`; a user Fseq is Fseq Bank Int with `fseq.user`. The FS1R's own `fseq.number` byte stops at 89 and keeps meaning a preset. The LCD shows a user item as U002.
+- **Numbers.** Every user item has a U number, the banks' items one after another: U1, U2 and so on, as many as there are. A user performance is Performance Bank User with `perf.user`; a user voice is a part's bank Int with `part.user.pN`; a user Fseq is Fseq Bank Int with `fseq.user`. Those params stop at 16,384, a host param's fixed range (exact through a host's 32-bit normalized value), but nothing else does: the browser loads a row by its number directly and the processor keeps the number of what it loaded, so a library past that loads and lights its rows the same, and only host automation and program change reach no further than the params. The FS1R's own `fseq.number` byte stops at 89 and keeps meaning a preset.
+- **A part shows its voice, not a code.** The Parts page's Voice and the LCD read the voice's own name out of the engine (text data `part.voice.pN`, "off" for a part with no voice bank), so a part names what it plays wherever it came from, and the session stores the voice itself in the engine's dump. The Voice field's menu opens the Browser's voices for that part, or turns the part off.
 - **Int inside a bank.** A performance names its voices and Fseq by bank and number. When it comes from a bank that holds its own internal voices (a dump of a whole unit, voices at 51 00 nn), Int voice N is that bank's voice N; when voice bulks for its parts follow it in the file (what Save to Bank writes), those are its voices; otherwise Int N is user voice N. Fseqs follow the same rule.
 - **Banks hold their own.** Yamaha FS1R lists the factory's presets only; a user preset is found in its own bank, since the same name can be in two banks. The Fseq page's bank still lists the 90 presets with a lock and then every user Fseq.
 - **Another bank opens on All.** Choosing a bank sets the Category column back to All, so a category picked in one bank never hides another bank's presets.
-- **A part shows the voice it plays.** A user performance's parts playing its bank's voices (the ones saved after it, or its bank's Int voices) take those voices' U numbers, so the Parts page and the LCD name them, and editing a part's voice number starts from the voice it plays.
+- **A part plays the voice it shows.** A user performance's parts playing its bank's voices (the ones saved after it, or its bank's Int voices) take those voices' U numbers, so the browser lights them.
 - **The lit row is what plays.** A user bank's lists light the loaded performance, each part's voice and the Fseq when they come from that bank, and nothing when they come from elsewhere.
 
 ## Unit-only settings without controls
@@ -92,9 +100,9 @@ The unit has two knob mode buttons. With the upper one lit, its four knobs edit 
 
 ### The morph square
 
-**Off for now.** The square is gone from the Easy page and its code is commented out in `plugin/plugin.cpp` until it works: every edit reaches all four corners, so a part plays its one voice wherever the morph params sit, and a session's saved corners are ignored. What follows is how it worked.
+**Off for now.** The square is gone from the Quick Control page and its code is commented out in `plugin/plugin.cpp` until it works: every edit reaches all four corners, so a part plays its one voice wherever the morph params sit, and a session's saved corners are ignored. What follows is how it worked.
 
-The morph square, on the Easy page: four corner voices per part, blended into the one voice the part plays. [Differences.md](Differences.md) has it as a difference from the unit.
+The morph square, on the Quick Control page (Easy, when it was there): four corner voices per part, blended into the one voice the part plays. [Differences.md](Differences.md) has it as a difference from the unit.
 
 - **What the square does.** A part's morph holds four corner voices, one per corner of the square. The square's position blends them, a random amount on each axis nudges every note's position (from a seed), Normalize copies one corner into all four, and the edit pages edit one corner or all of them.
 - **Why the corners are whole voices.** Keeping every corner's params would multiply them four times: an FS1R part's voice is 672 params, so four corners for four parts would add about 10,700 host params. The processor holds the corners as whole voices instead, saved with the instance.
@@ -134,7 +142,7 @@ The unit has no keyboard, so these are ours (issue #11): a way to reach any page
 | Alt+O, Alt+E | Ops, Env (all eight at once) |
 | Alt+M, Alt+K, Alt+F, Alt+P | Mod, KeySc, Filter, Pitch |
 | Alt+X, Alt+S | Effects, Fseq |
-| Alt+B, Alt+Z, Alt+T, Alt+R | Browser, Easy, Parts, Performance |
+| Alt+B, Alt+Z, Alt+T, Alt+R | Browser, Quick Control, Parts, Performance |
 | Alt+N | Voiced and unvoiced, back and forth (the V and N switches) |
 | Shift+1 to Shift+4 | The part the edit pages show |
 
@@ -169,17 +177,30 @@ Hollow's `tools/overflow.py` measures text against its widget with the skin's ow
 - **Filter page.** Key and Velocity fields are 70 px, so "Key Depth" fits; the Part row's fields are 64 px for "EG Depth".
 - **Key Scaling page.** The curve dropdowns are 70 px, so "+Exp" and "-Exp" fit, with the row's fields spread evenly.
 - **Fseq page.** The length column is wider for "512 frames", and the Loop box is one column of four rows, since two columns couldn't fit both the labels and "One Way".
-- **Parts page.** The user voice number field fits "U16384".
+- **Parts page.** Rebuilt; see The Parts page below.
 
 ### Elements that didn't make sense
 
 - **Mod page.** Row VC8 of the controller sets ran past its box; the rows are 26 px apart. LFO2's phase dropdown had no caption and read as a stray "0"; it is captioned Phase. LFO1's filter knob had its caption beside it, unlike every other knob; it has one above and sits under the wave and Key Sync controls. The Formant and FM routes were five unlabelled rows of dropdowns and numbers; each column is captioned Dest, V/U, Op and Depth.
 - **Pitch page.** The Pitch EG's range dropdown ("8 oct") had no caption; it is captioned Range.
 - **Effects page.** The page heading read "Insertion" while Variation and Reverb were titled inside their boxes. The heading is "Effects" and all three blocks are titled the same way. The Data List's run-together parameter names are spaced ("OutputLevel" reads "Output Level", "LPFCutoff" reads "LPF Cutoff").
-- **Easy page.** The knob captioned "LFO2" is LFO2's depth; it reads "LFO2 Dep" beside "LFO2 Spd".
+- **Quick Control page (Easy).** The knob captioned "LFO2" is LFO2's depth; it reads "LFO2 Dep" beside "LFO2 Spd".
 - **Browser.** The Channels column read "ch pfm"; it reads "Perf", or the channel numbers. The FS1R's "--" category reads "No category" in the category list. A fresh instance plays the performance its LCD and browser name (A001), rather than FSVR's init performance under A001's name.
 - **Fseq lengths.** The Fseq page said "steps" while the browser said "frames"; both say frames, the owner's manual's word.
 - **Performance page.** With the unit-only settings gone it regroups into Performance, Master, MIDI (channel, program mode, notes, device, knob transmit), MIDI Receive (bank select, program change, sysex, bulk dump protect, knobs) and Controller Numbers.
+
+## The Parts page
+
+Each part is a column, top to bottom:
+
+- **Voice**, by its name (above), and **MIDI Ch**, the channel it receives on with steppers through 1 to 16, Pfm (the performance channel) and Off; parts 1 and 2 have the top of a channel range beside it.
+- **The keys** on a keyboard of all 128 notes (Hollow's `key_range`): the part's note range lit, a key dragged moves the nearer end of it, and the note shift as a slider over the keys, captioned Note Shift: a small black triangle over the key middle C now lands on, on a thin rail spanning the shift's two octaves each way with a tick at none. Its number (+5, -12) sits on the side the triangle moved to, except that from -18 down it sits on the right, clear of the caption. A press on the rail puts the triangle there, a drag slides it, and a double-click clears it. The low and high notes and the notes reserved (Rsv) are numbers under it.
+- **Velocity** under its heading, as a curve on a dark screen (Hollow's `velocity`): velocity in across, out up, the FS1R's own law (`note_on` in `src/fs1r/firmware/notes.cpp`, with the system's normal curve), the range a note's velocity must fall in lit and the rest shaded. Its left end drags the range's low end and the offset, its right end the high end and the depth, and the four are numbers beside it.
+- **Poly or Mono** as radio buttons with a small keyboard each, three keys down for Poly and one for Mono; with Mono, the priority (Last, Top, Bottom, First) as four more, each a keyboard showing which of the keys held sounds.
+- **The switches**: Insertion, Filter, Sustain and Porta.
+- **Volume**, a fader as long as its travel, and nine dials: Pan, Reverb, Variation, Dry, V/N Balance, Detune, Pan LFO, Expression Low and Pan Scaling, each with its value in the dark value font.
+
+The voice's category is gone from the page: it belongs to the voice, which the page names, and the Browser shows and edits it. Its param stays.
 
 ## Operators and the noise generator
 
@@ -190,7 +211,7 @@ The FS1R's noise generator is its eight unvoiced operators. Each is noise shaped
 - **KeySc.** Level scaling curves are voiced-only on the unit; an unvoiced operator has one level key scaling amount, the Noise column.
 - **Fseq.** Each unvoiced operator has its own switch (the N row) to follow the Fseq's unvoiced tracks.
 - **Mod.** The Formant and FM routes pick V or N and an operator number.
-- **Algorithm matrix.** Voiced operators only, as on the unit: the 88 algorithms route voiced operators. Each unvoiced operator goes straight to the part's output at its level, and the part's V/N Balance (Parts and Easy pages) sets voiced against unvoiced.
+- **Algorithm matrix.** Voiced operators only, as on the unit: the 88 algorithms route voiced operators. Each unvoiced operator goes straight to the part's output at its level, and the part's V/N Balance (Parts and Quick Control pages) sets voiced against unvoiced.
 
 ## Everything fitted
 

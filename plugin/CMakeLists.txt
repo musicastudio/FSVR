@@ -11,7 +11,8 @@ FetchContent_MakeAvailable(dr_libs stb)
 hollow_embed_files("${CMAKE_CURRENT_BINARY_DIR}/factory.cpp" kFactoryFiles kFactoryFileCount FILES
     "${CMAKE_CURRENT_SOURCE_DIR}/generated/fs1r_presets.syx"
     "${CMAKE_CURRENT_SOURCE_DIR}/generated/fs1r_performances.syx"
-    "${CMAKE_CURRENT_SOURCE_DIR}/generated/fs1r_fseqs.syx")
+    "${CMAKE_CURRENT_SOURCE_DIR}/generated/fs1r_fseqs.syx"
+    "${CMAKE_CURRENT_SOURCE_DIR}/generated/contributors.txt")
 
 hollow_add_plugin(fsvr
   NAME "FSVR"

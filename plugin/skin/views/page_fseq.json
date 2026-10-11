@@ -1,7 +1,7 @@
 {
  "size": [
   1235,
-  536
+  566
  ],
  "widgets": [
   {
@@ -9,7 +9,7 @@
    "name": "bank_frame",
    "rect": [
     14,
-    36,
+    51,
     364,
     470
    ],
@@ -23,7 +23,7 @@
    "name": "bank_title",
    "rect": [
     20,
-    16,
+    31,
     108,
     20
    ],
@@ -48,7 +48,7 @@
    "name": "fseqs",
    "rect": [
     24,
-    46,
+    61,
     344,
     424
    ],
@@ -750,7 +750,7 @@
    "name": "fseq_import",
    "rect": [
     24,
-    478,
+    493,
     112,
     24
    ],
@@ -781,7 +781,7 @@
    "name": "fseq_export",
    "rect": [
     140,
-    478,
+    493,
     112,
     24
    ],
@@ -813,7 +813,7 @@
    "name": "fseq_import_audio",
    "rect": [
     256,
-    478,
+    493,
     112,
     24
    ],
@@ -844,7 +844,7 @@
    "name": "seq_frame",
    "rect": [
     392,
-    36,
+    51,
     204,
     124
    ],
@@ -858,7 +858,7 @@
    "name": "speed_frame",
    "rect": [
     610,
-    36,
+    51,
     278,
     124
    ],
@@ -872,7 +872,7 @@
    "name": "loop_frame",
    "rect": [
     902,
-    36,
+    51,
     319,
     124
    ],
@@ -886,7 +886,7 @@
    "name": "seq_title",
    "rect": [
     398,
-    16,
+    31,
     159,
     20
    ],
@@ -911,7 +911,7 @@
    "name": "speed_title",
    "rect": [
     616,
-    16,
+    31,
     145,
     20
    ],
@@ -936,7 +936,7 @@
    "name": "loop_title",
    "rect": [
     908,
-    16,
+    31,
     75,
     20
    ],
@@ -961,7 +961,7 @@
    "name": "seq_0_label",
    "rect": [
     400,
-    44,
+    59,
     82,
     18
    ],
@@ -985,7 +985,7 @@
    "name": "seq_0",
    "rect": [
     484,
-    44,
+    59,
     104,
     18
    ],
@@ -1037,7 +1037,7 @@
    "name": "seq_1_label",
    "rect": [
     400,
-    72,
+    87,
     82,
     18
    ],
@@ -1057,51 +1057,79 @@
    ]
   },
   {
-   "type": "dropdown",
-   "name": "seq_1",
+   "type": "button",
+   "name": "seq_1_scratch",
    "rect": [
     484,
-    72,
-    104,
-    18
+    85,
+    51,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
+    "text": "Scratch",
+    "font": "caption_grey_12",
+    "align": "center",
     "valign": "middle"
    },
    "pad": [
-    11,
-    2,
-    21,
-    2
+    1,
+    1,
+    1,
+    1
    ],
+   "hoverTiles": true,
    "pressOffset": [
-    2,
-    2
+    1,
+    1
    ],
-   "items": [
-    {
-     "label": "Scratch",
-     "value": 0
-    },
-    {
-     "label": "Fseq",
-     "value": 1
-    }
+   "param": "fseq.play_mode",
+   "action": {
+    "value": 0
+   }
+  },
+  {
+   "type": "button",
+   "name": "seq_1_fseq",
+   "rect": [
+    537,
+    85,
+    51,
+    22
    ],
-   "captionFromItem": true,
-   "param": "fseq.play_mode"
+   "fill": {
+    "image": "buttons/nav_small"
+   },
+   "text": {
+    "text": "Fseq",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
+   ],
+   "param": "fseq.play_mode",
+   "action": {
+    "value": 1
+   }
   },
   {
    "type": "plate",
    "name": "seq_2_label",
    "rect": [
     400,
-    100,
+    115,
     82,
     18
    ],
@@ -1121,51 +1149,79 @@
    ]
   },
   {
-   "type": "dropdown",
-   "name": "seq_2",
+   "type": "button",
+   "name": "seq_2_first",
    "rect": [
     484,
-    100,
-    104,
-    18
+    113,
+    51,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
+    "text": "First",
+    "font": "caption_grey_12",
+    "align": "center",
     "valign": "middle"
    },
    "pad": [
-    11,
-    2,
-    21,
-    2
+    1,
+    1,
+    1,
+    1
    ],
+   "hoverTiles": true,
    "pressOffset": [
-    2,
-    2
+    1,
+    1
    ],
-   "items": [
-    {
-     "label": "First",
-     "value": 0
-    },
-    {
-     "label": "All",
-     "value": 1
-    }
+   "param": "fseq.trigger",
+   "action": {
+    "value": 0
+   }
+  },
+  {
+   "type": "button",
+   "name": "seq_2_all",
+   "rect": [
+    537,
+    113,
+    51,
+    22
    ],
-   "captionFromItem": true,
-   "param": "fseq.trigger"
+   "fill": {
+    "image": "buttons/nav_small"
+   },
+   "text": {
+    "text": "All",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
+   ],
+   "param": "fseq.trigger",
+   "action": {
+    "value": 1
+   }
   },
   {
    "type": "plate",
    "name": "seq_3_label",
    "rect": [
     400,
-    128,
+    143,
     82,
     18
    ],
@@ -1185,51 +1241,79 @@
    ]
   },
   {
-   "type": "dropdown",
-   "name": "seq_3",
+   "type": "button",
+   "name": "seq_3_fseq",
    "rect": [
     484,
-    128,
-    104,
-    18
+    141,
+    51,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
+    "text": "Fseq",
+    "font": "caption_grey_12",
+    "align": "center",
     "valign": "middle"
    },
    "pad": [
-    11,
-    2,
-    21,
-    2
+    1,
+    1,
+    1,
+    1
    ],
+   "hoverTiles": true,
    "pressOffset": [
-    2,
-    2
+    1,
+    1
    ],
-   "items": [
-    {
-     "label": "Fseq",
-     "value": 0
-    },
-    {
-     "label": "Fixed",
-     "value": 1
-    }
+   "param": "fseq.pitch_mode",
+   "action": {
+    "value": 0
+   }
+  },
+  {
+   "type": "button",
+   "name": "seq_3_fixed",
+   "rect": [
+    537,
+    141,
+    51,
+    22
    ],
-   "captionFromItem": true,
-   "param": "fseq.pitch_mode"
+   "fill": {
+    "image": "buttons/nav_small"
+   },
+   "text": {
+    "text": "Fixed",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
+   ],
+   "param": "fseq.pitch_mode",
+   "action": {
+    "value": 1
+   }
   },
   {
    "type": "plate",
    "name": "speed_label",
    "rect": [
     620,
-    48,
+    63,
     80,
     18
    ],
@@ -1253,7 +1337,7 @@
    "name": "speed",
    "rect": [
     620,
-    72,
+    87,
     80,
     20
    ],
@@ -1284,7 +1368,7 @@
    "name": "speed_vel_label",
    "rect": [
     690,
-    45,
+    60,
     80,
     21
    ],
@@ -1306,7 +1390,7 @@
    "name": "speed_vel",
    "rect": [
     708,
-    66,
+    81,
     44,
     44
    ],
@@ -1322,7 +1406,7 @@
    "name": "speed_vel_value",
    "rect": [
     700,
-    111,
+    126,
     60,
     22
    ],
@@ -1348,7 +1432,7 @@
    "name": "level_vel_label",
    "rect": [
     756,
-    45,
+    60,
     80,
     21
    ],
@@ -1370,7 +1454,7 @@
    "name": "level_vel",
    "rect": [
     774,
-    66,
+    81,
     44,
     44
    ],
@@ -1386,7 +1470,7 @@
    "name": "level_vel_value",
    "rect": [
     766,
-    111,
+    126,
     60,
     22
    ],
@@ -1412,7 +1496,7 @@
    "name": "delay_label",
    "rect": [
     822,
-    45,
+    60,
     80,
     21
    ],
@@ -1434,7 +1518,7 @@
    "name": "delay",
    "rect": [
     840,
-    66,
+    81,
     44,
     44
    ],
@@ -1450,7 +1534,7 @@
    "name": "delay_value",
    "rect": [
     832,
-    111,
+    126,
     60,
     22
    ],
@@ -1476,7 +1560,7 @@
    "name": "loop_0_label",
    "rect": [
     950,
-    44,
+    59,
     110,
     18
    ],
@@ -1500,7 +1584,7 @@
    "name": "loop_0",
    "rect": [
     1064,
-    44,
+    59,
     110,
     18
    ],
@@ -1529,7 +1613,7 @@
    "name": "loop_1_label",
    "rect": [
     950,
-    72,
+    87,
     110,
     18
    ],
@@ -1549,51 +1633,79 @@
    ]
   },
   {
-   "type": "dropdown",
-   "name": "loop_1",
+   "type": "button",
+   "name": "loop_1_one_way",
    "rect": [
     1064,
-    72,
-    110,
-    18
+    85,
+    60,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
+    "text": "One Way",
+    "font": "caption_grey_12",
+    "align": "center",
     "valign": "middle"
    },
    "pad": [
-    11,
-    2,
-    21,
-    2
+    1,
+    1,
+    1,
+    1
    ],
+   "hoverTiles": true,
    "pressOffset": [
-    2,
-    2
+    1,
+    1
    ],
-   "items": [
-    {
-     "label": "One Way",
-     "value": 0
-    },
-    {
-     "label": "Round",
-     "value": 1
-    }
+   "param": "fseq.loop_mode",
+   "action": {
+    "value": 0
+   }
+  },
+  {
+   "type": "button",
+   "name": "loop_1_round",
+   "rect": [
+    1126,
+    85,
+    60,
+    22
    ],
-   "captionFromItem": true,
-   "param": "fseq.loop_mode"
+   "fill": {
+    "image": "buttons/nav_small"
+   },
+   "text": {
+    "text": "Round",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
+   ],
+   "param": "fseq.loop_mode",
+   "action": {
+    "value": 1
+   }
   },
   {
    "type": "plate",
    "name": "loop_2_label",
    "rect": [
     950,
-    100,
+    115,
     110,
     18
    ],
@@ -1617,7 +1729,7 @@
    "name": "loop_2",
    "rect": [
     1064,
-    100,
+    115,
     110,
     18
    ],
@@ -1646,7 +1758,7 @@
    "name": "loop_3_label",
    "rect": [
     950,
-    128,
+    143,
     110,
     18
    ],
@@ -1670,7 +1782,7 @@
    "name": "loop_3",
    "rect": [
     1064,
-    128,
+    143,
     110,
     18
    ],
@@ -1699,7 +1811,7 @@
    "name": "display_frame",
    "rect": [
     392,
-    174,
+    189,
     829,
     196
    ],
@@ -1713,7 +1825,7 @@
    "name": "display_screen",
    "rect": [
     402,
-    184,
+    199,
     809,
     176
    ],
@@ -1727,7 +1839,7 @@
    "name": "display",
    "rect": [
     402,
-    184,
+    199,
     809,
     176
    ],
@@ -1754,7 +1866,7 @@
    "name": "display_user",
    "rect": [
     402,
-    184,
+    199,
     809,
     176
    ],
@@ -1781,7 +1893,7 @@
    "name": "ops_frame",
    "rect": [
     392,
-    384,
+    399,
     829,
     122
    ],
@@ -1795,7 +1907,7 @@
    "name": "ops_title",
    "rect": [
     402,
-    390,
+    405,
     300,
     21
    ],
@@ -1817,7 +1929,7 @@
    "name": "op_1_label",
    "rect": [
     402,
-    416,
+    431,
     96,
     18
    ],
@@ -1841,7 +1953,7 @@
    "name": "op_1_v",
    "rect": [
     402,
-    440,
+    455,
     46,
     18
    ],
@@ -1872,7 +1984,7 @@
    "name": "op_1_u",
    "rect": [
     452,
-    440,
+    455,
     46,
     18
    ],
@@ -1903,7 +2015,7 @@
    "name": "op_1_track_label",
    "rect": [
     402,
-    466,
+    481,
     46,
     18
    ],
@@ -1927,7 +2039,7 @@
    "name": "op_1_track",
    "rect": [
     452,
-    466,
+    481,
     46,
     18
    ],
@@ -1957,7 +2069,7 @@
    "name": "op_2_label",
    "rect": [
     504,
-    416,
+    431,
     96,
     18
    ],
@@ -1981,7 +2093,7 @@
    "name": "op_2_v",
    "rect": [
     504,
-    440,
+    455,
     46,
     18
    ],
@@ -2012,7 +2124,7 @@
    "name": "op_2_u",
    "rect": [
     554,
-    440,
+    455,
     46,
     18
    ],
@@ -2043,7 +2155,7 @@
    "name": "op_2_track_label",
    "rect": [
     504,
-    466,
+    481,
     46,
     18
    ],
@@ -2067,7 +2179,7 @@
    "name": "op_2_track",
    "rect": [
     554,
-    466,
+    481,
     46,
     18
    ],
@@ -2097,7 +2209,7 @@
    "name": "op_3_label",
    "rect": [
     606,
-    416,
+    431,
     96,
     18
    ],
@@ -2121,7 +2233,7 @@
    "name": "op_3_v",
    "rect": [
     606,
-    440,
+    455,
     46,
     18
    ],
@@ -2152,7 +2264,7 @@
    "name": "op_3_u",
    "rect": [
     656,
-    440,
+    455,
     46,
     18
    ],
@@ -2183,7 +2295,7 @@
    "name": "op_3_track_label",
    "rect": [
     606,
-    466,
+    481,
     46,
     18
    ],
@@ -2207,7 +2319,7 @@
    "name": "op_3_track",
    "rect": [
     656,
-    466,
+    481,
     46,
     18
    ],
@@ -2237,7 +2349,7 @@
    "name": "op_4_label",
    "rect": [
     708,
-    416,
+    431,
     96,
     18
    ],
@@ -2261,7 +2373,7 @@
    "name": "op_4_v",
    "rect": [
     708,
-    440,
+    455,
     46,
     18
    ],
@@ -2292,7 +2404,7 @@
    "name": "op_4_u",
    "rect": [
     758,
-    440,
+    455,
     46,
     18
    ],
@@ -2323,7 +2435,7 @@
    "name": "op_4_track_label",
    "rect": [
     708,
-    466,
+    481,
     46,
     18
    ],
@@ -2347,7 +2459,7 @@
    "name": "op_4_track",
    "rect": [
     758,
-    466,
+    481,
     46,
     18
    ],
@@ -2377,7 +2489,7 @@
    "name": "op_5_label",
    "rect": [
     810,
-    416,
+    431,
     96,
     18
    ],
@@ -2401,7 +2513,7 @@
    "name": "op_5_v",
    "rect": [
     810,
-    440,
+    455,
     46,
     18
    ],
@@ -2432,7 +2544,7 @@
    "name": "op_5_u",
    "rect": [
     860,
-    440,
+    455,
     46,
     18
    ],
@@ -2463,7 +2575,7 @@
    "name": "op_5_track_label",
    "rect": [
     810,
-    466,
+    481,
     46,
     18
    ],
@@ -2487,7 +2599,7 @@
    "name": "op_5_track",
    "rect": [
     860,
-    466,
+    481,
     46,
     18
    ],
@@ -2517,7 +2629,7 @@
    "name": "op_6_label",
    "rect": [
     912,
-    416,
+    431,
     96,
     18
    ],
@@ -2541,7 +2653,7 @@
    "name": "op_6_v",
    "rect": [
     912,
-    440,
+    455,
     46,
     18
    ],
@@ -2572,7 +2684,7 @@
    "name": "op_6_u",
    "rect": [
     962,
-    440,
+    455,
     46,
     18
    ],
@@ -2603,7 +2715,7 @@
    "name": "op_6_track_label",
    "rect": [
     912,
-    466,
+    481,
     46,
     18
    ],
@@ -2627,7 +2739,7 @@
    "name": "op_6_track",
    "rect": [
     962,
-    466,
+    481,
     46,
     18
    ],
@@ -2657,7 +2769,7 @@
    "name": "op_7_label",
    "rect": [
     1014,
-    416,
+    431,
     96,
     18
    ],
@@ -2681,7 +2793,7 @@
    "name": "op_7_v",
    "rect": [
     1014,
-    440,
+    455,
     46,
     18
    ],
@@ -2712,7 +2824,7 @@
    "name": "op_7_u",
    "rect": [
     1064,
-    440,
+    455,
     46,
     18
    ],
@@ -2743,7 +2855,7 @@
    "name": "op_7_track_label",
    "rect": [
     1014,
-    466,
+    481,
     46,
     18
    ],
@@ -2767,7 +2879,7 @@
    "name": "op_7_track",
    "rect": [
     1064,
-    466,
+    481,
     46,
     18
    ],
@@ -2797,7 +2909,7 @@
    "name": "op_8_label",
    "rect": [
     1116,
-    416,
+    431,
     96,
     18
    ],
@@ -2821,7 +2933,7 @@
    "name": "op_8_v",
    "rect": [
     1116,
-    440,
+    455,
     46,
     18
    ],
@@ -2852,7 +2964,7 @@
    "name": "op_8_u",
    "rect": [
     1166,
-    440,
+    455,
     46,
     18
    ],
@@ -2883,7 +2995,7 @@
    "name": "op_8_track_label",
    "rect": [
     1116,
-    466,
+    481,
     46,
     18
    ],
@@ -2907,7 +3019,7 @@
    "name": "op_8_track",
    "rect": [
     1166,
-    466,
+    481,
     46,
     18
    ],

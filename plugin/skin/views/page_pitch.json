@@ -1,15 +1,26 @@
 {
  "size": [
   1235,
-  536
+  566
  ],
  "widgets": [
+  {
+   "type": "embed",
+   "name": "subtabs",
+   "rect": [
+    0,
+    0,
+    1235,
+    38
+   ],
+   "view": "ops_tabs"
+  },
   {
    "type": "plate",
    "name": "matrix_title",
    "rect": [
     827,
-    15,
+    45,
     104,
     23
    ],
@@ -34,7 +45,7 @@
    "name": "fm_matrix",
    "rect": [
     821,
-    35,
+    65,
     408,
     472
    ],
@@ -46,7 +57,7 @@
    "name": "pitch_frame",
    "rect": [
     14,
-    36,
+    66,
     330,
     104
    ],
@@ -60,7 +71,7 @@
    "name": "porta_frame",
    "rect": [
     359,
-    36,
+    66,
     264,
     104
    ],
@@ -74,7 +85,7 @@
    "name": "peg_frame",
    "rect": [
     638,
-    36,
+    66,
     154,
     236
    ],
@@ -88,7 +99,7 @@
    "name": "part_frame",
    "rect": [
     14,
-    153,
+    183,
     609,
     119
    ],
@@ -102,7 +113,7 @@
    "name": "env_frame",
    "rect": [
     14,
-    285,
+    315,
     778,
     221
    ],
@@ -116,7 +127,7 @@
    "name": "pitch_title",
    "rect": [
     20,
-    16,
+    46,
     75,
     20
    ],
@@ -141,7 +152,7 @@
    "name": "porta_title",
    "rect": [
     365,
-    16,
+    46,
     119,
     20
    ],
@@ -166,7 +177,7 @@
    "name": "peg_title",
    "rect": [
     644,
-    16,
+    46,
     94,
     20
    ],
@@ -191,7 +202,7 @@
    "name": "pitch_0_label",
    "rect": [
     24,
-    50,
+    80,
     76,
     18
    ],
@@ -215,7 +226,7 @@
    "name": "pitch_0",
    "rect": [
     24,
-    72,
+    102,
     76,
     20
    ],
@@ -244,7 +255,7 @@
    "name": "pitch_1_label",
    "rect": [
     104,
-    50,
+    80,
     76,
     18
    ],
@@ -268,7 +279,7 @@
    "name": "pitch_1",
    "rect": [
     104,
-    72,
+    102,
     76,
     20
    ],
@@ -297,7 +308,7 @@
    "name": "pitch_2_label",
    "rect": [
     184,
-    50,
+    80,
     76,
     18
    ],
@@ -321,7 +332,7 @@
    "name": "pitch_2",
    "rect": [
     184,
-    72,
+    102,
     76,
     20
    ],
@@ -350,7 +361,7 @@
    "name": "pitch_3_label",
    "rect": [
     264,
-    50,
+    80,
     76,
     18
    ],
@@ -374,7 +385,7 @@
    "name": "pitch_3",
    "rect": [
     264,
-    72,
+    102,
     76,
     20
    ],
@@ -403,7 +414,7 @@
    "name": "porta",
    "rect": [
     369,
-    50,
+    80,
     110,
     18
    ],
@@ -430,51 +441,79 @@
    "tip": "Portamento"
   },
   {
-   "type": "dropdown",
-   "name": "porta_mode",
+   "type": "button",
+   "name": "porta_mode_fingered",
    "rect": [
     369,
-    76,
-    110,
-    18
+    104,
+    58,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
+    "text": "Fingered",
+    "font": "caption_grey_12",
+    "align": "center",
     "valign": "middle"
    },
    "pad": [
-    11,
-    2,
-    21,
-    2
+    1,
+    1,
+    1,
+    1
    ],
+   "hoverTiles": true,
    "pressOffset": [
-    2,
-    2
+    1,
+    1
    ],
-   "items": [
-    {
-     "label": "Fingered",
-     "value": 0
-    },
-    {
-     "label": "Fulltime",
-     "value": 1
-    }
+   "param": "part.porta_mode.{part}",
+   "action": {
+    "value": 0
+   }
+  },
+  {
+   "type": "button",
+   "name": "porta_mode_fulltime",
+   "rect": [
+    429,
+    104,
+    58,
+    22
    ],
-   "captionFromItem": true,
-   "param": "part.porta_mode.{part}"
+   "fill": {
+    "image": "buttons/nav_small"
+   },
+   "text": {
+    "text": "Fulltime",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
+   ],
+   "param": "part.porta_mode.{part}",
+   "action": {
+    "value": 1
+   }
   },
   {
    "type": "plate",
    "name": "porta_time_label",
    "rect": [
     511,
-    41,
+    71,
     80,
     21
    ],
@@ -496,7 +535,7 @@
    "name": "porta_time",
    "rect": [
     523,
-    62,
+    92,
     56,
     56
    ],
@@ -512,13 +551,13 @@
    "name": "porta_time_value",
    "rect": [
     521,
-    119,
+    149,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -538,7 +577,7 @@
    "name": "peg_range_label",
    "rect": [
     648,
-    50,
+    80,
     50,
     18
    ],
@@ -562,7 +601,7 @@
    "name": "peg_range",
    "rect": [
     700,
-    50,
+    80,
     82,
     18
    ],
@@ -611,7 +650,7 @@
    "name": "peg_vel_label",
    "rect": [
     633,
-    83,
+    113,
     80,
     21
    ],
@@ -633,7 +672,7 @@
    "name": "peg_vel",
    "rect": [
     651,
-    104,
+    134,
     44,
     44
    ],
@@ -649,7 +688,7 @@
    "name": "peg_vel_value",
    "rect": [
     643,
-    149,
+    179,
     60,
     22
    ],
@@ -675,7 +714,7 @@
    "name": "peg_time_scale_label",
    "rect": [
     703,
-    83,
+    113,
     80,
     21
    ],
@@ -697,7 +736,7 @@
    "name": "peg_time_scale",
    "rect": [
     721,
-    104,
+    134,
     44,
     44
    ],
@@ -713,7 +752,7 @@
    "name": "peg_time_scale_value",
    "rect": [
     713,
-    149,
+    179,
     60,
     22
    ],
@@ -739,7 +778,7 @@
    "name": "part_title",
    "rect": [
     20,
-    167,
+    197,
     37,
     21
    ],
@@ -761,7 +800,7 @@
    "name": "part_title2",
    "rect": [
     20,
-    185,
+    215,
     37,
     21
    ],
@@ -783,7 +822,7 @@
    "name": "part_0_label",
    "rect": [
     62,
-    167,
+    197,
     60,
     18
    ],
@@ -807,7 +846,7 @@
    "name": "part_0",
    "rect": [
     62,
-    189,
+    219,
     60,
     20
    ],
@@ -836,7 +875,7 @@
    "name": "part_1_label",
    "rect": [
     126,
-    167,
+    197,
     60,
     18
    ],
@@ -860,7 +899,7 @@
    "name": "part_1",
    "rect": [
     126,
-    189,
+    219,
     60,
     20
    ],
@@ -889,7 +928,7 @@
    "name": "part_2_label",
    "rect": [
     190,
-    167,
+    197,
     60,
     18
    ],
@@ -913,7 +952,7 @@
    "name": "part_2",
    "rect": [
     190,
-    189,
+    219,
     60,
     20
    ],
@@ -942,7 +981,7 @@
    "name": "part_3_label",
    "rect": [
     254,
-    167,
+    197,
     60,
     18
    ],
@@ -966,7 +1005,7 @@
    "name": "part_3",
    "rect": [
     254,
-    189,
+    219,
     60,
     20
    ],
@@ -995,7 +1034,7 @@
    "name": "env_title",
    "rect": [
     20,
-    299,
+    329,
     37,
     21
    ],
@@ -1017,12 +1056,12 @@
    "name": "env_screen",
    "rect": [
     59,
-    303,
+    333,
     720,
     165
    ],
    "fill": {
-    "colour": "#384243ff"
+    "image": "displays/op_screen"
    },
    "surface": false
   },
@@ -1031,7 +1070,7 @@
    "name": "envelope",
    "rect": [
     59,
-    303,
+    333,
     720,
     165
    ],
@@ -1061,19 +1100,22 @@
      "voice.peg.l4.{part}"
     ]
    ],
-   "grid": "#5f7172ff",
-   "area": "#3a4445a5",
-   "curve": "#879ea0ff",
-   "handle": "#394344ff",
-   "dots": "#f6f6f6ff"
+   "grid": "#ffffff24",
+   "area": "#86eac24d",
+   "curve": "#86eac2ff",
+   "handle": "#effff8ff",
+   "dots": "#ffffff59",
+   "area2": "#86eac205",
+   "glow": "#86eac222",
+   "ring": "#25292cff"
   },
   {
    "type": "plate",
    "name": "peg_l0_label",
    "rect": [
     62,
-    474,
-    34,
+    504,
+    28,
     18
    ],
    "fill": {
@@ -1081,7 +1123,7 @@
    },
    "text": {
     "text": "L0",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1095,9 +1137,9 @@
    "type": "number",
    "name": "peg_l0",
    "rect": [
-    96,
-    474,
-    38,
+    90,
+    504,
+    45,
     18
    ],
    "fill": {
@@ -1105,7 +1147,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1125,8 +1167,8 @@
    "name": "peg_t1_label",
    "rect": [
     142,
-    474,
-    34,
+    504,
+    28,
     18
    ],
    "fill": {
@@ -1134,7 +1176,7 @@
    },
    "text": {
     "text": "T1",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1148,9 +1190,9 @@
    "type": "number",
    "name": "peg_t1",
    "rect": [
-    176,
-    474,
-    38,
+    170,
+    504,
+    44,
     18
    ],
    "fill": {
@@ -1158,7 +1200,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1178,8 +1220,8 @@
    "name": "peg_l1_label",
    "rect": [
     222,
-    474,
-    34,
+    504,
+    28,
     18
    ],
    "fill": {
@@ -1187,7 +1229,7 @@
    },
    "text": {
     "text": "L1",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1201,9 +1243,9 @@
    "type": "number",
    "name": "peg_l1",
    "rect": [
-    256,
-    474,
-    38,
+    250,
+    504,
+    45,
     18
    ],
    "fill": {
@@ -1211,7 +1253,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1231,8 +1273,8 @@
    "name": "peg_t2_label",
    "rect": [
     302,
-    474,
-    34,
+    504,
+    28,
     18
    ],
    "fill": {
@@ -1240,7 +1282,7 @@
    },
    "text": {
     "text": "T2",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1254,9 +1296,9 @@
    "type": "number",
    "name": "peg_t2",
    "rect": [
-    336,
-    474,
-    38,
+    330,
+    504,
+    44,
     18
    ],
    "fill": {
@@ -1264,7 +1306,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1284,8 +1326,8 @@
    "name": "peg_l2_label",
    "rect": [
     382,
-    474,
-    34,
+    504,
+    28,
     18
    ],
    "fill": {
@@ -1293,7 +1335,7 @@
    },
    "text": {
     "text": "L2",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1307,9 +1349,9 @@
    "type": "number",
    "name": "peg_l2",
    "rect": [
-    416,
-    474,
-    38,
+    410,
+    504,
+    45,
     18
    ],
    "fill": {
@@ -1317,7 +1359,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1337,8 +1379,8 @@
    "name": "peg_t3_label",
    "rect": [
     462,
-    474,
-    34,
+    504,
+    28,
     18
    ],
    "fill": {
@@ -1346,7 +1388,7 @@
    },
    "text": {
     "text": "T3",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1360,9 +1402,9 @@
    "type": "number",
    "name": "peg_t3",
    "rect": [
-    496,
-    474,
-    38,
+    490,
+    504,
+    44,
     18
    ],
    "fill": {
@@ -1370,7 +1412,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1390,8 +1432,8 @@
    "name": "peg_l3_label",
    "rect": [
     542,
-    474,
-    34,
+    504,
+    28,
     18
    ],
    "fill": {
@@ -1399,7 +1441,7 @@
    },
    "text": {
     "text": "L3",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1413,9 +1455,9 @@
    "type": "number",
    "name": "peg_l3",
    "rect": [
-    576,
-    474,
-    38,
+    570,
+    504,
+    45,
     18
    ],
    "fill": {
@@ -1423,7 +1465,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1443,8 +1485,8 @@
    "name": "peg_t4_label",
    "rect": [
     622,
-    474,
-    34,
+    504,
+    28,
     18
    ],
    "fill": {
@@ -1452,7 +1494,7 @@
    },
    "text": {
     "text": "T4",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1466,9 +1508,9 @@
    "type": "number",
    "name": "peg_t4",
    "rect": [
-    656,
-    474,
-    38,
+    650,
+    504,
+    44,
     18
    ],
    "fill": {
@@ -1476,7 +1518,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1496,8 +1538,8 @@
    "name": "peg_l4_label",
    "rect": [
     702,
-    474,
-    34,
+    504,
+    28,
     18
    ],
    "fill": {
@@ -1505,7 +1547,7 @@
    },
    "text": {
     "text": "L4",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1519,9 +1561,9 @@
    "type": "number",
    "name": "peg_l4",
    "rect": [
-    736,
-    474,
-    38,
+    730,
+    504,
+    45,
     18
    ],
    "fill": {
@@ -1529,7 +1571,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },

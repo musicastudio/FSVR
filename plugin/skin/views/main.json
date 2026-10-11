@@ -1,7 +1,7 @@
 {
  "size": [
   1514,
-  922
+  952
  ],
  "fill": {
   "image": "backgrounds/main"
@@ -23,9 +23,9 @@
    "type": "button",
    "name": "tab_browser",
    "rect": [
-    8,
+    6,
     136,
-    164,
+    172,
     44
    ],
    "layer": 4,
@@ -59,9 +59,9 @@
    "type": "button",
    "name": "tab_parts",
    "rect": [
-    172,
+    178,
     136,
-    164,
+    172,
     44
    ],
    "layer": 4,
@@ -93,11 +93,79 @@
   },
   {
    "type": "button",
+   "name": "tab_operators",
+   "rect": [
+    350,
+    136,
+    172,
+    44
+   ],
+   "layer": 4,
+   "fill": {
+    "image": "buttons/tab_operators"
+   },
+   "text": {
+    "text": "Operators",
+    "font": "tab_caption",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    4,
+    2,
+    4,
+    10
+   ],
+   "hoverTiles": true,
+   "action": {
+    "goto": "page_operator",
+    "stack": "pages"
+   },
+   "showIf": {
+    "param": "gui.hide_editor",
+    "equals": 0
+   },
+   "tip": "The operators, their envelopes, the modulation, key scaling, filter and pitch",
+   "onIf": {
+    "any": [
+     {
+      "stack": "pages",
+      "view": "page_operator"
+     },
+     {
+      "stack": "pages",
+      "view": "page_all_ops"
+     },
+     {
+      "stack": "pages",
+      "view": "page_all_envs"
+     },
+     {
+      "stack": "pages",
+      "view": "page_mod_matrix"
+     },
+     {
+      "stack": "pages",
+      "view": "page_key_scaling"
+     },
+     {
+      "stack": "pages",
+      "view": "page_filter"
+     },
+     {
+      "stack": "pages",
+      "view": "page_pitch"
+     }
+    ]
+   }
+  },
+  {
+   "type": "button",
    "name": "tab_performance",
    "rect": [
-    336,
+    522,
     136,
-    164,
+    172,
     44
    ],
    "layer": 4,
@@ -131,9 +199,9 @@
    "type": "button",
    "name": "tab_effects",
    "rect": [
-    500,
+    694,
     136,
-    164,
+    172,
     44
    ],
    "layer": 4,
@@ -167,9 +235,9 @@
    "type": "button",
    "name": "tab_fseq",
    "rect": [
-    664,
+    866,
     136,
-    164,
+    172,
     44
    ],
    "layer": 4,
@@ -201,19 +269,19 @@
   },
   {
    "type": "button",
-   "name": "tab_easy",
+   "name": "tab_quick",
    "rect": [
-    828,
+    1038,
     136,
-    164,
+    172,
     44
    ],
    "layer": 4,
    "fill": {
-    "image": "buttons/tab_easy"
+    "image": "buttons/tab_quick"
    },
    "text": {
-    "text": "Easy",
+    "text": "Quick Control",
     "font": "tab_caption",
     "align": "center",
     "valign": "middle"
@@ -242,7 +310,7 @@
     8,
     172,
     1235,
-    536
+    566
    ],
    "view": "page_library",
    "showIf": {
@@ -257,7 +325,7 @@
     1251,
     138,
     255,
-    570
+    600
    ],
    "view": "opcol",
    "showIf": {
@@ -270,7 +338,7 @@
    "name": "keys",
    "rect": [
     0,
-    708,
+    738,
     1514,
     214
    ],
@@ -294,7 +362,7 @@
    "name": "keys_bar",
    "rect": [
     0,
-    708,
+    738,
     1514,
     6
    ],
@@ -368,7 +436,7 @@
     0,
     0,
     1514,
-    922
+    952
    ],
    "layer": 7,
    "fill": {
@@ -381,7 +449,7 @@
    "name": "about_box",
    "rect": [
     437,
-    221,
+    236,
     640,
     480
    ],

@@ -1,7 +1,7 @@
 {
  "size": [
   1235,
-  536
+  566
  ],
  "widgets": [
   {
@@ -9,7 +9,7 @@
    "name": "lfo_frame",
    "rect": [
     228,
-    36,
+    51,
     178,
     221
    ],
@@ -23,7 +23,7 @@
    "name": "tone_frame",
    "rect": [
     421,
-    36,
+    51,
     233,
     221
    ],
@@ -37,7 +37,7 @@
    "name": "filter_frame",
    "rect": [
     669,
-    36,
+    51,
     337,
     221
    ],
@@ -51,7 +51,7 @@
    "name": "peg_frame",
    "rect": [
     228,
-    285,
+    300,
     371,
     221
    ],
@@ -65,7 +65,7 @@
    "name": "amp_frame",
    "rect": [
     614,
-    285,
+    300,
     392,
     221
    ],
@@ -79,7 +79,7 @@
    "name": "lfo_title",
    "rect": [
     234,
-    16,
+    31,
     68,
     20
    ],
@@ -104,7 +104,7 @@
    "name": "tone_title",
    "rect": [
     427,
-    16,
+    31,
     76,
     20
    ],
@@ -129,7 +129,7 @@
    "name": "filter_title",
    "rect": [
     675,
-    16,
+    31,
     77,
     20
    ],
@@ -154,7 +154,7 @@
    "name": "peg_title",
    "rect": [
     234,
-    265,
+    280,
     135,
     20
    ],
@@ -179,7 +179,7 @@
    "name": "amp_title",
    "rect": [
     620,
-    265,
+    280,
     167,
     20
    ],
@@ -204,7 +204,7 @@
    "name": "lfo1_rate_label",
    "rect": [
     235,
-    39,
+    54,
     80,
     21
    ],
@@ -226,7 +226,7 @@
    "name": "lfo1_rate",
    "rect": [
     247,
-    60,
+    75,
     56,
     56
    ],
@@ -242,13 +242,13 @@
    "name": "lfo1_rate_value",
    "rect": [
     245,
-    117,
+    132,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -268,7 +268,7 @@
    "name": "lfo1_pmod_label",
    "rect": [
     319,
-    39,
+    54,
     80,
     21
    ],
@@ -290,7 +290,7 @@
    "name": "lfo1_pmod",
    "rect": [
     331,
-    60,
+    75,
     56,
     56
    ],
@@ -306,13 +306,13 @@
    "name": "lfo1_pmod_value",
    "rect": [
     329,
-    117,
+    132,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -332,7 +332,7 @@
    "name": "lfo1_delay_label",
    "rect": [
     235,
-    156,
+    171,
     80,
     21
    ],
@@ -354,7 +354,7 @@
    "name": "lfo1_delay",
    "rect": [
     247,
-    177,
+    192,
     56,
     56
    ],
@@ -370,13 +370,13 @@
    "name": "lfo1_delay_value",
    "rect": [
     245,
-    234,
+    249,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -396,7 +396,7 @@
    "name": "lfo2_depth_label",
    "rect": [
     319,
-    156,
+    171,
     80,
     21
    ],
@@ -418,7 +418,7 @@
    "name": "lfo2_depth",
    "rect": [
     331,
-    177,
+    192,
     56,
     56
    ],
@@ -434,13 +434,13 @@
    "name": "lfo2_depth_value",
    "rect": [
     329,
-    234,
+    249,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -460,7 +460,7 @@
    "name": "formant_label",
    "rect": [
     429,
-    39,
+    54,
     80,
     21
    ],
@@ -482,7 +482,7 @@
    "name": "formant",
    "rect": [
     441,
-    60,
+    75,
     56,
     56
    ],
@@ -498,13 +498,13 @@
    "name": "formant_value",
    "rect": [
     439,
-    117,
+    132,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -524,7 +524,7 @@
    "name": "fm_label",
    "rect": [
     567,
-    39,
+    54,
     80,
     21
    ],
@@ -546,7 +546,7 @@
    "name": "fm",
    "rect": [
     579,
-    60,
+    75,
     56,
     56
    ],
@@ -562,13 +562,13 @@
    "name": "fm_value",
    "rect": [
     577,
-    117,
+    132,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -588,7 +588,7 @@
    "name": "vn_balance_label",
    "rect": [
     429,
-    156,
+    171,
     80,
     21
    ],
@@ -610,7 +610,7 @@
    "name": "vn_balance",
    "rect": [
     441,
-    177,
+    192,
     56,
     56
    ],
@@ -626,13 +626,13 @@
    "name": "vn_balance_value",
    "rect": [
     439,
-    234,
+    249,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -652,7 +652,7 @@
    "name": "detune_label",
    "rect": [
     567,
-    156,
+    171,
     80,
     21
    ],
@@ -674,7 +674,7 @@
    "name": "detune",
    "rect": [
     579,
-    177,
+    192,
     56,
     56
    ],
@@ -690,13 +690,13 @@
    "name": "detune_value",
    "rect": [
     577,
-    234,
+    249,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -716,7 +716,7 @@
    "name": "f_cutoff_label",
    "rect": [
     677,
-    39,
+    54,
     80,
     21
    ],
@@ -738,7 +738,7 @@
    "name": "f_cutoff",
    "rect": [
     689,
-    60,
+    75,
     56,
     56
    ],
@@ -754,13 +754,13 @@
    "name": "f_cutoff_value",
    "rect": [
     687,
-    117,
+    132,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -780,7 +780,7 @@
    "name": "f_resonance_label",
    "rect": [
     761,
-    39,
+    54,
     80,
     21
    ],
@@ -802,7 +802,7 @@
    "name": "f_resonance",
    "rect": [
     773,
-    60,
+    75,
     56,
     56
    ],
@@ -818,13 +818,13 @@
    "name": "f_resonance_value",
    "rect": [
     771,
-    117,
+    132,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -844,7 +844,7 @@
    "name": "f_filter_eg_label",
    "rect": [
     677,
-    156,
+    171,
     80,
     21
    ],
@@ -866,7 +866,7 @@
    "name": "f_filter_eg",
    "rect": [
     689,
-    177,
+    192,
     56,
     56
    ],
@@ -882,13 +882,13 @@
    "name": "f_filter_eg_value",
    "rect": [
     687,
-    234,
+    249,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -908,7 +908,7 @@
    "name": "f_lfo2_rate_label",
    "rect": [
     761,
-    156,
+    171,
     80,
     21
    ],
@@ -930,7 +930,7 @@
    "name": "f_lfo2_rate",
    "rect": [
     773,
-    177,
+    192,
     56,
     56
    ],
@@ -946,13 +946,13 @@
    "name": "f_lfo2_rate_value",
    "rect": [
     771,
-    234,
+    249,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -972,7 +972,7 @@
    "name": "filter_sw",
    "rect": [
     864,
-    60,
+    75,
     130,
     18
    ],
@@ -1002,7 +1002,7 @@
    "name": "volume_track",
    "rect": [
     924,
-    104,
+    119,
     20,
     125
    ],
@@ -1015,7 +1015,7 @@
    "name": "volume",
    "rect": [
     913,
-    104,
+    119,
     42,
     125
    ],
@@ -1032,13 +1032,13 @@
    "name": "volume_value",
    "rect": [
     904,
-    233,
+    248,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -1058,7 +1058,7 @@
    "name": "volume_label",
    "rect": [
     894,
-    84,
+    99,
     80,
     21
    ],
@@ -1080,7 +1080,7 @@
    "name": "peg_init_label",
    "rect": [
     235,
-    288,
+    303,
     80,
     21
    ],
@@ -1102,7 +1102,7 @@
    "name": "peg_init_track",
    "rect": [
     265,
-    309,
+    324,
     20,
     173
    ],
@@ -1115,7 +1115,7 @@
    "name": "peg_init",
    "rect": [
     254,
-    309,
+    324,
     42,
     173
    ],
@@ -1132,13 +1132,13 @@
    "name": "peg_init_value",
    "rect": [
     245,
-    482,
+    497,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -1158,7 +1158,7 @@
    "name": "peg_attack_label",
    "rect": [
     321,
-    288,
+    303,
     80,
     21
    ],
@@ -1180,7 +1180,7 @@
    "name": "peg_attack_track",
    "rect": [
     351,
-    309,
+    324,
     20,
     173
    ],
@@ -1193,7 +1193,7 @@
    "name": "peg_attack",
    "rect": [
     340,
-    309,
+    324,
     42,
     173
    ],
@@ -1210,13 +1210,13 @@
    "name": "peg_attack_value",
    "rect": [
     331,
-    482,
+    497,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -1236,7 +1236,7 @@
    "name": "peg_release_level_label",
    "rect": [
     407,
-    288,
+    303,
     80,
     21
    ],
@@ -1258,7 +1258,7 @@
    "name": "peg_release_level_track",
    "rect": [
     437,
-    309,
+    324,
     20,
     173
    ],
@@ -1271,7 +1271,7 @@
    "name": "peg_release_level",
    "rect": [
     426,
-    309,
+    324,
     42,
     173
    ],
@@ -1288,13 +1288,13 @@
    "name": "peg_release_level_value",
    "rect": [
     417,
-    482,
+    497,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -1314,7 +1314,7 @@
    "name": "peg_release_label",
    "rect": [
     493,
-    288,
+    303,
     80,
     21
    ],
@@ -1336,7 +1336,7 @@
    "name": "peg_release_track",
    "rect": [
     523,
-    309,
+    324,
     20,
     173
    ],
@@ -1349,7 +1349,7 @@
    "name": "peg_release",
    "rect": [
     512,
-    309,
+    324,
     42,
     173
    ],
@@ -1366,13 +1366,13 @@
    "name": "peg_release_value",
    "rect": [
     503,
-    482,
+    497,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -1392,7 +1392,7 @@
    "name": "attack_label",
    "rect": [
     624,
-    288,
+    303,
     80,
     21
    ],
@@ -1414,7 +1414,7 @@
    "name": "attack_track",
    "rect": [
     654,
-    309,
+    324,
     20,
     173
    ],
@@ -1427,7 +1427,7 @@
    "name": "attack",
    "rect": [
     643,
-    309,
+    324,
     42,
     173
    ],
@@ -1444,13 +1444,13 @@
    "name": "attack_value",
    "rect": [
     634,
-    482,
+    497,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -1470,7 +1470,7 @@
    "name": "decay_label",
    "rect": [
     710,
-    288,
+    303,
     80,
     21
    ],
@@ -1492,7 +1492,7 @@
    "name": "decay_track",
    "rect": [
     740,
-    309,
+    324,
     20,
     173
    ],
@@ -1505,7 +1505,7 @@
    "name": "decay",
    "rect": [
     729,
-    309,
+    324,
     42,
     173
    ],
@@ -1522,13 +1522,13 @@
    "name": "decay_value",
    "rect": [
     720,
-    482,
+    497,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -1548,7 +1548,7 @@
    "name": "release_label",
    "rect": [
     796,
-    288,
+    303,
     80,
     21
    ],
@@ -1570,7 +1570,7 @@
    "name": "release_track",
    "rect": [
     826,
-    309,
+    324,
     20,
     173
    ],
@@ -1583,7 +1583,7 @@
    "name": "release",
    "rect": [
     815,
-    309,
+    324,
     42,
     173
    ],
@@ -1600,13 +1600,13 @@
    "name": "release_value",
    "rect": [
     806,
-    482,
+    497,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -1626,7 +1626,7 @@
    "name": "vel_depth_label",
    "rect": [
     886,
-    297,
+    312,
     80,
     21
    ],
@@ -1648,7 +1648,7 @@
    "name": "vel_depth",
    "rect": [
     904,
-    318,
+    333,
     44,
     44
    ],
@@ -1664,7 +1664,7 @@
    "name": "vel_depth_value",
    "rect": [
     896,
-    363,
+    378,
     60,
     22
    ],
@@ -1690,7 +1690,7 @@
    "name": "vel_offset_label",
    "rect": [
     886,
-    389,
+    404,
     80,
     21
    ],
@@ -1712,7 +1712,7 @@
    "name": "vel_offset",
    "rect": [
     904,
-    410,
+    425,
     44,
     44
    ],
@@ -1728,7 +1728,7 @@
    "name": "vel_offset_value",
    "rect": [
     896,
-    455,
+    470,
     60,
     22
    ],

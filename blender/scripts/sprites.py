@@ -78,8 +78,8 @@ def glyph(c, name, x, y, size, mat, z=1.0):
         c.objects.link(o)
         o.data.materials.append(mat)
         objs.append(o)
-    if spec.get('fill'):
-        objs.append(kit.prism(name + '_fill', [(x + px * k, y + py * k) for px, py in spec['fill']], z - 0.5, z + 0.5, mat, collection=c))
+    for poly in ([spec['fill']] if spec.get('fill') else []) + spec.get('fills', []):
+        objs.append(kit.prism(name + '_fill', [(x + px * k, y + py * k) for px, py in poly], z - 0.5, z + 0.5, mat, collection=c))
     for (cx, cy, r) in spec.get('dots', []):
         objs.append(kit.prism(name + '_dot', [(x + (cx + r * math.cos(a / 8 * math.pi)) * k, y + (cy + r * math.sin(a / 8 * math.pi)) * k)
                                               for a in range(16)], z - 0.5, z + 0.5, mat, collection=c))
@@ -105,7 +105,7 @@ def dark(w, h, r=4, underline=False, icon=None, icon_x=None, icon_size=16, outli
     def build(c):
         b = body(c, 1, 1, w - 2, h - 3, r, 3, M['slate'], 1.2)
         rim = body(c, 0.5, 0.5, w - 1, h - 2, r + 0.5, 1.5, M['lit'], 0, 'Rim') if outline else None
-        bar = body(c, 6, h - 6, w - 12, 2, 1, 3.6, M['lit'], 0, 'Bar') if underline else None
+        bar = body(c, 8, h - 5, w - 16, 1.6, 0.8, 3.6, M['lit'], 0, 'Bar') if underline else None   # under the text, not through it
         g = glyph(c, icon, icon_x if icon_x is not None else (w - icon_size) / 2, (h - 2 - icon_size) / 2, icon_size, M['glyph'], 3.5) if icon else []
         def st(on, hover):
             def f():
@@ -232,6 +232,18 @@ def op_box(w, h):
     return build
 
 
+def header(w, h, menu=True):
+    """A dark screen's header bar: a slate band; as a dropdown, with a chevron at its right end and lighter
+    under the pointer."""
+    def build(c):
+        b = body(c, 0, 0, w, h, 3, 1.5, M['slate'], 0.6)
+        if not menu:
+            return [None]
+        glyph(c, 'chevron', w - 20, (h - 14) / 2, 14, M['glyph_dim'], 2.0)
+        return [lambda: b.data.materials.__setitem__(0, M['slate']), lambda: b.data.materials.__setitem__(0, M['slate_hover'])]
+    return build
+
+
 def flat(w, h, mats):
     def build(c):
         b = kit.prism('Plate', kit.rounded_rect(0, 0, w, h, 0), 0, 0.2, M[mats[0]], collection=c)
@@ -261,6 +273,7 @@ BUTTONS = {
     'buttons/library_blank_narrow': (21, 29, blank(21, 29), {'slice': [0, 3, 0, 3]}),
     'buttons/dropdown_small': (50, 18, dropdown(50, 18), {'slice': [0, 23, 0, 2]}),
     'buttons/dropdown_small_inv': (50, 18, dropdown(50, 18, True), {'slice': [0, 23, 0, 2]}),
+    'buttons/dropdown_header': (60, 22, header(60, 22), {'slice': [0, 24, 0, 6]}),
     'buttons/alg_cell': (24, 24, cell(24, 24), {'slice': [3, 3, 3, 3]}),
     'buttons/matrix_op': (41, 29, op_box(41, 29), {}),
     'buttons/about_button': (196, 45, flat(196, 45, ['pale', 'pale_hover']), {}),
@@ -284,6 +297,7 @@ def lcd_mats():
     M['plate_dark'] = kit.plain('PlateDark', (0.025, 0.035, 0.038), roughness=0.5, alpha=0.62)
     M['well_dark'] = kit.plain('WellDark', (0.030, 0.040, 0.043), metallic=0.2, roughness=0.5)
     M['slot'] = kit.plain('Slot', (0.055, 0.072, 0.076), metallic=0.2, roughness=0.5)
+    M['screen'] = kit.plain('Screen', (0.006, 0.009, 0.011), metallic=0.25, roughness=0.3)
 
 
 def screen(w, h, dots=None, right=0):
@@ -415,6 +429,7 @@ PANELS = {
     'panels/label_plate': (50, 18, plate(50, 18, 'plate_glass_light', 3, 0.8, 0.4), {'slice': [3, 3, 3, 3]}),
     'panels/label_plate_inv': (50, 18, plate(50, 18, 'plate_dark', 3, 0.8, 0.4), {'slice': [3, 3, 3, 3]}),
     'panels/plate_slate': (15, 15, plate(15, 15, 'graphite', 3, 1.0, 0.5), {'slice': [4, 4, 4, 4]}),
+    'panels/header_band': (60, 22, header(60, 22, menu=False), {'slice': [0, 6, 0, 6]}),   # buttons/dropdown_header with no menu
     'panels/mesh_dark_large': (408, 473, plate(408, 473, 'well_dark', 6, 1.5, 1.0), {}),
     'backgrounds/fm_matrix': (408, 473, matrix_bg(408, 473), {}),
     'backgrounds/library_stripes': (48, 473, plate(48, 473, 'well_dark', 0, 0.5, 0), {'slice': [0, 0, 0, 15]}),
@@ -427,9 +442,9 @@ PANELS = {
     'faders/wheel_slot': (100, 25, plate(100, 25, 'silver', 5, inset=True), {}),
 }
 DISPLAYS = {
-    'displays/lcd_window': (330, 66, screen(330, 66, dots=(25, 3, 7, 6)), {}),
+    'displays/lcd_window': (330, 66, screen(330, 66, dots=(25, 3, 9, 9)), {}),   # the grid and its marks column centred in the glass
     'displays/lcd_monitor': (286, 66, screen(286, 66, right=38), {}),
-    'displays/op_screen': (231, 84, screen(231, 84), {'slice': [6, 6, 6, 6]}),
+    'displays/op_screen': (231, 84, plate(231, 84, 'screen', 5, inset=True), {'slice': [6, 6, 6, 6]}),   # the graphs' dark glass
     'displays/lcd_edit': (12, 16, lcd_mark(12, 16, 'edit'), {}),
     'displays/lcd_midi': (12, 16, lcd_mark(12, 16, 'note'), {}),
     'meters/lcd_level': (8, 52, meter(8, 52), {}),
@@ -444,6 +459,13 @@ GLYPHS = {
 }
 for _n in ('all_ops', 'all_envs', 'mod', 'keysc', 'filter', 'pitch'):
     GLYPHS['icons/page_' + _n] = (24, 24, flat_glyph(24, 24, 'page_' + _n, ['glyph'], 22), {})
+# a number box's steppers (skin.json "steppers"): down at its left end, up at its right, lit while held; the
+# _inv pair for the dark boxes
+for _n, _ink in (('', 'ink'), ('_inv', 'glyph_dim')):
+    GLYPHS['buttons/step_down' + _n] = (9, 14, flat_glyph(9, 14, 'down', [_ink, 'lit'], 11), {})
+    GLYPHS['buttons/step_up' + _n] = (9, 14, flat_glyph(9, 14, 'up', [_ink, 'lit'], 11), {})
+for _n in ('kbd_poly', 'kbd_mono', 'prio_last', 'prio_first', 'prio_top', 'prio_bottom'):
+    GLYPHS['icons/' + _n] = (22, 18, flat_glyph(22, 18, _n, ['ink'], 22), {})
 
 FAMILIES = {'buttons': BUTTONS, 'panels': PANELS, 'displays': DISPLAYS, 'glyphs': GLYPHS}
 

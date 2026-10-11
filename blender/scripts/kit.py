@@ -17,7 +17,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)) if '__file__' in globals() els
 ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
 SKIN = os.path.join(ROOT, 'plugin', 'skin')
 TEXTURES = os.path.join(ROOT, 'blender', 'textures')
-WINDOW = (1514, 921)   # the main view at 1x; the mottled chrome is mapped across it
+WINDOW = (1514, 952)   # the main view at 1x; the mottled chrome is mapped across it
 KEY_SUN, RIM_SUN = 2.85, 0.45   # W/m2, set so a flat aqua face shows aqua_env at about its own brightness
 
 
@@ -119,7 +119,11 @@ def frame(x, y, w, h, scale):
 
 
 def render(x, y, w, h, scale):
-    """The window rect rendered at scale, as float RGBA rows top first."""
+    """The window rect rendered at scale, as float RGBA rows top first. Its edges snap to whole pixels as the
+    runtime rounds a widget's rect (each edge by lround), so a rect starting between pixels at a scale (x 6 at
+    0.75x) lines up with the background instead of drawing half a pixel off."""
+    X0, Y0 = lround(x * scale), lround(y * scale)
+    x, y, w, h = X0 / scale, Y0 / scale, (lround((x + w) * scale) - X0) / scale, (lround((y + h) * scale) - Y0) / scale
     want = (max(1, lround(w * scale)), max(1, lround(h * scale)))
     if min(want) < 8:   # Blender renders nothing under a few pixels: a bigger frame from the same corner, cropped
         a = render(x, y, max(w, 8 / scale), max(h, 8 / scale), scale)

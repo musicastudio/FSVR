@@ -1,0 +1,267 @@
+{
+ "size": [
+  1235,
+  38
+ ],
+ "widgets": [
+  {
+   "type": "plate",
+   "name": "header_bar",
+   "rect": [
+    3,
+    3,
+    1229,
+    32
+   ],
+   "layer": 0,
+   "fill": {
+    "image": "library/toolbar_bar"
+   }
+  },
+  {
+   "type": "button",
+   "name": "tab_operator",
+   "rect": [
+    3,
+    3,
+    110,
+    29
+   ],
+   "fill": {
+    "image": "buttons/library_blank_narrow"
+   },
+   "press": "up",
+   "pressOffset": [
+    1,
+    1
+   ],
+   "text": {
+    "text": "Operator",
+    "font": "library_row_white_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ],
+   "tip": "Every setting of the operator the panel picks",
+   "action": {
+    "goto": "page_operator",
+    "stack": "pages"
+   }
+  },
+  {
+   "type": "button",
+   "name": "tab_all_ops",
+   "rect": [
+    113,
+    3,
+    130,
+    29
+   ],
+   "fill": {
+    "image": "buttons/library_blank_narrow"
+   },
+   "press": "up",
+   "pressOffset": [
+    1,
+    1
+   ],
+   "text": {
+    "text": "All Operators",
+    "font": "library_row_white_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ],
+   "tip": "All eight operators",
+   "action": {
+    "goto": "page_all_ops",
+    "stack": "pages"
+   }
+  },
+  {
+   "type": "button",
+   "name": "tab_all_envs",
+   "rect": [
+    243,
+    3,
+    110,
+    29
+   ],
+   "fill": {
+    "image": "buttons/library_blank_narrow"
+   },
+   "press": "up",
+   "pressOffset": [
+    1,
+    1
+   ],
+   "text": {
+    "text": "Envelopes",
+    "font": "library_row_white_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ],
+   "tip": "All eight envelopes",
+   "action": {
+    "goto": "page_all_envs",
+    "stack": "pages"
+   }
+  },
+  {
+   "type": "button",
+   "name": "tab_mod_matrix",
+   "rect": [
+    353,
+    3,
+    120,
+    29
+   ],
+   "fill": {
+    "image": "buttons/library_blank_narrow"
+   },
+   "press": "up",
+   "pressOffset": [
+    1,
+    1
+   ],
+   "text": {
+    "text": "Modulation",
+    "font": "library_row_white_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ],
+   "tip": "LFOs, Formant and FM control, and controller sets",
+   "action": {
+    "goto": "page_mod_matrix",
+    "stack": "pages"
+   }
+  },
+  {
+   "type": "button",
+   "name": "tab_key_scaling",
+   "rect": [
+    473,
+    3,
+    120,
+    29
+   ],
+   "fill": {
+    "image": "buttons/library_blank_narrow"
+   },
+   "press": "up",
+   "pressOffset": [
+    1,
+    1
+   ],
+   "text": {
+    "text": "Key Scaling",
+    "font": "library_row_white_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ],
+   "tip": "Level and rate scaling across the keyboard",
+   "action": {
+    "goto": "page_key_scaling",
+    "stack": "pages"
+   }
+  },
+  {
+   "type": "button",
+   "name": "tab_filter",
+   "rect": [
+    593,
+    3,
+    90,
+    29
+   ],
+   "fill": {
+    "image": "buttons/library_blank_narrow"
+   },
+   "press": "up",
+   "pressOffset": [
+    1,
+    1
+   ],
+   "text": {
+    "text": "Filter",
+    "font": "library_row_white_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ],
+   "tip": "The part's filter and its EG",
+   "action": {
+    "goto": "page_filter",
+    "stack": "pages"
+   }
+  },
+  {
+   "type": "button",
+   "name": "tab_pitch",
+   "rect": [
+    683,
+    3,
+    90,
+    29
+   ],
+   "fill": {
+    "image": "buttons/library_blank_narrow"
+   },
+   "press": "up",
+   "pressOffset": [
+    1,
+    1
+   ],
+   "text": {
+    "text": "Pitch",
+    "font": "library_row_white_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ],
+   "tip": "Tuning, portamento and the pitch EG",
+   "action": {
+    "goto": "page_pitch",
+    "stack": "pages"
+   }
+  }
+ ]
+}

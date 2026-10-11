@@ -363,10 +363,56 @@
   },
   {
    "type": "plate",
+   "name": "credit_3_name",
+   "rect": [
+    24,
+    302,
+    592,
+    20
+   ],
+   "layer": 0,
+   "text": {
+    "text": "contributors",
+    "font": "aw_black_16",
+    "align": "left",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "credit_3_role",
+   "rect": [
+    24,
+    322,
+    592,
+    20
+   ],
+   "layer": 0,
+   "text": {
+    "text": "{data:fsvr.contributors|}",
+    "font": "aw_grey_16",
+    "align": "left",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
    "name": "trademark",
    "rect": [
     24,
-    350,
+    362,
     592,
     16
    ],

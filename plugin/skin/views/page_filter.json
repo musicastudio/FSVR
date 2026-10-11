@@ -1,15 +1,26 @@
 {
  "size": [
   1235,
-  536
+  566
  ],
  "widgets": [
+  {
+   "type": "embed",
+   "name": "subtabs",
+   "rect": [
+    0,
+    0,
+    1235,
+    38
+   ],
+   "view": "ops_tabs"
+  },
   {
    "type": "plate",
    "name": "matrix_title",
    "rect": [
     827,
-    15,
+    45,
     104,
     23
    ],
@@ -34,7 +45,7 @@
    "name": "fm_matrix",
    "rect": [
     821,
-    35,
+    65,
     408,
     472
    ],
@@ -46,7 +57,7 @@
    "name": "filter_frame",
    "rect": [
     14,
-    36,
+    66,
     298,
     104
    ],
@@ -60,7 +71,7 @@
    "name": "key_frame",
    "rect": [
     327,
-    36,
+    66,
     296,
     104
    ],
@@ -74,7 +85,7 @@
    "name": "feg_frame",
    "rect": [
     638,
-    36,
+    66,
     154,
     236
    ],
@@ -88,7 +99,7 @@
    "name": "mod_frame",
    "rect": [
     14,
-    153,
+    183,
     609,
     119
    ],
@@ -102,7 +113,7 @@
    "name": "env_frame",
    "rect": [
     14,
-    285,
+    315,
     778,
     221
    ],
@@ -116,7 +127,7 @@
    "name": "filter_title",
    "rect": [
     20,
-    16,
+    46,
     77,
     20
    ],
@@ -141,7 +152,7 @@
    "name": "key_title",
    "rect": [
     333,
-    16,
+    46,
     146,
     20
    ],
@@ -166,7 +177,7 @@
    "name": "feg_title",
    "rect": [
     644,
-    16,
+    46,
     96,
     20
    ],
@@ -191,7 +202,7 @@
    "name": "type",
    "rect": [
     24,
-    46,
+    76,
     100,
     18
    ],
@@ -248,7 +259,7 @@
    "name": "filter_sw",
    "rect": [
     24,
-    70,
+    100,
     100,
     18
    ],
@@ -279,7 +290,7 @@
    "name": "gain_label",
    "rect": [
     24,
-    96,
+    126,
     46,
     18
    ],
@@ -303,7 +314,7 @@
    "name": "gain",
    "rect": [
     72,
-    96,
+    126,
     52,
     18
    ],
@@ -333,7 +344,7 @@
    "name": "cutoff_label",
    "rect": [
     134,
-    41,
+    71,
     80,
     21
    ],
@@ -355,7 +366,7 @@
    "name": "cutoff",
    "rect": [
     146,
-    62,
+    92,
     56,
     56
    ],
@@ -371,13 +382,13 @@
    "name": "cutoff_value",
    "rect": [
     144,
-    119,
+    149,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -397,7 +408,7 @@
    "name": "resonance_label",
    "rect": [
     222,
-    41,
+    71,
     80,
     21
    ],
@@ -419,7 +430,7 @@
    "name": "resonance",
    "rect": [
     234,
-    62,
+    92,
     56,
     56
    ],
@@ -435,13 +446,13 @@
    "name": "resonance_value",
    "rect": [
     232,
-    119,
+    149,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -461,7 +472,7 @@
    "name": "key_0_label",
    "rect": [
     335,
-    50,
+    80,
     70,
     18
    ],
@@ -485,7 +496,7 @@
    "name": "key_0",
    "rect": [
     335,
-    72,
+    102,
     70,
     20
    ],
@@ -514,7 +525,7 @@
    "name": "key_1_label",
    "rect": [
     407,
-    50,
+    80,
     70,
     18
    ],
@@ -538,7 +549,7 @@
    "name": "key_1",
    "rect": [
     407,
-    72,
+    102,
     70,
     20
    ],
@@ -567,7 +578,7 @@
    "name": "key_2_label",
    "rect": [
     479,
-    50,
+    80,
     70,
     18
    ],
@@ -591,7 +602,7 @@
    "name": "key_2",
    "rect": [
     479,
-    72,
+    102,
     70,
     20
    ],
@@ -620,7 +631,7 @@
    "name": "key_3_label",
    "rect": [
     551,
-    50,
+    80,
     70,
     18
    ],
@@ -644,7 +655,7 @@
    "name": "key_3",
    "rect": [
     551,
-    72,
+    102,
     70,
     20
    ],
@@ -673,7 +684,7 @@
    "name": "eg_depth_label",
    "rect": [
     633,
-    41,
+    71,
     80,
     21
    ],
@@ -695,7 +706,7 @@
    "name": "eg_depth",
    "rect": [
     651,
-    62,
+    92,
     44,
     44
    ],
@@ -711,7 +722,7 @@
    "name": "eg_depth_value",
    "rect": [
     643,
-    107,
+    137,
     60,
     22
    ],
@@ -737,7 +748,7 @@
    "name": "eg_attack_vel_label",
    "rect": [
     703,
-    41,
+    71,
     80,
     21
    ],
@@ -759,7 +770,7 @@
    "name": "eg_attack_vel",
    "rect": [
     721,
-    62,
+    92,
     44,
     44
    ],
@@ -775,7 +786,7 @@
    "name": "eg_attack_vel_value",
    "rect": [
     713,
-    107,
+    137,
     60,
     22
    ],
@@ -801,7 +812,7 @@
    "name": "eg_time_scale_label",
    "rect": [
     668,
-    139,
+    169,
     80,
     21
    ],
@@ -823,7 +834,7 @@
    "name": "eg_time_scale",
    "rect": [
     686,
-    160,
+    190,
     44,
     44
    ],
@@ -839,7 +850,7 @@
    "name": "eg_time_scale_value",
    "rect": [
     678,
-    205,
+    235,
     60,
     22
    ],
@@ -865,7 +876,7 @@
    "name": "mod_title",
    "rect": [
     20,
-    167,
+    197,
     37,
     21
    ],
@@ -887,7 +898,7 @@
    "name": "part_title",
    "rect": [
     20,
-    216,
+    246,
     37,
     21
    ],
@@ -909,7 +920,7 @@
    "name": "mod_0_0_label",
    "rect": [
     62,
-    167,
+    197,
     64,
     18
    ],
@@ -933,7 +944,7 @@
    "name": "mod_0_0",
    "rect": [
     62,
-    189,
+    219,
     64,
     20
    ],
@@ -962,7 +973,7 @@
    "name": "mod_0_1_label",
    "rect": [
     130,
-    167,
+    197,
     64,
     18
    ],
@@ -986,7 +997,7 @@
    "name": "mod_0_1",
    "rect": [
     130,
-    189,
+    219,
     64,
     20
    ],
@@ -1015,7 +1026,7 @@
    "name": "mod_1_0_label",
    "rect": [
     62,
-    216,
+    246,
     64,
     18
    ],
@@ -1039,7 +1050,7 @@
    "name": "mod_1_0",
    "rect": [
     62,
-    238,
+    268,
     64,
     20
    ],
@@ -1068,7 +1079,7 @@
    "name": "mod_1_1_label",
    "rect": [
     130,
-    216,
+    246,
     64,
     18
    ],
@@ -1092,7 +1103,7 @@
    "name": "mod_1_1",
    "rect": [
     130,
-    238,
+    268,
     64,
     20
    ],
@@ -1121,7 +1132,7 @@
    "name": "mod_1_2_label",
    "rect": [
     198,
-    216,
+    246,
     64,
     18
    ],
@@ -1145,7 +1156,7 @@
    "name": "mod_1_2",
    "rect": [
     198,
-    238,
+    268,
     64,
     20
    ],
@@ -1174,7 +1185,7 @@
    "name": "env_title",
    "rect": [
     20,
-    299,
+    329,
     37,
     21
    ],
@@ -1196,12 +1207,12 @@
    "name": "env_screen",
    "rect": [
     59,
-    303,
+    333,
     720,
     165
    ],
    "fill": {
-    "colour": "#384243ff"
+    "image": "displays/op_screen"
    },
    "surface": false
   },
@@ -1210,7 +1221,7 @@
    "name": "envelope",
    "rect": [
     59,
-    303,
+    333,
     720,
     165
    ],
@@ -1240,18 +1251,21 @@
      "voice.filter.eg_l4.{part}"
     ]
    ],
-   "grid": "#5f7172ff",
-   "area": "#3a4445a5",
-   "curve": "#879ea0ff",
-   "handle": "#394344ff",
-   "dots": "#f6f6f6ff"
+   "grid": "#ffffff24",
+   "area": "#86eac24d",
+   "curve": "#86eac2ff",
+   "handle": "#effff8ff",
+   "dots": "#ffffff59",
+   "area2": "#86eac205",
+   "glow": "#86eac222",
+   "ring": "#25292cff"
   },
   {
    "type": "plate",
    "name": "feg_t1_label",
    "rect": [
     62,
-    474,
+    504,
     34,
     18
    ],
@@ -1260,7 +1274,7 @@
    },
    "text": {
     "text": "T1",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1275,7 +1289,7 @@
    "name": "feg_t1",
    "rect": [
     96,
-    474,
+    504,
     49,
     18
    ],
@@ -1284,7 +1298,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1304,7 +1318,7 @@
    "name": "feg_t2_label",
    "rect": [
     244,
-    474,
+    504,
     34,
     18
    ],
@@ -1313,7 +1327,7 @@
    },
    "text": {
     "text": "T2",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1328,7 +1342,7 @@
    "name": "feg_t2",
    "rect": [
     278,
-    474,
+    504,
     49,
     18
    ],
@@ -1337,7 +1351,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1357,7 +1371,7 @@
    "name": "feg_t3_label",
    "rect": [
     426,
-    474,
+    504,
     34,
     18
    ],
@@ -1366,7 +1380,7 @@
    },
    "text": {
     "text": "T3",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1381,7 +1395,7 @@
    "name": "feg_t3",
    "rect": [
     460,
-    474,
+    504,
     49,
     18
    ],
@@ -1390,7 +1404,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1410,7 +1424,7 @@
    "name": "feg_t4_label",
    "rect": [
     608,
-    474,
+    504,
     34,
     18
    ],
@@ -1419,7 +1433,7 @@
    },
    "text": {
     "text": "T4",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1434,7 +1448,7 @@
    "name": "feg_t4",
    "rect": [
     642,
-    474,
+    504,
     49,
     18
    ],
@@ -1443,7 +1457,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1463,7 +1477,7 @@
    "name": "feg_l1_label",
    "rect": [
     153,
-    474,
+    504,
     34,
     18
    ],
@@ -1472,7 +1486,7 @@
    },
    "text": {
     "text": "L1",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1487,7 +1501,7 @@
    "name": "feg_l1",
    "rect": [
     187,
-    474,
+    504,
     49,
     18
    ],
@@ -1496,7 +1510,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1516,7 +1530,7 @@
    "name": "feg_l2_label",
    "rect": [
     335,
-    474,
+    504,
     34,
     18
    ],
@@ -1525,7 +1539,7 @@
    },
    "text": {
     "text": "L2",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1540,7 +1554,7 @@
    "name": "feg_l2",
    "rect": [
     369,
-    474,
+    504,
     49,
     18
    ],
@@ -1549,7 +1563,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1569,7 +1583,7 @@
    "name": "feg_l3_label",
    "rect": [
     517,
-    474,
+    504,
     34,
     18
    ],
@@ -1578,7 +1592,7 @@
    },
    "text": {
     "text": "L3",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1593,7 +1607,7 @@
    "name": "feg_l3",
    "rect": [
     551,
-    474,
+    504,
     49,
     18
    ],
@@ -1602,7 +1616,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -1622,7 +1636,7 @@
    "name": "feg_l4_label",
    "rect": [
     699,
-    474,
+    504,
     34,
     18
    ],
@@ -1631,7 +1645,7 @@
    },
    "text": {
     "text": "L4",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -1646,7 +1660,7 @@
    "name": "feg_l4",
    "rect": [
     733,
-    474,
+    504,
     49,
     18
    ],
@@ -1655,7 +1669,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },

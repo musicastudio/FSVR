@@ -229,6 +229,8 @@ public:
         lib.rescan(true);
         st.setData("library.dir", (std::filesystem::u8path(lib.dir) / "").u8string());
         st.setData("fsvr.version", FSVR_VERSION);   // the About box's header
+        st.setData("fsvr.contributors", contributors());
+        followParams();
         writeLists();
         names();
         worker = std::thread([this] { run(); });
@@ -316,6 +318,10 @@ private:
     int partBank[4], partProgram[4], partUser[4], morphX[4], morphY[4], jitterX[4], jitterY[4], morphSeed[4], morphEdit[4];
     int browseBank = -1, browseCategory = -1, browsePerf = -1, browseFseq = -1, browseVoice[4], knob[4];
     int perfCategory = -1, edited = -1, saveBank = -1, itemCategory = -1, itemReadonly = -1, itemKind = -1, bankReadonly = -1;
+    // The user performance, each part's user voice and the user Fseq loaded, by U number: what the browser lights.
+    // The params hold the same numbers up to their 16,384, a host's range; the library has no such limit.
+    int userPerf = 0, userVoice[4] = {0, 0, 0, 0}, userFseq = 0;
+    std::string voiceShown[4];         // each part's voice name as last published (part.voice.pN)
 
     // MIDI waiting for its place in the block
     static constexpr int kEvents = 1024;
@@ -399,6 +405,7 @@ private:
     }
 
     double get(int i) const { return i >= 0 ? st.get((size_t)i) : 0; }
+    void putUser(int param, int& loaded, int n) { loaded = n; put(param, n); }   // a U number, past the param's range too
     void put(int i, double v) {   // a value read back from the engine: it has it already, and no action follows
         if (i < 0) return;
         st.set((size_t)i, v);
@@ -651,6 +658,36 @@ private:
         if (!(loads & 1) && loads != loadsSeen) restore(loads);
         if (adoptWanted.exchange(false)) adopt();
         selectors();
+        voiceNames();
+    }
+
+    // The user items a session or a fresh instance names, from its params (which stop at 16,384).
+    void followParams() {
+        userPerf = (int)get(perfUser);
+        userFseq = (int)get(fseqUser);
+        for (int p = 0; p < 4; ++p) userVoice[p] = (int)get(partUser[p]);
+    }
+
+    // Each part's voice by its name, "off" for a part with no voice bank: the Parts page's Voice and the LCD
+    // show the voice itself, whatever bank or number it came from.
+    void voiceNames() {
+        for (int p = 0; p < 4; ++p) {
+            std::string n = "off";
+            if (get(partBank[p]) != 0) {
+                n.clear();
+                for (int k = 0; k < 10; ++k) n += model.voice[p][k] >= 32 && model.voice[p][k] < 127 ? (char)model.voice[p][k] : ' ';
+                while (!n.empty() && n.back() == ' ') n.pop_back();
+            }
+            if (n != voiceShown[p]) st.setData("part.voice.p" + std::to_string(p + 1), voiceShown[p] = n);
+        }
+    }
+
+    // The About box's credit line for the repository's other contributors (plugin/generated/contributors.txt).
+    static std::string contributors() {
+        const std::vector<uint8_t> b = factoryBytes("contributors.txt");
+        std::string s(b.begin(), b.end());
+        while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' ')) s.pop_back();
+        return s;
     }
 
     // A session came back: the engine as it was saved, the corners too, and every param as the host holds it.
@@ -677,6 +714,8 @@ private:
                 std::memcpy(corners[p][c].data(), model.voice[p], 608);
         st.setData("fsvr.message", "");
         st.setData("fsvr.version", FSVR_VERSION);   // a session saved by another version carries its number
+        st.setData("fsvr.contributors", contributors());
+        followParams();
         writeLists();
         names();
     }
@@ -762,13 +801,16 @@ private:
         for (int i : {perfProgram, perfBank, perfUser}) perf |= moved(i);
         for (int i : {fseqBank, fseqNumber, fseqUser}) fseq |= moved(i);
         if (perf) {
-            if (get(perfBank) == 1) loadUserPerf((int)get(perfUser));
+            if (get(perfBank) == 1) loadUserPerf(userPerf = (int)get(perfUser));
             else loadFactoryPerf((int)get(perfProgram));
         }
         for (int p = 0; p < 4; ++p) {
             bool voice = false;
             for (int i : {partBank[p], partProgram[p], partUser[p]}) voice |= moved(i);
-            if (voice && !perf) loadPartVoice(p);
+            if (voice && !perf) {
+                if (get(partBank[p]) == 1) userVoice[p] = (int)get(partUser[p]);
+                loadPartVoice(p);
+            }
             if (moved(morphEdit[p])) {
                 if (edit(p) < 4) lastCorner[p] = edit(p);
                 show(p);
@@ -776,7 +818,7 @@ private:
         }
         if (fseq && !perf) {
             if (get(fseqBank) == 1) loadFactoryFseq((int)get(fseqNumber));
-            else loadUserFseq((int)get(fseqUser));
+            else loadUserFseq(userFseq = (int)get(fseqUser));
         }
         if (moved(panic) && get(panic) > 0) dev.allNotesOff();
         const bool bank = moved(browseBank);
@@ -817,7 +859,7 @@ private:
         dev.loadSyx(it->syx.data(), it->syx.size(), 0, 0);
         followPerf(*it, &b);
         put(perfBank, 1);
-        put(perfUser, n);
+        putUser(perfUser, userPerf, n);
         st.setData("perf.user.name", it->name);
         adopt();
         put(edited, 0);
@@ -836,13 +878,13 @@ private:
             const int vb = d[192 + 52 * p + 1], prog = d[192 + 52 * p + 2];
             auto from = [&](const Item* v) {   // a voice of the performance's own bank
                 loadVoiceItem(*v, p);
-                if (k >= 0) put(partUser[p], lib.number(lib.voices, k, (int)(v - bank->voices.data())));
+                if (k >= 0) putUser(partUser[p], userVoice[p], lib.number(lib.voices, k, (int)(v - bank->voices.data())));
             };
             if (bank && perf.partVoice[p] >= 0) from(&bank->voices[(size_t)perf.partVoice[p]]);
             else if (vb >= 2 && factoryVoice(vb, prog) < (int)factory.voices.size()) loadVoiceItem(factory.voices[(size_t)factoryVoice(vb, prog)], p);
             else if (vb == 1) {
                 if (const Item* v = internal(bank, &Bank::voices, prog)) from(v);
-                else if (const Item* u = lib.voice(prog + 1)) { loadVoiceItem(*u, p); put(partUser[p], prog + 1); }
+                else if (const Item* u = lib.voice(prog + 1)) { loadVoiceItem(*u, p); putUser(partUser[p], userVoice[p], prog + 1); }
             }
         }
         if (bank && perf.fseq >= 0) {
@@ -861,7 +903,7 @@ private:
                 dev.loadSyx(f->syx.data(), f->syx.size(), 0, 0);
             } else if (const Item* u = lib.fseq(num + 1)) {
                 dev.loadSyx(u->syx.data(), u->syx.size(), 0, 0);
-                put(fseqUser, num + 1);
+                putUser(fseqUser, userFseq, num + 1);
             }
         }
     }
@@ -877,7 +919,7 @@ private:
 
     void loadPartVoice(int p) {
         const int vb = (int)get(partBank[p]);
-        const Item* it = vb == 1 ? lib.voice((int)get(partUser[p]))
+        const Item* it = vb == 1 ? lib.voice(userVoice[p])
                        : factoryVoice(vb, (int)get(partProgram[p]) - 1) >= 0 ? &factory.voices[(size_t)factoryVoice(vb, (int)get(partProgram[p]) - 1)] : nullptr;
         if (!it) return;
         dev.allNotesOff();
@@ -912,15 +954,15 @@ private:
         if (row < 1 || row > (int)browsed[list].size()) return;
         const int n = browsed[list][(size_t)row - 1];
         if (list == 0) {
-            put(perfUser, n);
+            putUser(perfUser, userPerf, n);
             put(perfBank, 1);
             loadUserPerf(n);
         } else if (list == 1) {
-            put(partUser[p], n);
+            putUser(partUser[p], userVoice[p], n);
             choose(partBank[p], 1);
             loadPartVoice(p);
         } else {
-            put(fseqUser, n);
+            putUser(fseqUser, userFseq, n);
             choose(fseqBank, 0);
             loadUserFseq(n);
         }
@@ -1001,9 +1043,9 @@ private:
         auto set = [&](int i, int v) {   // a click the worker has not acted on yet stays
             if (i >= 0 && st.get((size_t)i) == sel[(size_t)i] && get(i) != v) put(i, v);
         };
-        set(browsePerf, get(perfBank) == 1 ? row(0, (int)get(perfUser)) : 0);
-        for (int p = 0; p < 4; ++p) set(browseVoice[p], get(partBank[p]) == 1 ? row(1, (int)get(partUser[p])) : 0);
-        set(browseFseq, get(fseqBank) == 0 ? row(2, (int)get(fseqUser)) : 0);
+        set(browsePerf, get(perfBank) == 1 ? row(0, userPerf) : 0);
+        for (int p = 0; p < 4; ++p) set(browseVoice[p], get(partBank[p]) == 1 ? row(1, userVoice[p]) : 0);
+        set(browseFseq, get(fseqBank) == 0 ? row(2, userFseq) : 0);
     }
 
     // ---- requests from the GUI ---------------------------------------------------------------------
@@ -1068,7 +1110,7 @@ private:
                 " voices, " + std::to_string(b.fseqs.size()) + " Fseqs");
         if (!b.fseqs.empty() && (fseqFirst || (b.perfs.empty() && b.voices.empty()))) {
             const int n = lib.number(lib.fseqs, k, 0);
-            put(fseqUser, n);
+            putUser(fseqUser, userFseq, n);
             choose(fseqBank, 0);
             loadUserFseq(n);
         } else if (!b.perfs.empty()) {
@@ -1076,7 +1118,7 @@ private:
             loadUserPerf(n);
         } else if (!b.voices.empty()) {
             const int p = selectedPart(), n = lib.number(lib.voices, k, 0);
-            put(partUser[p], n);
+            putUser(partUser[p], userVoice[p], n);
             choose(partBank[p], 1);
             loadPartVoice(p);
         }
@@ -1155,7 +1197,7 @@ private:
     void openSave() {
         std::lock_guard<std::mutex> g(ctl);
         st.setData("save.name", perfName());
-        int bank = get(perfBank) == 1 && lib.perf((int)get(perfUser)) ? lib.perfs[(size_t)get(perfUser) - 1].bank + 1 : (int)get(browseBank);
+        int bank = get(perfBank) == 1 && lib.perf(userPerf) ? lib.perfs[(size_t)userPerf - 1].bank + 1 : (int)get(browseBank);
         put(saveBank, bank >= 1 && bank <= (int)lib.banks.size() ? bank : 0);
         // A new bank's name starts on one no bank has, so the name shown is the name the file gets.
         std::string fresh = "My Presets";
@@ -1196,7 +1238,7 @@ private:
         const Bank& b = lib.banks[(size_t)k];
         for (int i = (int)b.perfs.size() - 1; i >= 0; --i)
             if (trimmed(b.perfs[(size_t)i].name) == name) {
-                put(perfUser, lib.number(lib.perfs, k, i));
+                putUser(perfUser, userPerf, lib.number(lib.perfs, k, i));
                 break;
             }
         put(perfBank, 1);
@@ -1334,7 +1376,7 @@ private:
     // by after the library changes under it.
     struct Loaded { std::string path, name; int index = -1; };
     Loaded loaded() const {
-        const int n = (int)get(perfUser);
+        const int n = userPerf;
         if (get(perfBank) != 1 || !lib.perf(n)) return {};
         const Library::Ref& r = lib.perfs[(size_t)n - 1];
         return {lib.banks[(size_t)r.bank].path, lib.banks[(size_t)r.bank].perfs[(size_t)r.index].name, r.index};
@@ -1346,7 +1388,7 @@ private:
         int best = -1;
         for (int i = 0; i < (int)b.perfs.size(); ++i)
             if (b.perfs[(size_t)i].name == was.name && (best < 0 || i == was.index)) best = i;
-        if (best >= 0) put(perfUser, lib.number(lib.perfs, k, best));
+        if (best >= 0) putUser(perfUser, userPerf, lib.number(lib.perfs, k, best));
     }
 
     // Delete, Rename, Edit Attributes (OK), Copy Attributes and Paste Attributes on the row; the factory's
@@ -1469,7 +1511,7 @@ private:
         if (k < 0) { message(err); return; }
         writeLists();
         const int n = lib.number(lib.fseqs, k, 0);
-        put(fseqUser, n);
+        putUser(fseqUser, userFseq, n);
         choose(fseqBank, 0);
         if (get(fseqPart) == 0) choose(fseqPart, 1);
         loadUserFseq(n);
@@ -1479,18 +1521,44 @@ private:
     // ---- the monitor -------------------------------------------------------------------------------
 
     // Every part's eight voiced operators as the engine makes them, for the operator panel's display: text
-    // data live.wave.p<part>.<op>, 128 points 0..1 with the centre line at 0.5. Live data: never saved.
+    // data live.wave.p<part>.<op>, 128 points 0..1 with the centre line at 0.5, and live.harmonics.p<part>.<op>,
+    // the level of its first 16 harmonics, -48..0 dB as 0..1, which is what tells the spectral forms apart (a
+    // sine is one line, the formant a band around its frequency). Live data: never saved.
     void waves() {
-        float y[128];
+        static constexpr int kPeriod = 480, kN = 2 * kPeriod;   // operatorWave's two periods at 100 Hz (48 kHz), every sample
+        static const std::vector<std::pair<float, float>> turn = [] {   // cos and sin of 2 pi i / kN
+            std::vector<std::pair<float, float>> t(kN);
+            for (int i = 0; i < kN; ++i) t[(size_t)i] = {(float)std::cos(2 * 3.14159265358979323846 * i / kN), (float)std::sin(2 * 3.14159265358979323846 * i / kN)};
+            return t;
+        }();
+        std::vector<float> y(kN);
+        auto put = [](std::string& s, double v) {   // three decimals, written out so that a host's locale has no say
+            const int k = (int)std::lround(std::clamp(v, 0.0, 1.0) * 1000);
+            s += k >= 1000 ? "1 " : "0." + std::string(k < 100 ? "0" : "") + std::string(k < 10 ? "0" : "") + std::to_string(k) + " ";
+        };
         for (int p = 0; p < 4; ++p)
             for (int o = 0; o < 8; ++o) {
-                dev.operatorWave(p, o, y, 128);
-                std::string s;
-                for (float v : y) {   // three decimals, written out so that a host's locale has no say
-                    const int k = (int)std::lround(std::clamp(0.5 + 0.45 * v, 0.0, 1.0) * 1000);
-                    s += k >= 1000 ? "1 " : "0." + std::string(k < 100 ? "0" : "") + std::string(k < 10 ? "0" : "") + std::to_string(k) + " ";
+                dev.operatorWave(p, o, y.data(), kN);
+                std::string wave, harm;
+                for (int i = 0; i < 128; ++i) {   // each point the largest sample of its share, as operatorWave draws a trace
+                    float m = y[(size_t)i * kN / 128];
+                    for (int k = i * kN / 128; k < (i + 1) * kN / 128; ++k)
+                        if (std::fabs(y[(size_t)k]) > std::fabs(m)) m = y[(size_t)k];
+                    put(wave, 0.5 + 0.45 * m);
                 }
-                st.setData("live.wave.p" + std::to_string(p + 1) + "." + std::to_string(o + 1), s);
+                double mag[16], top = 1e-9;
+                for (int h = 0; h < 16; ++h) {   // harmonic h + 1 is bin 2 (h + 1) of the two periods
+                    double re = 0, im = 0;
+                    for (int i = 0; i < kN; ++i) {
+                        const auto& t = turn[(size_t)(2 * (h + 1) * i % kN)];
+                        re += y[(size_t)i] * t.first, im -= y[(size_t)i] * t.second;
+                    }
+                    top = std::max(top, mag[h] = std::hypot(re, im));
+                }
+                for (double m : mag) put(harm, m > top * 1e-3 ? (20 * std::log10(m / top) + 48) / 48 : 0);
+                const std::string at = "p" + std::to_string(p + 1) + "." + std::to_string(o + 1);
+                st.setData("live.wave." + at, wave);
+                st.setData("live.harmonics." + at, harm);
             }
     }
 

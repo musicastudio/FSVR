@@ -1,9 +1,9 @@
 // check_gui: the FSVR editor end to end without a window. The real skin and the real processor, one Hollow
 // Gui over them, driven as a mouse and a keyboard would drive it: widgets found by name, clicks, drags,
 // right-clicks and typing, then the params, text data, menus and modals checked. The top bar's menus and
-// toggles, the keyboard's lit keys, every page by its tab or the operator column's buttons, the operator panel and
-// the waveform the engine draws for it, the skin's keyboard shortcuts and the tooltips that name them,
-// the browser and its right-click menus, every dialog, the modal's veil,
+// toggles, the keyboard's lit keys, every page by its tab, the Operators tab's sub-tabs or the operator column's buttons, the operator panel,
+// the waveform the engine draws for it, its Form header and its frequency box, the skin's keyboard shortcuts and the tooltips that name them,
+// the Parts page's steppers, keyboard, velocity curve and Poly/Mono radios, the browser and its right-click menus, every dialog, the modal's veil,
 // Escape and close X, the close prompt, the LCD's scale menu and the About box; then a sweep of every page's
 // dials, faders, dropdowns and toggles. Exits non-zero on any failure.
 //   build/<dir>/Release/check_gui      (ctest runs it as "gui")
@@ -102,6 +102,12 @@ struct Ui {   // one instance and its editor, run a block and a GUI tick at a ti
         if (right) rclickAt(x, y);
         else clickAt(x, y);
         return true;
+    }
+    bool tabLit(const std::string& tab) {   // a page tab sunk into the well (its grey floor), not raised (the bright aqua)
+        Rect r;
+        if (!gui.widgetRect(tab, r)) return false;
+        const uint32_t p = gui.pixels()[(size_t)(r.y + r.h / 3) * gui.width() + r.x + 12];
+        return (77 * (p >> 16 & 255) + 150 * (p >> 8 & 255) + 29 * (p & 255)) >> 8 < 180;
     }
     bool lit(const std::string& list, int n) {   // row n drawn in the browser's lit green (its selectFill)
         Rect r;
@@ -247,13 +253,19 @@ int main() {
         // ---- every page: the tabs, and the operator column's buttons ----------------------------------
         const std::pair<const char*, const char*> pages[] = {
             {"tab_parts", "page_parts"}, {"tab_performance", "page_master"}, {"tab_effects", "page_fx"}, {"tab_fseq", "page_fseq"},
-            {"tab_easy", "page_quick"}, {"opcol/page_all_ops", "page_all_ops"}, {"opcol/page_all_envs", "page_all_envs"},
+            {"tab_quick", "page_quick"}, {"tab_operators", "page_operator"}, {"pages/subtabs/tab_all_ops", "page_all_ops"},
+            {"pages/subtabs/tab_all_envs", "page_all_envs"}, {"pages/subtabs/tab_mod_matrix", "page_mod_matrix"},
+            {"pages/subtabs/tab_key_scaling", "page_key_scaling"}, {"pages/subtabs/tab_filter", "page_filter"}, {"pages/subtabs/tab_pitch", "page_pitch"},
+            {"pages/subtabs/tab_operator", "page_operator"}, {"opcol/page_all_ops", "page_all_ops"}, {"opcol/page_all_envs", "page_all_envs"},
             {"opcol/page_mod", "page_mod_matrix"}, {"opcol/page_keysc", "page_key_scaling"}, {"opcol/page_filter", "page_filter"},
             {"opcol/page_pitch", "page_pitch"}, {"opcol/edit", "page_operator"}, {"tab_browser", "page_library"}};
         for (auto& p : pages) {
             u.click(p.first);
             CHECK(u.ui().find(std::string("\"view\":\"") + p.second + "\"") != std::string::npos || (std::string(p.second) == "page_library" && u.shows("pages/library")),
                   "%s did not open %s", p.first, p.second);
+            // The Operators tab stands for all seven of its pages, and sinks into the well for any of them.
+            const bool expert = std::string(p.second) == "page_operator" || u.shows("pages/subtabs");
+            CHECK(u.tabLit("tab_operators") == expert, "%s: the Operators tab is %s", p.second, expert ? "not lit" : "lit");
         }
 
         // ---- the operator panel: it picks the operator the operator page shows, and draws the engine's wave
@@ -266,6 +278,23 @@ int main() {
               u.data("live.wave.p1.6").substr(0, 40).c_str());
         CHECK(u.st->save().find("live.wave") == std::string::npos, "the panel's wave went into the saved session");
         u.click("opcol/op_1");
+        {   // Form is the screen's header, a menu; the frequency a box under Ratio and Fixed whose steppers move Coarse
+            const double form = u.get("op.1.v.form.p1"), mode = u.get("op.1.v.mode.p1"), coarse = u.get("op.1.v.coarse.p1");
+            if (u.click("opcol/form")) u.menuIs({"Sine", "All 1", "All 2", "Odd 1", "Odd 2", "Res 1", "Res 2", "Formant"}, "the Form header's");
+            u.choose("Formant");
+            CHECK(u.get("op.1.v.form.p1") == 7, "Formant from the header left the form at %g", u.get("op.1.v.form.p1"));
+            u.click("opcol/mode_ratio");
+            u.set("op.1.v.coarse.p1", 1);
+            Rect r;
+            if (u.rect("opcol/wave_ratio", r)) u.clickAt(r.x + r.w - 3, r.y + r.h / 2);
+            CHECK(u.get("op.1.v.coarse.p1") == 2, "the frequency's up stepper left Coarse at %g, from 1", u.get("op.1.v.coarse.p1"));
+            if (u.rect("opcol/wave_ratio", r)) u.clickAt(r.x + 3, r.y + r.h / 2);
+            CHECK(u.get("op.1.v.coarse.p1") == 1, "the frequency's down stepper left Coarse at %g, from 2", u.get("op.1.v.coarse.p1"));
+            u.click("opcol/mode_fixed");
+            CHECK(u.shows("opcol/wave_fixed") && !u.shows("opcol/wave_ratio") && u.shows("opcol/freq_hz_label"), "Fixed did not show the frequency in Hz");
+            u.set("op.1.v.form.p1", form), u.set("op.1.v.mode.p1", mode), u.set("op.1.v.coarse.p1", coarse);
+            u.run();
+        }
 
         // ---- the keyboard shortcuts (skin.json "keys", issue #11) -------------------------------------
         {
@@ -313,7 +342,7 @@ int main() {
             // Every shortcut names itself in the tooltip of the control that does the same thing, so the chord
             // is never written out twice and never hides. The wording of a tip is the skin's to change, so
             // only the chord it ends with is checked here, and that it kept the words it had.
-            u.click("tab_easy");
+            u.click("tab_quick");
             auto tipEnds = [&](const char* path, const char* chord) {
                 const std::string got = u.gui.tipOf(path), want = std::string(" (") + chord + ")";
                 CHECK(got.size() > want.size() && got.compare(got.size() - want.size(), want.size(), want) == 0,
@@ -330,9 +359,10 @@ int main() {
             tipEnds("tab_fseq", "Alt+S");
             tipEnds("tab_parts", "Alt+T");
             tipEnds("tab_performance", "Alt+R");
-            tipEnds("tab_easy", "Alt+Z");
+            tipEnds("tab_quick", "Alt+Z");
             tipEnds("topbar/part_2", "Shift+2");
             u.click("opcol/page_all_ops");
+            tipEnds("pages/subtabs/tab_filter", "Alt+F");   // the Operators tab's sub-tabs name the chords too
             tipEnds("pages/fm_matrix/op_3", "Alt+3");   // the matrix's box opens the operator's page, as Alt+3 does
             // Alt+N cycles the var, so both buttons that set one of its values own the chord.
             tipEnds("pages/voiced", "Alt+N");
@@ -348,9 +378,55 @@ int main() {
             CHECK(u.until([&] { return u.get("gui.edited") == 1; }), "an edit did not mark the performance edited");
             if (u.rect("topbar/volume", r)) u.clickAt(r.x + r.w / 2, r.y + r.h / 2, true);
             CHECK(u.get("perf.volume") == u.st->def((size_t)u.at("perf.volume")).def, "a double-click did not reset Volume (%g)", u.get("perf.volume"));
-            u.click("tab_easy");
+            u.click("tab_quick");
             if (u.rect("pages/attack", r)) u.drag(r.x + r.w / 2, r.y + r.h / 2, 0, -300);
             CHECK(u.get("part.attack.p1") == 63, "Easy's Attack fader reached %g, not 63", u.get("part.attack.p1"));
+        }
+
+        // ---- the Parts page: the voice by name, the steppers, the keyboard, velocity and Poly/Mono ------
+        {
+            u.click("tab_parts");
+            CHECK(u.until([&] { return !u.data("part.voice.p1").empty() && u.data("part.voice.p1") != "off"; }) && u.data("part.voice.p2") == "off",
+                  "the parts' voices read \"%s\" and \"%s\"", u.data("part.voice.p1").c_str(), u.data("part.voice.p2").c_str());
+            Rect r;
+            const double rsv = u.get("part.note_reserve.p1");
+            if (u.rect("pages/reserve_1", r)) u.clickAt(r.x + r.w - 3, r.y + r.h / 2);
+            CHECK(u.get("part.note_reserve.p1") == rsv + 1, "the reserve's up stepper left it at %g, from %g", u.get("part.note_reserve.p1"), rsv);
+            if (u.rect("pages/reserve_1", r)) u.clickAt(r.x + 3, r.y + r.h / 2);
+            CHECK(u.get("part.note_reserve.p1") == rsv, "the reserve's down stepper left it at %g", u.get("part.note_reserve.p1"));
+            const double ch = u.get("part.rcv_ch.p1");
+            if (u.rect("pages/rcv_1", r)) u.clickAt(r.x + r.w - 3, r.y + r.h / 2);
+            CHECK(u.get("part.rcv_ch.p1") == ch + 1, "the MIDI channel's up stepper gave %g, from %g", u.get("part.rcv_ch.p1"), ch);
+            if (u.rect("pages/rcv_1", r)) u.clickAt(r.x + 3, r.y + r.h / 2);
+            // the keyboard: a key three quarters up moves the range's top down to it; the slider over the keys shifts
+            if (u.rect("pages/keys_1", r)) u.clickAt(r.x + r.w * 3 / 4, r.y + r.h - 3);
+            CHECK(u.get("part.note_high.p1") < 127 && u.get("part.note_high.p1") > 64, "a key three quarters up made the top %g", u.get("part.note_high.p1"));
+            if (u.rect("pages/keys_1", r)) u.clickAt(r.x + (int)std::lround(48.5 * r.w / 128), r.y + 4);   // over C2: middle C an octave down
+            CHECK(u.get("part.note_shift.p1") == -12, "a press on the shift's rail over C2 made the shift %g", u.get("part.note_shift.p1"));
+            if (u.rect("pages/keys_1", r)) u.clickAt(r.x + 20, r.y + 4);   // on its caption, left of the rail
+            CHECK(u.get("part.note_shift.p1") == -12, "a press on the Note Shift caption moved the shift to %g", u.get("part.note_shift.p1"));
+            if (u.rect("pages/keys_1", r)) u.drag(r.x + r.w / 2, r.y + 4, 30, 0);
+            CHECK(u.get("part.note_shift.p1") > 0, "dragging the shift's triangle right left the shift at %g", u.get("part.note_shift.p1"));
+            if (u.rect("pages/keys_1", r)) u.clickAt(r.x + r.w / 2, r.y + 4, true);
+            CHECK(u.get("part.note_shift.p1") == 0, "a double-click on the strip left the shift at %g", u.get("part.note_shift.p1"));
+            // velocity: the right handle, dragged down, lowers the depth
+            const double depth = u.get("part.vel_depth.p1");
+            if (u.rect("pages/velocity_1", r)) u.drag(r.x + r.w - 7, r.y + 7, 0, 20);
+            CHECK(u.get("part.vel_depth.p1") < depth, "dragging the velocity curve's right end down left the depth at %g", u.get("part.vel_depth.p1"));
+            // Poly and Mono are radio buttons; the priorities show with Mono only
+            u.click("pages/poly_1");
+            CHECK(u.get("part.poly.p1") == 1 && !u.shows("pages/prio_top_1"), "Poly left the part at %g, its priorities showing", u.get("part.poly.p1"));
+            u.click("pages/mono_1");
+            CHECK(u.get("part.poly.p1") == 0 && u.shows("pages/prio_top_1"), "Mono did not make the part mono and show its priorities");
+            u.click("pages/prio_top_1");
+            CHECK(u.get("part.priority.p1") == 1, "Top set the priority to %g", u.get("part.priority.p1"));
+            u.click("pages/poly_1");
+            CHECK(u.get("part.poly.p1") == 1 && !u.shows("pages/prio_top_1"), "Poly did not bring the part back");
+            // the voice: its menu goes to the Browser's voices for the part, or turns the part off
+            if (u.click("pages/voice_1")) u.menuIs({"Choose in the Browser...", "-", "Off"}, "the voice's");
+            u.choose("Choose in the Browser...");
+            CHECK(u.shows("pages/library") && u.ui().find("\"browse\":\"voice\"") != std::string::npos, "Choose in the Browser did not open the voices");
+            u.click("pages/library/tab_perf");   // back to the performances, where the browser's checks start
         }
 
         // ---- the close prompt, with the performance edited -------------------------------------------
@@ -533,6 +609,6 @@ int main() {
         u.proc.reset();
     }
     fs::remove_all(tmp, ec);
-    if (!fails) std::printf("check_gui: the top bar, its menus and toggles, every page, the keyboard shortcuts and their tooltips, the browser's right-click menus, every dialog, the modal's veil, Escape and close X, the close prompt, the scale menu and About all pass\n");
+    if (!fails) std::printf("check_gui: the top bar, its menus and toggles, every page and the Operators tab's sub-tabs, the keyboard shortcuts and their tooltips, the Parts page's steppers, keyboard, velocity curve and radios, the browser's right-click menus, every dialog, the modal's veil, Escape and close X, the close prompt, the scale menu and About all pass\n");
     return fails ? 1 : 0;
 }

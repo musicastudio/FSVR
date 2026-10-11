@@ -2,7 +2,7 @@
 
 Every file in this folder is written by a tool. **Do not hand-edit any of them.** An edit here survives until the next time someone runs the generator, then disappears without warning, and the diff that removes it will look like the generator is broken.
 
-They are committed rather than built, so the plugin needs no Python at build time. `plugin/CMakeLists.txt` embeds the three factory banks in the binary (`hollow_embed_files`); the parameter descriptions and the voice index are what the editor's params, their sysex table and the browser's lists in `plugin/skin` were made from.
+They are committed rather than built, so the plugin needs no Python at build time. `plugin/CMakeLists.txt` embeds the three factory banks and the contributors in the binary (`hollow_embed_files`); the parameter descriptions and the voice index are what the editor's params, their sysex table and the browser's lists in `plugin/skin` were made from.
 
 | File | Generator | Source |
 |---|---|---|
@@ -10,6 +10,7 @@ They are committed rather than built, so the plugin needs no Python at build tim
 | `fs1r_presets.syx` and `fs1r_presets.csv` | `tools/make_presets_blob.py` | `presets/`, the 1408 factory voices |
 | `fs1r_performances.syx` | `tools/make_presets_blob.py` | `presets/performances`, the 384 factory performances |
 | `fs1r_fseqs.syx` | `tools/make_presets_blob.py` | `presets/fseq`, the 90 preset formant sequences |
+| `contributors.txt` | `tools/contributors.py` | GitHub's contributor list for the repository, less jameshansen, rgwan and bots: the About box's credit line. The build workflow runs it before every build |
 
 To change what is in one of these, change the generator or its source and re-run it. `tools/check_presets.py` reads the banks back and runs under `build.bat test`, so a stale or hand-edited file fails the build.
 

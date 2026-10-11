@@ -1,15 +1,26 @@
 {
  "size": [
   1235,
-  536
+  566
  ],
  "widgets": [
+  {
+   "type": "embed",
+   "name": "subtabs",
+   "rect": [
+    0,
+    0,
+    1235,
+    38
+   ],
+   "view": "ops_tabs"
+  },
   {
    "type": "plate",
    "name": "freq_frame",
    "rect": [
     14,
-    36,
+    66,
     298,
     104
    ],
@@ -23,7 +34,7 @@
    "name": "osc_frame",
    "rect": [
     327,
-    36,
+    66,
     296,
     104
    ],
@@ -37,7 +48,7 @@
    "name": "amp_frame",
    "rect": [
     638,
-    36,
+    66,
     154,
     236
    ],
@@ -51,7 +62,7 @@
    "name": "sens_frame",
    "rect": [
     14,
-    153,
+    183,
     609,
     119
    ],
@@ -65,7 +76,7 @@
    "name": "env_frame",
    "rect": [
     14,
-    285,
+    315,
     778,
     221
    ],
@@ -79,7 +90,7 @@
    "name": "coarse_title",
    "rect": [
     20,
-    16,
+    46,
     86,
     20
    ],
@@ -104,7 +115,7 @@
    "name": "fine_title",
    "rect": [
     174,
-    16,
+    46,
     70,
     20
    ],
@@ -129,7 +140,7 @@
    "name": "osc_title",
    "rect": [
     333,
-    16,
+    46,
     105,
     20
    ],
@@ -154,7 +165,7 @@
    "name": "amp_title",
    "rect": [
     644,
-    16,
+    46,
     107,
     20
    ],
@@ -179,7 +190,7 @@
    "name": "matrix_title",
    "rect": [
     827,
-    15,
+    45,
     104,
     23
    ],
@@ -204,7 +215,7 @@
    "name": "fm_matrix",
    "rect": [
     821,
-    35,
+    65,
     408,
     472
    ],
@@ -216,7 +227,7 @@
    "name": "op_number",
    "rect": [
     18,
-    44,
+    74,
     22,
     19
    ],
@@ -237,7 +248,7 @@
    "name": "op_layer_v",
    "rect": [
     18,
-    64,
+    94,
     22,
     19
    ],
@@ -263,7 +274,7 @@
    "name": "op_layer_u",
    "rect": [
     18,
-    64,
+    94,
     22,
     19
    ],
@@ -289,7 +300,7 @@
    "name": "coarse_inset",
    "rect": [
     50,
-    63,
+    93,
     118,
     50
    ],
@@ -303,7 +314,7 @@
    "name": "coarse_ratio",
    "rect": [
     54,
-    77,
+    107,
     108,
     25
    ],
@@ -348,7 +359,7 @@
    "name": "coarse_fixed",
    "rect": [
     54,
-    77,
+    107,
     84,
     25
    ],
@@ -393,7 +404,7 @@
    "name": "coarse_fixed_unit",
    "rect": [
     140,
-    82,
+    112,
     24,
     18
    ],
@@ -427,7 +438,7 @@
    "name": "coarse_noise",
    "rect": [
     54,
-    77,
+    107,
     84,
     25
    ],
@@ -472,7 +483,7 @@
    "name": "coarse_noise_unit",
    "rect": [
     140,
-    82,
+    112,
     24,
     18
    ],
@@ -506,7 +517,7 @@
    "name": "coarse_linked",
    "rect": [
     54,
-    77,
+    107,
     108,
     25
    ],
@@ -547,7 +558,7 @@
    "name": "coarse_up_1",
    "rect": [
     51,
-    41,
+    71,
     38,
     18
    ],
@@ -571,7 +582,7 @@
    "name": "coarse_down_1",
    "rect": [
     51,
-    117,
+    147,
     38,
     18
    ],
@@ -595,7 +606,7 @@
    "name": "fine_inset",
    "rect": [
     180,
-    63,
+    93,
     118,
     50
    ],
@@ -609,7 +620,7 @@
    "name": "fine",
    "rect": [
     184,
-    77,
+    107,
     108,
     25
    ],
@@ -637,7 +648,7 @@
    "name": "fine_up_10",
    "rect": [
     181,
-    41,
+    71,
     38,
     18
    ],
@@ -661,7 +672,7 @@
    "name": "fine_down_10",
    "rect": [
     181,
-    117,
+    147,
     38,
     18
    ],
@@ -685,7 +696,7 @@
    "name": "fine_up_1",
    "rect": [
     220,
-    41,
+    71,
     38,
     18
    ],
@@ -709,7 +720,7 @@
    "name": "fine_down_1",
    "rect": [
     220,
-    117,
+    147,
     38,
     18
    ],
@@ -733,7 +744,7 @@
    "name": "form",
    "rect": [
     337,
-    44,
+    74,
     150,
     18
    ],
@@ -798,44 +809,77 @@
    "tip": "Spectral form"
   },
   {
-   "type": "dropdown",
-   "name": "mode",
+   "type": "button",
+   "name": "mode_ratio",
    "rect": [
     493,
-    44,
-    120,
-    18
+    72,
+    59,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
+    "text": "Ratio",
+    "font": "caption_grey_12",
+    "align": "center",
     "valign": "middle"
    },
    "pad": [
-    11,
-    2,
-    21,
-    2
+    1,
+    1,
+    1,
+    1
    ],
+   "hoverTiles": true,
    "pressOffset": [
-    2,
-    2
+    1,
+    1
    ],
-   "items": [
-    {
-     "label": "Ratio",
-     "value": 0
-    },
-    {
-     "label": "Fixed",
-     "value": 1
-    }
-   ],
-   "captionFromItem": true,
    "param": "op.{op}.v.mode.{part}",
+   "action": {
+    "value": 0
+   },
+   "showIf": {
+    "var": "layer",
+    "equals": "v"
+   },
+   "tip": "Ratio or fixed frequency"
+  },
+  {
+   "type": "button",
+   "name": "mode_fixed",
+   "rect": [
+    554,
+    72,
+    59,
+    22
+   ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
+   "text": {
+    "text": "Fixed",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    1,
+    1,
+    1
+   ],
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
+   ],
+   "param": "op.{op}.v.mode.{part}",
+   "action": {
+    "value": 1
+   },
    "showIf": {
     "var": "layer",
     "equals": "v"
@@ -847,7 +891,7 @@
    "name": "pitch_mode",
    "rect": [
     337,
-    44,
+    74,
     150,
     18
    ],
@@ -896,7 +940,7 @@
    "name": "osc_skirt_label",
    "rect": [
     335,
-    66,
+    96,
     70,
     18
    ],
@@ -920,7 +964,7 @@
    "name": "osc_skirt",
    "rect": [
     335,
-    86,
+    116,
     70,
     20
    ],
@@ -949,7 +993,7 @@
    "name": "osc_transpose_label",
    "rect": [
     407,
-    66,
+    96,
     70,
     18
    ],
@@ -973,7 +1017,7 @@
    "name": "osc_transpose",
    "rect": [
     407,
-    86,
+    116,
     70,
     20
    ],
@@ -1002,7 +1046,7 @@
    "name": "osc_band_ratio_label",
    "rect": [
     479,
-    66,
+    96,
     70,
     18
    ],
@@ -1030,7 +1074,7 @@
    "name": "osc_band_ratio",
    "rect": [
     479,
-    86,
+    116,
     70,
     20
    ],
@@ -1063,7 +1107,7 @@
    "name": "osc_detune_label",
    "rect": [
     551,
-    66,
+    96,
     70,
     18
    ],
@@ -1091,7 +1135,7 @@
    "name": "osc_detune",
    "rect": [
     551,
-    86,
+    116,
     70,
     20
    ],
@@ -1124,7 +1168,7 @@
    "name": "osc_bandwidth_label",
    "rect": [
     479,
-    66,
+    96,
     70,
     18
    ],
@@ -1152,7 +1196,7 @@
    "name": "osc_bandwidth",
    "rect": [
     479,
-    86,
+    116,
     70,
     20
    ],
@@ -1185,7 +1229,7 @@
    "name": "osc_resonance_label",
    "rect": [
     551,
-    66,
+    96,
     70,
     18
    ],
@@ -1213,7 +1257,7 @@
    "name": "osc_resonance",
    "rect": [
     551,
-    86,
+    116,
     70,
     20
    ],
@@ -1246,7 +1290,7 @@
    "name": "key_sync",
    "rect": [
     337,
-    112,
+    142,
     136,
     18
    ],
@@ -1281,7 +1325,7 @@
    "name": "fseq_sw",
    "rect": [
     477,
-    112,
+    142,
     136,
     18
    ],
@@ -1312,7 +1356,7 @@
    "name": "voiced",
    "rect": [
     646,
-    40,
+    70,
     68,
     21
    ],
@@ -1348,7 +1392,7 @@
    "name": "unvoiced",
    "rect": [
     718,
-    40,
+    70,
     68,
     21
    ],
@@ -1384,7 +1428,7 @@
    "name": "level_label",
    "rect": [
     718,
-    65,
+    95,
     80,
     21
    ],
@@ -1406,7 +1450,7 @@
    "name": "level_track",
    "rect": [
     748,
-    86,
+    116,
     20,
     149
    ],
@@ -1419,7 +1463,7 @@
    "name": "level",
    "rect": [
     737,
-    86,
+    116,
     42,
     149
    ],
@@ -1436,13 +1480,13 @@
    "name": "level_value",
    "rect": [
     728,
-    237,
+    267,
     60,
     22
    ],
    "text": {
     "text": "",
-    "font": "label_white_13",
+    "font": "value_dark_12",
     "align": "center",
     "valign": "middle"
    },
@@ -1462,7 +1506,7 @@
    "name": "amp_vel_label",
    "rect": [
     633,
-    67,
+    97,
     80,
     21
    ],
@@ -1484,7 +1528,7 @@
    "name": "amp_vel",
    "rect": [
     651,
-    88,
+    118,
     44,
     44
    ],
@@ -1500,7 +1544,7 @@
    "name": "amp_vel_value",
    "rect": [
     643,
-    133,
+    163,
     60,
     22
    ],
@@ -1526,7 +1570,7 @@
    "name": "eg_bias_label",
    "rect": [
     633,
-    151,
+    181,
     80,
     21
    ],
@@ -1548,7 +1592,7 @@
    "name": "eg_bias",
    "rect": [
     651,
-    172,
+    202,
     44,
     44
    ],
@@ -1564,7 +1608,7 @@
    "name": "eg_bias_value",
    "rect": [
     643,
-    217,
+    247,
     60,
     22
    ],
@@ -1590,7 +1634,7 @@
    "name": "sens_title",
    "rect": [
     20,
-    167,
+    197,
     37,
     21
    ],
@@ -1612,7 +1656,7 @@
    "name": "feg_title",
    "rect": [
     20,
-    216,
+    246,
     37,
     21
    ],
@@ -1634,7 +1678,7 @@
    "name": "feg_title2",
    "rect": [
     20,
-    234,
+    264,
     37,
     21
    ],
@@ -1656,7 +1700,7 @@
    "name": "sens_pitch_mod_label",
    "rect": [
     62,
-    167,
+    197,
     60,
     18
    ],
@@ -1684,7 +1728,7 @@
    "name": "sens_pitch_mod",
    "rect": [
     62,
-    189,
+    219,
     60,
     20
    ],
@@ -1717,7 +1761,7 @@
    "name": "sens_freq_mod_label",
    "rect": [
     126,
-    167,
+    197,
     60,
     18
    ],
@@ -1741,7 +1785,7 @@
    "name": "sens_freq_mod",
    "rect": [
     126,
-    189,
+    219,
     60,
     20
    ],
@@ -1770,7 +1814,7 @@
    "name": "sens_freq_vel_label",
    "rect": [
     190,
-    167,
+    197,
     60,
     18
    ],
@@ -1794,7 +1838,7 @@
    "name": "sens_freq_vel",
    "rect": [
     190,
-    189,
+    219,
     60,
     20
    ],
@@ -1823,7 +1867,7 @@
    "name": "sens_amp_mod_label",
    "rect": [
     254,
-    167,
+    197,
     60,
     18
    ],
@@ -1847,7 +1891,7 @@
    "name": "sens_amp_mod",
    "rect": [
     254,
-    189,
+    219,
     60,
     20
    ],
@@ -1876,7 +1920,7 @@
    "name": "sens_freq_bias_label",
    "rect": [
     318,
-    167,
+    197,
     60,
     18
    ],
@@ -1900,7 +1944,7 @@
    "name": "sens_freq_bias",
    "rect": [
     318,
-    189,
+    219,
     60,
     20
    ],
@@ -1929,7 +1973,7 @@
    "name": "sens_bw_bias_label",
    "rect": [
     382,
-    167,
+    197,
     60,
     18
    ],
@@ -1953,7 +1997,7 @@
    "name": "sens_bw_bias",
    "rect": [
     382,
-    189,
+    219,
     60,
     20
    ],
@@ -1982,7 +2026,7 @@
    "name": "sens_note_scaling_label",
    "rect": [
     446,
-    167,
+    197,
     70,
     18
    ],
@@ -2006,7 +2050,7 @@
    "name": "sens_note_scaling",
    "rect": [
     446,
-    189,
+    219,
     70,
     20
    ],
@@ -2035,7 +2079,7 @@
    "name": "sens_eg_time_scale_label",
    "rect": [
     520,
-    167,
+    197,
     70,
     18
    ],
@@ -2059,7 +2103,7 @@
    "name": "sens_eg_time_scale",
    "rect": [
     520,
-    189,
+    219,
     70,
     20
    ],
@@ -2088,7 +2132,7 @@
    "name": "sens_feg_init_label",
    "rect": [
     62,
-    216,
+    246,
     60,
     18
    ],
@@ -2112,7 +2156,7 @@
    "name": "sens_feg_init",
    "rect": [
     62,
-    238,
+    268,
     60,
     20
    ],
@@ -2141,7 +2185,7 @@
    "name": "sens_feg_attack_level_label",
    "rect": [
     126,
-    216,
+    246,
     60,
     18
    ],
@@ -2165,7 +2209,7 @@
    "name": "sens_feg_attack_level",
    "rect": [
     126,
-    238,
+    268,
     60,
     20
    ],
@@ -2194,7 +2238,7 @@
    "name": "sens_feg_attack_label",
    "rect": [
     190,
-    216,
+    246,
     60,
     18
    ],
@@ -2218,7 +2262,7 @@
    "name": "sens_feg_attack",
    "rect": [
     190,
-    238,
+    268,
     60,
     20
    ],
@@ -2247,7 +2291,7 @@
    "name": "sens_feg_decay_label",
    "rect": [
     254,
-    216,
+    246,
     60,
     18
    ],
@@ -2271,7 +2315,7 @@
    "name": "sens_feg_decay",
    "rect": [
     254,
-    238,
+    268,
     60,
     20
    ],
@@ -2300,7 +2344,7 @@
    "name": "sens_carrier_corr_label",
    "rect": [
     318,
-    216,
+    246,
     60,
     18
    ],
@@ -2328,7 +2372,7 @@
    "name": "sens_carrier_corr",
    "rect": [
     318,
-    238,
+    268,
     60,
     20
    ],
@@ -2361,7 +2405,7 @@
    "name": "sens_level_key_scale_label",
    "rect": [
     318,
-    216,
+    246,
     60,
     18
    ],
@@ -2389,7 +2433,7 @@
    "name": "sens_level_key_scale",
    "rect": [
     318,
-    238,
+    268,
     60,
     20
    ],
@@ -2422,7 +2466,7 @@
    "name": "sens_fseq_track_label",
    "rect": [
     382,
-    216,
+    246,
     60,
     18
    ],
@@ -2450,7 +2494,7 @@
    "name": "sens_fseq_track",
    "rect": [
     382,
-    238,
+    268,
     60,
     20
    ],
@@ -2483,7 +2527,7 @@
    "name": "env_title",
    "rect": [
     20,
-    299,
+    329,
     37,
     21
    ],
@@ -2505,12 +2549,12 @@
    "name": "env_screen",
    "rect": [
     59,
-    303,
+    333,
     720,
     165
    ],
    "fill": {
-    "colour": "#384243ff"
+    "image": "displays/op_screen"
    },
    "surface": false
   },
@@ -2519,7 +2563,7 @@
    "name": "envelope",
    "rect": [
     59,
-    303,
+    333,
     720,
     165
    ],
@@ -2554,19 +2598,22 @@
     ]
    ],
    "tip": "Drag a point: sideways its time, up and down its level",
-   "grid": "#5f7172ff",
-   "area": "#3a4445a5",
-   "curve": "#879ea0ff",
-   "handle": "#394344ff",
-   "dots": "#f6f6f6ff"
+   "grid": "#ffffff24",
+   "area": "#86eac24d",
+   "curve": "#86eac2ff",
+   "handle": "#effff8ff",
+   "dots": "#ffffff59",
+   "area2": "#86eac205",
+   "glow": "#86eac222",
+   "ring": "#25292cff"
   },
   {
    "type": "plate",
    "name": "env_eg_hold_label",
    "rect": [
     62,
-    474,
-    38,
+    504,
+    35,
     18
    ],
    "fill": {
@@ -2574,7 +2621,7 @@
    },
    "text": {
     "text": "Hold",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -2588,9 +2635,9 @@
    "type": "number",
    "name": "env_eg_hold",
    "rect": [
-    100,
-    474,
-    36,
+    97,
+    504,
+    39,
     18
    ],
    "fill": {
@@ -2598,7 +2645,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -2618,8 +2665,8 @@
    "name": "env_eg_t1_label",
    "rect": [
     142,
-    474,
-    38,
+    504,
+    35,
     18
    ],
    "fill": {
@@ -2627,7 +2674,7 @@
    },
    "text": {
     "text": "T1",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -2641,9 +2688,9 @@
    "type": "number",
    "name": "env_eg_t1",
    "rect": [
-    180,
-    474,
-    36,
+    177,
+    504,
+    39,
     18
    ],
    "fill": {
@@ -2651,7 +2698,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -2671,8 +2718,8 @@
    "name": "env_eg_t2_label",
    "rect": [
     302,
-    474,
-    38,
+    504,
+    35,
     18
    ],
    "fill": {
@@ -2680,7 +2727,7 @@
    },
    "text": {
     "text": "T2",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -2694,9 +2741,9 @@
    "type": "number",
    "name": "env_eg_t2",
    "rect": [
-    340,
-    474,
-    36,
+    337,
+    504,
+    39,
     18
    ],
    "fill": {
@@ -2704,7 +2751,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -2724,8 +2771,8 @@
    "name": "env_eg_t3_label",
    "rect": [
     462,
-    474,
-    38,
+    504,
+    35,
     18
    ],
    "fill": {
@@ -2733,7 +2780,7 @@
    },
    "text": {
     "text": "T3",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -2747,9 +2794,9 @@
    "type": "number",
    "name": "env_eg_t3",
    "rect": [
-    500,
-    474,
-    36,
+    497,
+    504,
+    39,
     18
    ],
    "fill": {
@@ -2757,7 +2804,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -2777,8 +2824,8 @@
    "name": "env_eg_t4_label",
    "rect": [
     622,
-    474,
-    38,
+    504,
+    35,
     18
    ],
    "fill": {
@@ -2786,7 +2833,7 @@
    },
    "text": {
     "text": "T4",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -2800,9 +2847,9 @@
    "type": "number",
    "name": "env_eg_t4",
    "rect": [
-    660,
-    474,
-    36,
+    657,
+    504,
+    39,
     18
    ],
    "fill": {
@@ -2810,7 +2857,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -2830,8 +2877,8 @@
    "name": "env_eg_l1_label",
    "rect": [
     222,
-    474,
-    38,
+    504,
+    35,
     18
    ],
    "fill": {
@@ -2839,7 +2886,7 @@
    },
    "text": {
     "text": "L1",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -2853,9 +2900,9 @@
    "type": "number",
    "name": "env_eg_l1",
    "rect": [
-    260,
-    474,
-    36,
+    257,
+    504,
+    39,
     18
    ],
    "fill": {
@@ -2863,7 +2910,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -2883,8 +2930,8 @@
    "name": "env_eg_l2_label",
    "rect": [
     382,
-    474,
-    38,
+    504,
+    35,
     18
    ],
    "fill": {
@@ -2892,7 +2939,7 @@
    },
    "text": {
     "text": "L2",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -2906,9 +2953,9 @@
    "type": "number",
    "name": "env_eg_l2",
    "rect": [
-    420,
-    474,
-    36,
+    417,
+    504,
+    39,
     18
    ],
    "fill": {
@@ -2916,7 +2963,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -2936,8 +2983,8 @@
    "name": "env_eg_l3_label",
    "rect": [
     542,
-    474,
-    38,
+    504,
+    35,
     18
    ],
    "fill": {
@@ -2945,7 +2992,7 @@
    },
    "text": {
     "text": "L3",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -2959,9 +3006,9 @@
    "type": "number",
    "name": "env_eg_l3",
    "rect": [
-    580,
-    474,
-    36,
+    577,
+    504,
+    39,
     18
    ],
    "fill": {
@@ -2969,7 +3016,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },
@@ -2989,8 +3036,8 @@
    "name": "env_eg_l4_label",
    "rect": [
     702,
-    474,
-    38,
+    504,
+    35,
     18
    ],
    "fill": {
@@ -2998,7 +3045,7 @@
    },
    "text": {
     "text": "L4",
-    "font": "caption_grey_12",
+    "font": "caption_white_12",
     "align": "center"
    },
    "pad": [
@@ -3012,9 +3059,9 @@
    "type": "number",
    "name": "env_eg_l4",
    "rect": [
-    740,
-    474,
-    36,
+    737,
+    504,
+    39,
     18
    ],
    "fill": {
@@ -3022,7 +3069,7 @@
    },
    "text": {
     "text": "",
-    "font": "value_dark_12",
+    "font": "value_dark_12_inv",
     "align": "center",
     "valign": "middle"
    },

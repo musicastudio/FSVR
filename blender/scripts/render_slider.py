@@ -1,5 +1,6 @@
 # Renders the slider parts from slider.blend into the skin at every scale: faders/pot_cap (the grabber) and
-# the four tracks, faders/track_narrow, track_long_narrow, track_mid_narrow and track_short_narrow.
+# the tracks, faders/track_narrow, track_long_narrow, track_mid_narrow, track_short_narrow and track_parts (the
+# Parts page's volume, as long as its fader travels).
 #   In Blender, with slider.blend open (blender/scripts on sys.path): import render_slider; render_slider.run()
 import bmesh, os, sys
 import bpy
@@ -17,7 +18,7 @@ TRACK_W = 20
 # first, middle and last ticks (the heavier ones): a tick every 4 px on whole rows at 1x. Height, first tick
 # row, ticks.
 TRACKS = {"track_narrow": (173, 14, 37), "track_long_narrow": (188, 17, 39),
-          "track_mid_narrow": (149, 14, 31), "track_short_narrow": (125, 14, 25)}
+          "track_mid_narrow": (149, 14, 31), "track_short_narrow": (125, 14, 25), "track_parts": (170, 17, 35)}
 TICK_X = (6, 14)        # tick span, px from the left edge
 TICK_X_HEAVY = (4, 16)
 WELL_R = 9.8            # half width of the slot, px (the WellMat shader's W_PX)
@@ -41,14 +42,14 @@ def show(grabber):
     D.collections["TrackSet"].hide_render = grabber
 
 
-def run(scales=kit.SCALES):
+def run(scales=kit.SCALES, only=None):
     sc = bpy.context.scene
     cam = sc.camera
     sc.render.image_settings.file_format = 'PNG'
     sc.render.image_settings.color_mode = 'RGBA'
     sc.render.filepath = os.path.join(bpy.app.tempdir, "slider_part.png")
     show(True)
-    for s in scales:
+    for s in scales if not only or "pot_cap" in only else []:
         a = render(sc, cam, CAP, CAP, s)
         # the drop shadow runs past the frame: fade it to nothing at the edge so it never shows a square clip
         n = a.shape[0]
@@ -62,6 +63,8 @@ def run(scales=kit.SCALES):
     show(False)
     well, ticks = D.objects["TrackWell"], D.objects["TrackTicks"]
     for name, (h, first, n) in TRACKS.items():
+        if only and name not in only:
+            continue
         half = h / 2 * PX
         bm = bmesh.new()   # the well covers the whole image; its shader draws the slot inside
         bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=1.0)

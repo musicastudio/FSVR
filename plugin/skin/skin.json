@@ -53,36 +53,6 @@
   }
  },
  "fonts": {
-  "aw_black_16": {
-   "file": "SairaSemiCondensed-Regular.ttf",
-   "size": 14.0,
-   "colour": "#000000fe",
-   "tracking": 1.54
-  },
-  "aw_black_24": {
-   "file": "SairaSemiCondensed-Regular.ttf",
-   "size": 22.0,
-   "colour": "#000000fe",
-   "tracking": 1.83
-  },
-  "aw_grey_13": {
-   "file": "SairaSemiCondensed-Regular.ttf",
-   "size": 10.0,
-   "colour": "#777377fe",
-   "tracking": 1.91
-  },
-  "aw_grey_16": {
-   "file": "SairaSemiCondensed-Regular.ttf",
-   "size": 14.0,
-   "colour": "#777377fe",
-   "tracking": 1.54
-  },
-  "aw_grey_24": {
-   "file": "SairaSemiCondensed-Regular.ttf",
-   "size": 22.0,
-   "colour": "#777377fe",
-   "tracking": 1.83
-  },
   "caption_grey_12": {
    "file": "SairaSemiCondensed-Regular.ttf",
    "size": 14.0,
@@ -250,6 +220,12 @@
    "file": "SairaSemiCondensed-Medium.ttf",
    "size": 11,
    "colour": "#17301fe6"
+  },
+  "header_light": {
+   "file": "SairaSemiCondensed-SemiBold.ttf",
+   "size": 15.0,
+   "colour": "#e8f3effa",
+   "tracking": 0.7
   }
  },
  "images": {
@@ -357,6 +333,16 @@
     10
    ]
   },
+  "buttons/dropdown_header": {
+   "tiles": 2,
+   "surface": false,
+   "slice": [
+    0,
+    24,
+    0,
+    6
+   ]
+  },
   "buttons/dropdown_small": {
    "slice": [
     0,
@@ -415,6 +401,22 @@
    "tiles": 4,
    "surface": false
   },
+  "buttons/step_down": {
+   "tiles": 2,
+   "surface": false
+  },
+  "buttons/step_down_inv": {
+   "tiles": 2,
+   "surface": false
+  },
+  "buttons/step_up": {
+   "tiles": 2,
+   "surface": false
+  },
+  "buttons/step_up_inv": {
+   "tiles": 2,
+   "surface": false
+  },
   "buttons/strip_editor": {
    "surface": false,
    "tiles": 4
@@ -435,10 +437,6 @@
    "tiles": 4,
    "surface": false
   },
-  "buttons/tab_easy": {
-   "tiles": 4,
-   "surface": false
-  },
   "buttons/tab_effects": {
    "tiles": 4,
    "surface": false
@@ -447,11 +445,19 @@
    "tiles": 4,
    "surface": false
   },
+  "buttons/tab_operators": {
+   "tiles": 4,
+   "surface": false
+  },
   "buttons/tab_parts": {
    "tiles": 4,
    "surface": false
   },
   "buttons/tab_performance": {
+   "tiles": 4,
+   "surface": false
+  },
+  "buttons/tab_quick": {
    "tiles": 4,
    "surface": false
   },
@@ -503,6 +509,9 @@
   "faders/track_narrow": {
    "surface": false
   },
+  "faders/track_parts": {
+   "surface": false
+  },
   "faders/track_short_narrow": {
    "surface": false
   },
@@ -511,6 +520,12 @@
    "surface": false
   },
   "faders/wheel_slot": {
+   "surface": false
+  },
+  "icons/kbd_mono": {
+   "surface": false
+  },
+  "icons/kbd_poly": {
    "surface": false
   },
   "icons/lock": {
@@ -545,6 +560,18 @@
    "surface": false
   },
   "icons/page_pitch": {
+   "surface": false
+  },
+  "icons/prio_bottom": {
+   "surface": false
+  },
+  "icons/prio_first": {
+   "surface": false
+  },
+  "icons/prio_last": {
+   "surface": false
+  },
+  "icons/prio_top": {
    "surface": false
   },
   "keyboard/key_a": {
@@ -604,6 +631,10 @@
   "knobs/rotary_small": {
    "surface": false,
    "tiles": 128
+  },
+  "knobs/rotary_small_orange": {
+   "tiles": 128,
+   "surface": false
   },
   "library/column_frame": {
    "slice": [
@@ -680,6 +711,15 @@
     20
    ],
    "surface": false
+  },
+  "panels/header_band": {
+   "surface": false,
+   "slice": [
+    0,
+    6,
+    0,
+    6
+   ]
   },
   "panels/inset_light": {
    "slice": [
@@ -936,5 +976,18 @@
     "part": "p4"
    }
   }
- ]
+ ],
+ "steppers": {
+  "width": 9,
+  "plates": {
+   "panels/label_plate": [
+    "buttons/step_down",
+    "buttons/step_up"
+   ],
+   "panels/label_plate_inv": [
+    "buttons/step_down_inv",
+    "buttons/step_up_inv"
+   ]
+  }
+ }
 }

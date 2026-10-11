@@ -8,7 +8,7 @@
    "type": "button",
    "name": "logo",
    "rect": [
-    104,
+    125,
     16,
     162,
     26
@@ -32,7 +32,7 @@
    "type": "plate",
    "name": "pod",
    "rect": [
-    468,
+    508,
     46,
     350,
     66
@@ -152,7 +152,7 @@
    "type": "plate",
    "name": "attack_label",
    "rect": [
-    908,
+    887,
     32,
     72,
     20
@@ -178,7 +178,7 @@
    "type": "dial",
    "name": "attack",
    "rect": [
-    916,
+    895,
     51,
     56,
     56
@@ -199,7 +199,7 @@
    "type": "number",
    "name": "attack_value",
    "rect": [
-    914,
+    893,
     112,
     60,
     16
@@ -229,7 +229,7 @@
    "type": "plate",
    "name": "release_label",
    "rect": [
-    980,
+    959,
     32,
     72,
     20
@@ -255,7 +255,7 @@
    "type": "dial",
    "name": "release",
    "rect": [
-    988,
+    967,
     51,
     56,
     56
@@ -276,7 +276,7 @@
    "type": "number",
    "name": "release_value",
    "rect": [
-    986,
+    965,
     112,
     60,
     16
@@ -306,7 +306,7 @@
    "type": "plate",
    "name": "formant_label",
    "rect": [
-    1052,
+    1031,
     32,
     72,
     20
@@ -332,7 +332,7 @@
    "type": "dial",
    "name": "formant",
    "rect": [
-    1060,
+    1039,
     51,
     56,
     56
@@ -353,7 +353,7 @@
    "type": "number",
    "name": "formant_value",
    "rect": [
-    1058,
+    1037,
     112,
     60,
     16
@@ -383,7 +383,7 @@
    "type": "plate",
    "name": "fm_label",
    "rect": [
-    1124,
+    1103,
     32,
     72,
     20
@@ -409,7 +409,7 @@
    "type": "dial",
    "name": "fm",
    "rect": [
-    1132,
+    1111,
     51,
     56,
     56
@@ -430,7 +430,7 @@
    "type": "number",
    "name": "fm_value",
    "rect": [
-    1130,
+    1109,
     112,
     60,
     16
@@ -460,7 +460,7 @@
    "type": "plate",
    "name": "kn1_label",
    "rect": [
-    908,
+    887,
     32,
     72,
     20
@@ -486,7 +486,7 @@
    "type": "dial",
    "name": "kn1",
    "rect": [
-    916,
+    895,
     51,
     56,
     56
@@ -507,7 +507,7 @@
    "type": "number",
    "name": "kn1_value",
    "rect": [
-    914,
+    893,
     112,
     60,
     16
@@ -537,7 +537,7 @@
    "type": "plate",
    "name": "kn2_label",
    "rect": [
-    980,
+    959,
     32,
     72,
     20
@@ -563,7 +563,7 @@
    "type": "dial",
    "name": "kn2",
    "rect": [
-    988,
+    967,
     51,
     56,
     56
@@ -584,7 +584,7 @@
    "type": "number",
    "name": "kn2_value",
    "rect": [
-    986,
+    965,
     112,
     60,
     16
@@ -614,7 +614,7 @@
    "type": "plate",
    "name": "kn3_label",
    "rect": [
-    1052,
+    1031,
     32,
     72,
     20
@@ -640,7 +640,7 @@
    "type": "dial",
    "name": "kn3",
    "rect": [
-    1060,
+    1039,
     51,
     56,
     56
@@ -661,7 +661,7 @@
    "type": "number",
    "name": "kn3_value",
    "rect": [
-    1058,
+    1037,
     112,
     60,
     16
@@ -691,7 +691,7 @@
    "type": "plate",
    "name": "kn4_label",
    "rect": [
-    1124,
+    1103,
     32,
     72,
     20
@@ -717,7 +717,7 @@
    "type": "dial",
    "name": "kn4",
    "rect": [
-    1132,
+    1111,
     51,
     56,
     56
@@ -738,7 +738,7 @@
    "type": "number",
    "name": "kn4_value",
    "rect": [
-    1130,
+    1109,
     112,
     60,
     16
@@ -768,7 +768,7 @@
    "type": "plate",
    "name": "lcd",
    "rect": [
-    104,
+    125,
     46,
     330,
     66
@@ -782,9 +782,9 @@
    "type": "number",
    "name": "lcd_performance",
    "rect": [
-    111,
-    52,
-    300,
+    134,
+    55,
+    228,
     16
    ],
    "text": {
@@ -809,42 +809,11 @@
    }
   },
   {
-   "type": "number",
-   "name": "lcd_user_perf",
-   "rect": [
-    111,
-    52,
-    72,
-    16
-   ],
-   "text": {
-    "text": "",
-    "font": "lcd_small",
-    "align": "left",
-    "valign": "top"
-   },
-   "pad": [
-    0,
-    0,
-    0,
-    0
-   ],
-   "surface": false,
-   "param": "perf.user",
-   "format": "U%03.0f",
-   "drag": false,
-   "reset": false,
-   "showIf": {
-    "param": "perf.bank",
-    "equals": 1
-   }
-  },
-  {
    "type": "textbox",
    "name": "lcd_user_perf_name",
    "rect": [
-    183,
-    52,
+    134,
+    55,
     228,
     16
    ],
@@ -871,8 +840,8 @@
    "type": "button",
    "name": "lcd_edited",
    "rect": [
-    411,
-    52,
+    434,
+    55,
     12,
     16
    ],
@@ -888,8 +857,8 @@
    "type": "plate",
    "name": "lcd_part",
    "rect": [
-    111,
-    70,
+    134,
+    71,
     24,
     16
    ],
@@ -908,14 +877,15 @@
    "surface": false
   },
   {
-   "type": "number",
-   "name": "lcd_bank",
+   "type": "textbox",
+   "name": "lcd_voice",
    "rect": [
-    147,
-    70,
-    36,
+    170,
+    71,
+    120,
     16
    ],
+   "key": "part.voice.{part}",
    "text": {
     "text": "",
     "font": "lcd_small",
@@ -929,82 +899,14 @@
     0
    ],
    "surface": false,
-   "param": "part.bank.{part}",
-   "reset": false,
-   "tip": "The part's voice bank",
-   "showIf": {
-    "param": "part.bank.{part}",
-    "notEquals": 1
-   }
-  },
-  {
-   "type": "number",
-   "name": "lcd_program",
-   "rect": [
-    183,
-    70,
-    36,
-    16
-   ],
-   "text": {
-    "text": "",
-    "font": "lcd_small",
-    "align": "left",
-    "valign": "top"
-   },
-   "pad": [
-    0,
-    0,
-    0,
-    0
-   ],
-   "surface": false,
-   "param": "part.program.{part}",
-   "format": "%03.0f",
-   "reset": false,
-   "tip": "The part's voice number",
-   "showIf": {
-    "param": "part.bank.{part}",
-    "notEquals": 1
-   }
-  },
-  {
-   "type": "number",
-   "name": "lcd_user_voice",
-   "rect": [
-    147,
-    70,
-    72,
-    16
-   ],
-   "text": {
-    "text": "",
-    "font": "lcd_small",
-    "align": "left",
-    "valign": "top"
-   },
-   "pad": [
-    0,
-    0,
-    0,
-    0
-   ],
-   "surface": false,
-   "param": "part.user.{part}",
-   "format": "U%03.0f",
-   "reset": false,
-   "tip": "The part's user voice",
-   "showIf": {
-    "param": "part.bank.{part}",
-    "equals": 1
-   }
+   "tip": "The part's voice"
   },
   {
    "type": "plate",
    "name": "lcd_channel_label",
    "rect": [
-    243,
-    70,
+    302,
+    71,
     24,
     16
    ],
@@ -1026,8 +928,8 @@
    "type": "number",
    "name": "lcd_channel",
    "rect": [
-    279,
-    70,
+    326,
+    71,
     36,
     16
    ],
@@ -1052,8 +954,8 @@
    "type": "button",
    "name": "lcd_midi",
    "rect": [
-    411,
-    70,
+    434,
+    71,
     12,
     16
    ],
@@ -1069,8 +971,8 @@
    "type": "plate",
    "name": "lcd_poly_label",
    "rect": [
-    111,
-    88,
+    134,
+    87,
     48,
     16
    ],
@@ -1092,8 +994,8 @@
    "type": "textbox",
    "name": "lcd_poly",
    "rect": [
-    171,
-    88,
+    194,
+    87,
     24,
     16
    ],
@@ -1118,8 +1020,8 @@
    "type": "plate",
    "name": "lcd_cpu_label",
    "rect": [
-    243,
-    88,
+    302,
+    87,
     36,
     16
    ],
@@ -1141,8 +1043,8 @@
    "type": "textbox",
    "name": "lcd_cpu",
    "rect": [
-    279,
-    88,
+    338,
+    87,
     48,
     16
    ],
@@ -1166,9 +1068,9 @@
    "type": "button",
    "name": "lcd_scale",
    "rect": [
-    351,
-    88,
-    72,
+    374,
+    55,
+    60,
     16
    ],
    "text": {
@@ -1195,9 +1097,9 @@
    "type": "dropdown",
    "name": "patch_list",
    "rect": [
-    108,
-    50,
-    306,
+    131,
+    53,
+    240,
     20
    ],
    "pressOffset": [
@@ -2774,7 +2676,7 @@
    "type": "button",
    "name": "prev_patch",
    "rect": [
-    440,
+    461,
     60,
     17,
     17
@@ -2799,7 +2701,7 @@
    "type": "button",
    "name": "next_patch",
    "rect": [
-    440,
+    461,
     81,
     17,
     17
@@ -2824,7 +2726,7 @@
    "type": "button",
    "name": "show_editor",
    "rect": [
-    618,
+    658,
     52,
     72,
     26
@@ -2857,7 +2759,7 @@
    "type": "button",
    "name": "show_keys",
    "rect": [
-    690,
+    730,
     52,
     72,
     26
@@ -2890,7 +2792,7 @@
    "type": "dropdown",
    "name": "import_menu",
    "rect": [
-    546,
+    586,
     52,
     72,
     26
@@ -2945,7 +2847,7 @@
    "type": "dropdown",
    "name": "save_menu",
    "rect": [
-    474,
+    514,
     52,
     72,
     26
@@ -3016,7 +2918,7 @@
    "type": "plate",
    "name": "part_title",
    "rect": [
-    474,
+    514,
     82,
     46,
     26
@@ -3038,7 +2940,7 @@
    "type": "button",
    "name": "part_1",
    "rect": [
-    524,
+    564,
     82,
     56,
     26
@@ -3054,9 +2956,9 @@
    },
    "pad": [
     2,
+    0,
     2,
-    2,
-    2
+    5
    ],
    "hoverTiles": false,
    "pressOffset": [
@@ -3076,7 +2978,7 @@
    "type": "button",
    "name": "part_2",
    "rect": [
-    584,
+    624,
     82,
     56,
     26
@@ -3092,9 +2994,9 @@
    },
    "pad": [
     2,
+    0,
     2,
-    2,
-    2
+    5
    ],
    "hoverTiles": false,
    "pressOffset": [
@@ -3114,7 +3016,7 @@
    "type": "button",
    "name": "part_3",
    "rect": [
-    644,
+    684,
     82,
     56,
     26
@@ -3130,9 +3032,9 @@
    },
    "pad": [
     2,
+    0,
     2,
-    2,
-    2
+    5
    ],
    "hoverTiles": false,
    "pressOffset": [
@@ -3152,7 +3054,7 @@
    "type": "button",
    "name": "part_4",
    "rect": [
-    704,
+    744,
     82,
     56,
     26
@@ -3168,9 +3070,9 @@
    },
    "pad": [
     2,
+    0,
     2,
-    2,
-    2
+    5
    ],
    "hoverTiles": false,
    "pressOffset": [
@@ -3190,7 +3092,7 @@
    "type": "button",
    "name": "knobs_tone",
    "rect": [
-    768,
+    808,
     52,
     44,
     26
@@ -3206,9 +3108,9 @@
    },
    "pad": [
     2,
+    0,
     2,
-    2,
-    2
+    5
    ],
    "hoverTiles": false,
    "pressOffset": [
@@ -3228,7 +3130,7 @@
    "type": "button",
    "name": "knobs_kn",
    "rect": [
-    768,
+    808,
     82,
     44,
     26
@@ -3244,9 +3146,9 @@
    },
    "pad": [
     2,
+    0,
     2,
-    2,
-    2
+    5
    ],
    "hoverTiles": false,
    "pressOffset": [
@@ -3266,7 +3168,7 @@
    "type": "plate",
    "name": "monitor",
    "rect": [
-    1198,
+    1204,
     46,
     286,
     66
@@ -3280,7 +3182,7 @@
    "type": "plot",
    "name": "spectrum",
    "rect": [
-    1207,
+    1213,
     54,
     210,
     40
@@ -3295,7 +3197,7 @@
    "type": "meter",
    "name": "meter_left",
    "rect": [
-    1422,
+    1428,
     54,
     8,
     52
@@ -3314,7 +3216,7 @@
    "type": "meter",
    "name": "meter_right",
    "rect": [
-    1432,
+    1438,
     54,
     8,
     52
@@ -3333,7 +3235,7 @@
    "type": "button",
    "name": "panic",
    "rect": [
-    1450,
+    1456,
     52,
     31,
     25
@@ -3355,7 +3257,7 @@
    "type": "button",
    "name": "midi_learn",
    "rect": [
-    1450,
+    1456,
     81,
     31,
     25
@@ -3389,7 +3291,7 @@
    "type": "button",
    "name": "musica_studio",
    "rect": [
-    1356,
+    1362,
     20,
     128,
     17
@@ -3408,7 +3310,7 @@
    "type": "plate",
    "name": "harmonic_1",
    "rect": [
-    1200,
+    1206,
     95,
     20,
     12
@@ -3424,7 +3326,7 @@
    "type": "plate",
    "name": "harmonic_4",
    "rect": [
-    1220,
+    1226,
     95,
     20,
     12
@@ -3440,7 +3342,7 @@
    "type": "plate",
    "name": "harmonic_8",
    "rect": [
-    1246,
+    1252,
     95,
     20,
     12
@@ -3456,7 +3358,7 @@
    "type": "plate",
    "name": "harmonic_12",
    "rect": [
-    1272,
+    1278,
     95,
     20,
     12
@@ -3472,7 +3374,7 @@
    "type": "plate",
    "name": "harmonic_16",
    "rect": [
-    1299,
+    1305,
     95,
     20,
     12
@@ -3488,7 +3390,7 @@
    "type": "plate",
    "name": "harmonic_20",
    "rect": [
-    1325,
+    1331,
     95,
     20,
     12
@@ -3504,7 +3406,7 @@
    "type": "plate",
    "name": "harmonic_24",
    "rect": [
-    1351,
+    1357,
     95,
     20,
     12
@@ -3520,7 +3422,7 @@
    "type": "plate",
    "name": "harmonic_28",
    "rect": [
-    1377,
+    1383,
     95,
     20,
     12
@@ -3536,7 +3438,7 @@
    "type": "plate",
    "name": "harmonic_32",
    "rect": [
-    1404,
+    1410,
     95,
     20,
     12

@@ -1,7 +1,7 @@
 {
  "size": [
   1235,
-  536
+  566
  ],
  "widgets": [
   {
@@ -11,7 +11,7 @@
     14,
     36,
     297,
-    470
+    520
    ],
    "layer": 0,
    "fill": {
@@ -69,16 +69,16 @@
    "rect": [
     24,
     46,
-    58,
+    52,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Voice",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Voice"
    },
    "pad": [
     1,
@@ -89,18 +89,18 @@
   },
   {
    "type": "dropdown",
-   "name": "bank_1",
+   "name": "voice_1",
    "rect": [
-    84,
+    80,
     46,
-    76,
+    221,
     18
    ],
    "fill": {
     "image": "buttons/dropdown_small"
    },
    "text": {
-    "text": "...",
+    "text": "{data:part.voice.p1|...}",
     "font": "value_dark_12",
     "valign": "middle"
    },
@@ -114,70 +114,61 @@
     2,
     2
    ],
+   "param": "part.bank.p1",
    "items": [
     {
-     "label": "off",
+     "label": "Choose in the Browser...",
+     "value": -1,
+     "action": {
+      "goto": "page_library",
+      "stack": "pages",
+      "set": {
+       "browse": "voice",
+       "part": "p1"
+      }
+     }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Off",
      "value": 0
-    },
-    {
-     "label": "Int",
-     "value": 1
-    },
-    {
-     "label": "PrA",
-     "value": 2
-    },
-    {
-     "label": "PrB",
-     "value": 3
-    },
-    {
-     "label": "PrC",
-     "value": 4
-    },
-    {
-     "label": "PrD",
-     "value": 5
-    },
-    {
-     "label": "PrE",
-     "value": 6
-    },
-    {
-     "label": "PrF",
-     "value": 7
-    },
-    {
-     "label": "PrG",
-     "value": 8
-    },
-    {
-     "label": "PrH",
-     "value": 9
-    },
-    {
-     "label": "PrI",
-     "value": 10
-    },
-    {
-     "label": "PrJ",
-     "value": 11
-    },
-    {
-     "label": "PrK",
-     "value": 12
     }
    ],
-   "captionFromItem": true,
-   "param": "part.bank.p1"
+   "tip": "The voice part 1 plays: choose one in the Browser, or turn the part off"
+  },
+  {
+   "type": "plate",
+   "name": "rcv_1_label",
+   "rect": [
+    24,
+    70,
+    52,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "MIDI Ch"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
   },
   {
    "type": "number",
-   "name": "program_1",
+   "name": "rcv_1",
    "rect": [
-    164,
-    46,
-    50,
+    80,
+    70,
+    64,
     18
    ],
    "fill": {
@@ -198,20 +189,40 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.program.p1",
-   "tip": "Voice number",
-   "showIf": {
-    "param": "part.bank.p1",
-    "notEquals": 1
-   }
+   "param": "part.rcv_ch.p1",
+   "tip": "The channel this part receives on: 1-16, the performance channel (Pfm), or off"
+  },
+  {
+   "type": "plate",
+   "name": "rcv_max_1_label",
+   "rect": [
+    148,
+    70,
+    26,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "to"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
   },
   {
    "type": "number",
-   "name": "user_1",
+   "name": "rcv_max_1",
    "rect": [
-    164,
-    46,
-    55,
+    178,
+    70,
+    64,
     18
    ],
    "fill": {
@@ -229,33 +240,179 @@
     2,
     2
    ],
-   "format": "U%03.0f",
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.user.p1",
-   "tip": "User voice number",
-   "showIf": {
-    "param": "part.bank.p1",
-    "equals": 1
-   }
+   "param": "part.rcv_max.p1",
+   "tip": "The top of a channel range, or Off for the one channel"
+  },
+  {
+   "type": "custom",
+   "name": "keys_1",
+   "rect": [
+    24,
+    94,
+    277,
+    50
+   ],
+   "kind": "key_range",
+   "low": "part.note_low.p1",
+   "high": "part.note_high.p1",
+   "shift": "part.note_shift.p1",
+   "text": {
+    "font": "value_dark_12"
+   },
+   "surface": false,
+   "arrow": "#111416ff",
+   "rail": "#11141666",
+   "labelLeft": 67,
+   "tip": "Drag a key to move the nearer end of the range. The triangle over the keys is the note shift, where middle C lands: drag it along its line, or double-click there for none"
+  },
+  {
+   "type": "plate",
+   "name": "shift_1_label",
+   "rect": [
+    24,
+    94,
+    74,
+    16
+   ],
+   "text": {
+    "text": "Note Shift",
+    "font": "caption_grey_12",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "note_low_1_label",
+   "rect": [
+    24,
+    148,
+    52,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Keys"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "note_low_1",
+   "rect": [
+    80,
+    148,
+    58,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.note_low.p1",
+   "tip": "The lowest note it plays"
+  },
+  {
+   "type": "plate",
+   "name": "note_low_1_to",
+   "rect": [
+    140,
+    148,
+    22,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "to"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "note_high_1",
+   "rect": [
+    164,
+    148,
+    58,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.note_high.p1",
+   "tip": "The highest note it plays"
   },
   {
    "type": "plate",
    "name": "reserve_1_label",
    "rect": [
-    222,
-    46,
-    38,
+    228,
+    148,
+    34,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Rsv",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Rsv"
    },
    "pad": [
     1,
@@ -268,9 +425,9 @@
    "type": "number",
    "name": "reserve_1",
    "rect": [
-    262,
-    46,
-    40,
+    264,
+    148,
+    37,
     18
    ],
    "fill": {
@@ -292,384 +449,86 @@
    "reset": false,
    "editable": true,
    "param": "part.note_reserve.p1",
-   "tip": "Notes reserved for this part"
+   "tip": "Notes reserved for this part, of the 32"
   },
   {
    "type": "plate",
-   "name": "rcv_1_label",
+   "name": "vel_title_1",
    "rect": [
     24,
-    72,
-    58,
-    18
+    170,
+    64,
+    16
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "MIDI Ch",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "rcv_1",
-   "rect": [
-    84,
-    72,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "1",
-     "value": 0
-    },
-    {
-     "label": "2",
-     "value": 1
-    },
-    {
-     "label": "3",
-     "value": 2
-    },
-    {
-     "label": "4",
-     "value": 3
-    },
-    {
-     "label": "5",
-     "value": 4
-    },
-    {
-     "label": "6",
-     "value": 5
-    },
-    {
-     "label": "7",
-     "value": 6
-    },
-    {
-     "label": "8",
-     "value": 7
-    },
-    {
-     "label": "9",
-     "value": 8
-    },
-    {
-     "label": "10",
-     "value": 9
-    },
-    {
-     "label": "11",
-     "value": 10
-    },
-    {
-     "label": "12",
-     "value": 11
-    },
-    {
-     "label": "13",
-     "value": 12
-    },
-    {
-     "label": "14",
-     "value": 13
-    },
-    {
-     "label": "15",
-     "value": 14
-    },
-    {
-     "label": "16",
-     "value": 15
-    },
-    {
-     "label": "Pfm",
-     "value": 16
-    },
-    {
-     "label": "Off",
-     "value": 17
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.rcv_ch.p1",
-   "tip": "The channel this part receives on: 1-16, the performance channel, or off"
-  },
-  {
-   "type": "plate",
-   "name": "rcv_max_1_label",
-   "rect": [
-    164,
-    72,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "rcv_max_1",
-   "rect": [
-    196,
-    72,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "1",
-     "value": 0
-    },
-    {
-     "label": "2",
-     "value": 1
-    },
-    {
-     "label": "3",
-     "value": 2
-    },
-    {
-     "label": "4",
-     "value": 3
-    },
-    {
-     "label": "5",
-     "value": 4
-    },
-    {
-     "label": "6",
-     "value": 5
-    },
-    {
-     "label": "7",
-     "value": 6
-    },
-    {
-     "label": "8",
-     "value": 7
-    },
-    {
-     "label": "9",
-     "value": 8
-    },
-    {
-     "label": "10",
-     "value": 9
-    },
-    {
-     "label": "11",
-     "value": 10
-    },
-    {
-     "label": "12",
-     "value": 11
-    },
-    {
-     "label": "13",
-     "value": 12
-    },
-    {
-     "label": "14",
-     "value": 13
-    },
-    {
-     "label": "15",
-     "value": 14
-    },
-    {
-     "label": "16",
-     "value": 15
-    },
-    {
-     "label": "Off",
-     "value": 16
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.rcv_max.p1",
-   "tip": "The highest channel of the part's range (parts 1 and 2)"
-  },
-  {
-   "type": "plate",
-   "name": "note_low_1_label",
-   "rect": [
-    24,
-    98,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Keys",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "note_low_1",
-   "rect": [
-    84,
-    98,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_low.p1"
-  },
-  {
-   "type": "plate",
-   "name": "note_low_1_to",
-   "rect": [
-    164,
-    98,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "note_high_1",
-   "rect": [
-    196,
-    98,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_high.p1"
-  },
-  {
-   "type": "plate",
-   "name": "vel_low_1_label",
-   "rect": [
-    24,
-    124,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
    "text": {
     "text": "Velocity",
     "font": "caption_grey_12",
-    "align": "center"
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "vel_rule_1",
+   "rect": [
+    88,
+    180,
+    213,
+    1
+   ],
+   "fill": {
+    "colour": "#00000026"
+   }
+  },
+  {
+   "type": "custom",
+   "name": "velocity_1",
+   "rect": [
+    24,
+    190,
+    128,
+    56
+   ],
+   "kind": "velocity",
+   "fill": {
+    "image": "displays/op_screen"
+   },
+   "surface": false,
+   "low": "part.vel_low.p1",
+   "high": "part.vel_high.p1",
+   "depth": "part.vel_depth.p1",
+   "offset": "part.vel_offset.p1",
+   "tip": "Velocity in, across; velocity out, up. The left handle drags the range's low end and the offset, the right one the high end and the depth",
+   "grid": "#ffffff24",
+   "area": "#86eac24d",
+   "area2": "#86eac205",
+   "curve": "#86eac2ff",
+   "glow": "#86eac222",
+   "handle": "#effff8ff",
+   "ring": "#25292cff",
+   "off": "#00000066"
+  },
+  {
+   "type": "plate",
+   "name": "vel_range_1_label",
+   "rect": [
+    158,
+    190,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Range"
    },
    "pad": [
     1,
@@ -682,9 +541,9 @@
    "type": "number",
    "name": "vel_low_1",
    "rect": [
-    84,
-    124,
-    76,
+    208,
+    190,
+    45,
     18
    ],
    "fill": {
@@ -705,39 +564,16 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_low.p1"
-  },
-  {
-   "type": "plate",
-   "name": "vel_low_1_to",
-   "rect": [
-    164,
-    124,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
+   "param": "part.vel_low.p1",
+   "tip": "The softest velocity it plays"
   },
   {
    "type": "number",
    "name": "vel_high_1",
    "rect": [
-    196,
-    124,
-    76,
+    256,
+    190,
+    45,
     18
    ],
    "fill": {
@@ -758,824 +594,422 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_high.p1"
+   "param": "part.vel_high.p1",
+   "tip": "The hardest velocity it plays"
   },
   {
-   "type": "dropdown",
+   "type": "plate",
+   "name": "vel_depth_1_label",
+   "rect": [
+    158,
+    209,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Depth"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "vel_depth_1",
+   "rect": [
+    208,
+    209,
+    93,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vel_depth.p1",
+   "tip": "Velocity sense depth: 64 plays velocity as it comes"
+  },
+  {
+   "type": "plate",
+   "name": "vel_offset_1_label",
+   "rect": [
+    158,
+    228,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Offset"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "vel_offset_1",
+   "rect": [
+    208,
+    228,
+    93,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vel_offset.p1",
+   "tip": "Velocity sense offset: 64 adds nothing"
+  },
+  {
+   "type": "button",
    "name": "poly_1",
    "rect": [
     24,
-    150,
-    90,
-    18
+    252,
+    64,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "Mono",
-     "value": 0
-    },
-    {
-     "label": "Poly",
-     "value": 1
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.poly.p1"
-  },
-  {
-   "type": "dropdown",
-   "name": "priority_1",
-   "rect": [
-    120,
-    150,
-    90,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "Last",
-     "value": 0
-    },
-    {
-     "label": "Top",
-     "value": 1
-    },
-    {
-     "label": "Bottom",
-     "value": 2
-    },
-    {
-     "label": "First",
-     "value": 3
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.priority.p1",
-   "tip": "Mono priority"
-  },
-  {
-   "type": "plate",
-   "name": "shift_1_label",
-   "rect": [
-    216,
-    150,
-    44,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Shift",
     "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "shift_1",
-   "rect": [
-    262,
-    150,
-    40,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
     "align": "center",
-    "valign": "middle"
+    "valign": "middle",
+    "text": "Poly"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_shift.p1",
-   "tip": "Note shift"
-  },
-  {
-   "type": "plate",
-   "name": "category_1_label",
-   "rect": [
+   "pad": [
     24,
-    176,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Category",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
     1,
     2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "category_1",
-   "rect": [
-    84,
-    176,
-    122,
-    18
+    1
    ],
-   "fill": {
-    "image": "buttons/dropdown_small"
+   "param": "part.poly.p1",
+   "action": {
+    "value": 1
    },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "--",
-     "value": 0
-    },
-    {
-     "label": "Piano",
-     "value": 1
-    },
-    {
-     "label": "Chromatic",
-     "value": 2
-    },
-    {
-     "label": "Organ",
-     "value": 3
-    },
-    {
-     "label": "Guitar",
-     "value": 4
-    },
-    {
-     "label": "Bass",
-     "value": 5
-    },
-    {
-     "label": "Strings",
-     "value": 6
-    },
-    {
-     "label": "Ensemble",
-     "value": 7
-    },
-    {
-     "label": "Brass",
-     "value": 8
-    },
-    {
-     "label": "Reed",
-     "value": 9
-    },
-    {
-     "label": "Pipe",
-     "value": 10
-    },
-    {
-     "label": "Synth Lead",
-     "value": 11
-    },
-    {
-     "label": "Synth Pad",
-     "value": 12,
-     "columnBreak": true
-    },
-    {
-     "label": "Synth FX",
-     "value": 13
-    },
-    {
-     "label": "Ethnic",
-     "value": 14
-    },
-    {
-     "label": "Percussive",
-     "value": 15
-    },
-    {
-     "label": "Sound FX",
-     "value": 16
-    },
-    {
-     "label": "Drums",
-     "value": 17
-    },
-    {
-     "label": "Synth Comp",
-     "value": 18
-    },
-    {
-     "label": "Vocal",
-     "value": 19
-    },
-    {
-     "label": "Combination",
-     "value": 20
-    },
-    {
-     "label": "Material Wave",
-     "value": 21
-    },
-    {
-     "label": "Sequence",
-     "value": 22
-    }
-   ],
-   "captionFromItem": true,
-   "param": "voice.category.p1",
-   "tip": "The voice's category, as the browser files it"
+   "tip": "Polyphonic: every note held sounds"
   },
   {
    "type": "plate",
-   "name": "pan_lfo_1_label",
+   "name": "poly_1_icon",
    "rect": [
-    208,
-    176,
-    52,
+    27,
+    254,
+    22,
     18
    ],
+   "layer": 4,
    "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Pan LFO",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "pan_lfo_1",
-   "rect": [
-    262,
-    176,
-    40,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.pan_lfo.p1",
-   "tip": "Pan LFO depth"
-  },
-  {
-   "type": "plate",
-   "name": "volume_1_label",
-   "rect": [
-    12,
-    199,
-    80,
-    21
-   ],
-   "layer": 1,
-   "text": {
-    "text": "Volume",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "plate",
-   "name": "volume_1_track",
-   "rect": [
-    42,
-    220,
-    20,
-    236
-   ],
-   "fill": {
-    "image": "faders/track_long_narrow"
+    "image": "icons/kbd_poly"
    }
   },
   {
-   "type": "dial",
-   "name": "volume_1",
+   "type": "button",
+   "name": "mono_1",
    "rect": [
-    31,
-    220,
-    42,
-    236
+    92,
+    252,
+    64,
+    22
    ],
-   "image": "faders/pot_cap",
-   "slider": true,
-   "sensitivity": 1.5,
-   "fine": 0.2,
-   "wheel": 0.09,
-   "reset": "default",
-   "param": "part.volume.p1"
+   "fill": {
+    "image": "buttons/nav_small"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle",
+    "text": "Mono"
+   },
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
+   ],
+   "pad": [
+    24,
+    1,
+    2,
+    1
+   ],
+   "param": "part.poly.p1",
+   "action": {
+    "value": 0
+   },
+   "tip": "Monophonic: one note at a time"
   },
   {
-   "type": "number",
-   "name": "volume_1_value",
+   "type": "plate",
+   "name": "mono_1_icon",
    "rect": [
+    95,
+    254,
     22,
-    459,
-    60,
+    18
+   ],
+   "layer": 4,
+   "fill": {
+    "image": "icons/kbd_mono"
+   }
+  },
+  {
+   "type": "button",
+   "name": "prio_last_1",
+   "rect": [
+    162,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "label_white_13",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.volume.p1"
+   "param": "part.priority.p1",
+   "action": {
+    "value": 0
+   },
+   "tip": "Last: the note played last sounds",
+   "showIf": {
+    "param": "part.poly.p1",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "pan_1_label",
+   "name": "prio_last_1_icon",
    "rect": [
-    86,
-    199,
-    80,
-    21
+    168,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Pan",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_last"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p1",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "pan_1",
+   "type": "button",
+   "name": "prio_top_1",
    "rect": [
-    104,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.pan.p1"
-  },
-  {
-   "type": "number",
-   "name": "pan_1_value",
-   "rect": [
-    96,
-    265,
-    60,
+    197,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.pan.p1"
+   "param": "part.priority.p1",
+   "action": {
+    "value": 1
+   },
+   "tip": "Top: the highest note held sounds",
+   "showIf": {
+    "param": "part.poly.p1",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "rev_send_1_label",
+   "name": "prio_top_1_icon",
    "rect": [
-    156,
-    199,
-    80,
-    21
+    203,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Reverb",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_top"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p1",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "rev_send_1",
+   "type": "button",
+   "name": "prio_bottom_1",
    "rect": [
-    174,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.rev_send.p1"
-  },
-  {
-   "type": "number",
-   "name": "rev_send_1_value",
-   "rect": [
-    166,
-    265,
-    60,
+    232,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.rev_send.p1"
+   "param": "part.priority.p1",
+   "action": {
+    "value": 2
+   },
+   "tip": "Bottom: the lowest note held sounds",
+   "showIf": {
+    "param": "part.poly.p1",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "var_send_1_label",
+   "name": "prio_bottom_1_icon",
    "rect": [
-    226,
-    199,
-    80,
-    21
+    238,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Variation",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_bottom"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p1",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "var_send_1",
+   "type": "button",
+   "name": "prio_first_1",
    "rect": [
-    244,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.var_send.p1"
-  },
-  {
-   "type": "number",
-   "name": "var_send_1_value",
-   "rect": [
-    236,
-    265,
-    60,
+    267,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.var_send.p1"
+   "param": "part.priority.p1",
+   "action": {
+    "value": 3
+   },
+   "tip": "First: the note held longest sounds",
+   "showIf": {
+    "param": "part.poly.p1",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "dry_1_label",
+   "name": "prio_first_1_icon",
    "rect": [
-    86,
-    291,
-    80,
-    21
+    273,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Dry",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_first"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "dial",
-   "name": "dry_1",
-   "rect": [
-    104,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.dry.p1"
-  },
-  {
-   "type": "number",
-   "name": "dry_1_value",
-   "rect": [
-    96,
-    357,
-    60,
-    22
-   ],
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.dry.p1"
-  },
-  {
-   "type": "plate",
-   "name": "vn_balance_1_label",
-   "rect": [
-    156,
-    291,
-    80,
-    21
-   ],
-   "layer": 1,
-   "text": {
-    "text": "V/N Bal",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "dial",
-   "name": "vn_balance_1",
-   "rect": [
-    174,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.vn_balance.p1"
-  },
-  {
-   "type": "number",
-   "name": "vn_balance_1_value",
-   "rect": [
-    166,
-    357,
-    60,
-    22
-   ],
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.vn_balance.p1"
-  },
-  {
-   "type": "plate",
-   "name": "detune_1_label",
-   "rect": [
-    226,
-    291,
-    80,
-    21
-   ],
-   "layer": 1,
-   "text": {
-    "text": "Detune",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "dial",
-   "name": "detune_1",
-   "rect": [
-    244,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.detune.p1"
-  },
-  {
-   "type": "number",
-   "name": "detune_1_value",
-   "rect": [
-    236,
-    357,
-    60,
-    22
-   ],
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.detune.p1"
+   "showIf": {
+    "param": "part.poly.p1",
+    "equals": 0
+   }
   },
   {
    "type": "button",
    "name": "ins_1",
    "rect": [
-    98,
-    400,
-    98,
+    24,
+    280,
+    136,
     18
    ],
    "fill": {
@@ -1604,9 +1038,9 @@
    "type": "button",
    "name": "filter_1",
    "rect": [
-    202,
-    400,
-    98,
+    165,
+    280,
+    136,
     18
    ],
    "fill": {
@@ -1634,9 +1068,9 @@
    "type": "button",
    "name": "sustain_1",
    "rect": [
-    98,
-    424,
-    98,
+    24,
+    302,
+    136,
     18
    ],
    "fill": {
@@ -1665,9 +1099,9 @@
    "type": "button",
    "name": "porta_1",
    "rect": [
-    202,
-    424,
-    98,
+    165,
+    302,
+    136,
     18
    ],
    "fill": {
@@ -1693,94 +1127,65 @@
   },
   {
    "type": "plate",
-   "name": "vel_depth_1_label",
+   "name": "volume_1_label",
    "rect": [
-    98,
-    450,
-    58,
+    16,
+    324,
+    64,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Vel Dep",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Volume"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
-  },
-  {
-   "type": "number",
-   "name": "vel_depth_1",
-   "rect": [
-    158,
-    450,
-    38,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.vel_depth.p1",
-   "tip": "Velocity sense depth"
   },
   {
    "type": "plate",
-   "name": "vel_offset_1_label",
+   "name": "volume_1_track",
    "rect": [
-    202,
-    450,
-    58,
-    18
+    38,
+    346,
+    20,
+    170
    ],
    "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Vel Ofs",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
+    "image": "faders/track_parts"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "volume_1",
+   "rect": [
+    27,
+    342,
+    42,
+    178
+   ],
+   "image": "faders/pot_cap",
+   "slider": true,
+   "sensitivity": 1.5,
+   "fine": 0.2,
+   "wheel": 0.09,
+   "reset": "default",
+   "param": "part.volume.p1"
   },
   {
    "type": "number",
-   "name": "vel_offset_1",
+   "name": "volume_1_value",
    "rect": [
-    262,
-    450,
-    38,
-    18
+    16,
+    522,
+    64,
+    16
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -1788,53 +1193,513 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_offset.p1",
-   "tip": "Velocity sense offset"
+   "param": "part.volume.p1"
+  },
+  {
+   "type": "plate",
+   "name": "pan_1_label",
+   "rect": [
+    82,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Pan"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "pan_1",
+   "rect": [
+    97,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan.p1"
+  },
+  {
+   "type": "number",
+   "name": "pan_1_value",
+   "rect": [
+    82,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.pan.p1"
+  },
+  {
+   "type": "plate",
+   "name": "rev_send_1_label",
+   "rect": [
+    156,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Reverb"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "rev_send_1",
+   "rect": [
+    171,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.rev_send.p1"
+  },
+  {
+   "type": "number",
+   "name": "rev_send_1_value",
+   "rect": [
+    156,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.rev_send.p1"
+  },
+  {
+   "type": "plate",
+   "name": "var_send_1_label",
+   "rect": [
+    230,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Variation"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "var_send_1",
+   "rect": [
+    245,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.var_send.p1"
+  },
+  {
+   "type": "number",
+   "name": "var_send_1_value",
+   "rect": [
+    230,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.var_send.p1"
+  },
+  {
+   "type": "plate",
+   "name": "dry_1_label",
+   "rect": [
+    82,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Dry"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "dry_1",
+   "rect": [
+    97,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.dry.p1"
+  },
+  {
+   "type": "number",
+   "name": "dry_1_value",
+   "rect": [
+    82,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.dry.p1"
+  },
+  {
+   "type": "plate",
+   "name": "vn_balance_1_label",
+   "rect": [
+    156,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "V/N Bal"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "vn_balance_1",
+   "rect": [
+    171,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.vn_balance.p1"
+  },
+  {
+   "type": "number",
+   "name": "vn_balance_1_value",
+   "rect": [
+    156,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vn_balance.p1"
+  },
+  {
+   "type": "plate",
+   "name": "detune_1_label",
+   "rect": [
+    230,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Detune"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "detune_1",
+   "rect": [
+    245,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.detune.p1"
+  },
+  {
+   "type": "number",
+   "name": "detune_1_value",
+   "rect": [
+    230,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.detune.p1"
+  },
+  {
+   "type": "plate",
+   "name": "pan_lfo_1_label",
+   "rect": [
+    82,
+    476,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Pan LFO"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "pan_lfo_1",
+   "rect": [
+    97,
+    492,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan_lfo.p1",
+   "tip": "Pan LFO depth"
+  },
+  {
+   "type": "number",
+   "name": "pan_lfo_1_value",
+   "rect": [
+    82,
+    536,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.pan_lfo.p1"
   },
   {
    "type": "plate",
    "name": "expr_1_label",
    "rect": [
-    98,
+    156,
     476,
-    58,
+    74,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Expr Lo",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Expr Lo"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
   },
   {
-   "type": "number",
+   "type": "dial",
    "name": "expr_1",
    "rect": [
-    158,
-    476,
-    38,
-    18
+    171,
+    492,
+    44,
+    44
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.expr_low.p1",
+   "tip": "Expression low limit"
+  },
+  {
+   "type": "number",
+   "name": "expr_1_value",
+   "rect": [
+    156,
+    536,
+    74,
+    14
+   ],
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -1842,53 +1707,64 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.expr_low.p1",
-   "tip": "Expression low limit"
+   "param": "part.expr_low.p1"
   },
   {
    "type": "plate",
    "name": "pan_scale_1_label",
    "rect": [
-    199,
+    230,
     476,
-    64,
+    74,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Pan Scale",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Pan Scale"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
   },
   {
-   "type": "number",
+   "type": "dial",
    "name": "pan_scale_1",
    "rect": [
-    262,
-    476,
-    38,
-    18
+    245,
+    492,
+    44,
+    44
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan_scaling.p1",
+   "tip": "Pan scaling across the keys"
+  },
+  {
+   "type": "number",
+   "name": "pan_scale_1_value",
+   "rect": [
+    230,
+    536,
+    74,
+    14
+   ],
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -1896,10 +1772,10 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
@@ -1913,7 +1789,7 @@
     319,
     36,
     297,
-    470
+    520
    ],
    "layer": 0,
    "fill": {
@@ -1971,16 +1847,16 @@
    "rect": [
     329,
     46,
-    58,
+    52,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Voice",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Voice"
    },
    "pad": [
     1,
@@ -1991,18 +1867,18 @@
   },
   {
    "type": "dropdown",
-   "name": "bank_2",
+   "name": "voice_2",
    "rect": [
-    389,
+    385,
     46,
-    76,
+    221,
     18
    ],
    "fill": {
     "image": "buttons/dropdown_small"
    },
    "text": {
-    "text": "...",
+    "text": "{data:part.voice.p2|...}",
     "font": "value_dark_12",
     "valign": "middle"
    },
@@ -2016,70 +1892,61 @@
     2,
     2
    ],
+   "param": "part.bank.p2",
    "items": [
     {
-     "label": "off",
+     "label": "Choose in the Browser...",
+     "value": -1,
+     "action": {
+      "goto": "page_library",
+      "stack": "pages",
+      "set": {
+       "browse": "voice",
+       "part": "p2"
+      }
+     }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Off",
      "value": 0
-    },
-    {
-     "label": "Int",
-     "value": 1
-    },
-    {
-     "label": "PrA",
-     "value": 2
-    },
-    {
-     "label": "PrB",
-     "value": 3
-    },
-    {
-     "label": "PrC",
-     "value": 4
-    },
-    {
-     "label": "PrD",
-     "value": 5
-    },
-    {
-     "label": "PrE",
-     "value": 6
-    },
-    {
-     "label": "PrF",
-     "value": 7
-    },
-    {
-     "label": "PrG",
-     "value": 8
-    },
-    {
-     "label": "PrH",
-     "value": 9
-    },
-    {
-     "label": "PrI",
-     "value": 10
-    },
-    {
-     "label": "PrJ",
-     "value": 11
-    },
-    {
-     "label": "PrK",
-     "value": 12
     }
    ],
-   "captionFromItem": true,
-   "param": "part.bank.p2"
+   "tip": "The voice part 2 plays: choose one in the Browser, or turn the part off"
+  },
+  {
+   "type": "plate",
+   "name": "rcv_2_label",
+   "rect": [
+    329,
+    70,
+    52,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "MIDI Ch"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
   },
   {
    "type": "number",
-   "name": "program_2",
+   "name": "rcv_2",
    "rect": [
-    469,
-    46,
-    50,
+    385,
+    70,
+    64,
     18
    ],
    "fill": {
@@ -2100,20 +1967,40 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.program.p2",
-   "tip": "Voice number",
-   "showIf": {
-    "param": "part.bank.p2",
-    "notEquals": 1
-   }
+   "param": "part.rcv_ch.p2",
+   "tip": "The channel this part receives on: 1-16, the performance channel (Pfm), or off"
+  },
+  {
+   "type": "plate",
+   "name": "rcv_max_2_label",
+   "rect": [
+    453,
+    70,
+    26,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "to"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
   },
   {
    "type": "number",
-   "name": "user_2",
+   "name": "rcv_max_2",
    "rect": [
-    469,
-    46,
-    55,
+    483,
+    70,
+    64,
     18
    ],
    "fill": {
@@ -2131,33 +2018,179 @@
     2,
     2
    ],
-   "format": "U%03.0f",
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.user.p2",
-   "tip": "User voice number",
-   "showIf": {
-    "param": "part.bank.p2",
-    "equals": 1
-   }
+   "param": "part.rcv_max.p2",
+   "tip": "The top of a channel range, or Off for the one channel"
+  },
+  {
+   "type": "custom",
+   "name": "keys_2",
+   "rect": [
+    329,
+    94,
+    277,
+    50
+   ],
+   "kind": "key_range",
+   "low": "part.note_low.p2",
+   "high": "part.note_high.p2",
+   "shift": "part.note_shift.p2",
+   "text": {
+    "font": "value_dark_12"
+   },
+   "surface": false,
+   "arrow": "#111416ff",
+   "rail": "#11141666",
+   "labelLeft": 67,
+   "tip": "Drag a key to move the nearer end of the range. The triangle over the keys is the note shift, where middle C lands: drag it along its line, or double-click there for none"
+  },
+  {
+   "type": "plate",
+   "name": "shift_2_label",
+   "rect": [
+    329,
+    94,
+    74,
+    16
+   ],
+   "text": {
+    "text": "Note Shift",
+    "font": "caption_grey_12",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "note_low_2_label",
+   "rect": [
+    329,
+    148,
+    52,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Keys"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "note_low_2",
+   "rect": [
+    385,
+    148,
+    58,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.note_low.p2",
+   "tip": "The lowest note it plays"
+  },
+  {
+   "type": "plate",
+   "name": "note_low_2_to",
+   "rect": [
+    445,
+    148,
+    22,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "to"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "note_high_2",
+   "rect": [
+    469,
+    148,
+    58,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.note_high.p2",
+   "tip": "The highest note it plays"
   },
   {
    "type": "plate",
    "name": "reserve_2_label",
    "rect": [
-    527,
-    46,
-    38,
+    533,
+    148,
+    34,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Rsv",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Rsv"
    },
    "pad": [
     1,
@@ -2170,9 +2203,9 @@
    "type": "number",
    "name": "reserve_2",
    "rect": [
-    567,
-    46,
-    40,
+    569,
+    148,
+    37,
     18
    ],
    "fill": {
@@ -2194,384 +2227,86 @@
    "reset": false,
    "editable": true,
    "param": "part.note_reserve.p2",
-   "tip": "Notes reserved for this part"
+   "tip": "Notes reserved for this part, of the 32"
   },
   {
    "type": "plate",
-   "name": "rcv_2_label",
+   "name": "vel_title_2",
    "rect": [
     329,
-    72,
-    58,
-    18
+    170,
+    64,
+    16
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "MIDI Ch",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "rcv_2",
-   "rect": [
-    389,
-    72,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "1",
-     "value": 0
-    },
-    {
-     "label": "2",
-     "value": 1
-    },
-    {
-     "label": "3",
-     "value": 2
-    },
-    {
-     "label": "4",
-     "value": 3
-    },
-    {
-     "label": "5",
-     "value": 4
-    },
-    {
-     "label": "6",
-     "value": 5
-    },
-    {
-     "label": "7",
-     "value": 6
-    },
-    {
-     "label": "8",
-     "value": 7
-    },
-    {
-     "label": "9",
-     "value": 8
-    },
-    {
-     "label": "10",
-     "value": 9
-    },
-    {
-     "label": "11",
-     "value": 10
-    },
-    {
-     "label": "12",
-     "value": 11
-    },
-    {
-     "label": "13",
-     "value": 12
-    },
-    {
-     "label": "14",
-     "value": 13
-    },
-    {
-     "label": "15",
-     "value": 14
-    },
-    {
-     "label": "16",
-     "value": 15
-    },
-    {
-     "label": "Pfm",
-     "value": 16
-    },
-    {
-     "label": "Off",
-     "value": 17
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.rcv_ch.p2",
-   "tip": "The channel this part receives on: 1-16, the performance channel, or off"
-  },
-  {
-   "type": "plate",
-   "name": "rcv_max_2_label",
-   "rect": [
-    469,
-    72,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "rcv_max_2",
-   "rect": [
-    501,
-    72,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "1",
-     "value": 0
-    },
-    {
-     "label": "2",
-     "value": 1
-    },
-    {
-     "label": "3",
-     "value": 2
-    },
-    {
-     "label": "4",
-     "value": 3
-    },
-    {
-     "label": "5",
-     "value": 4
-    },
-    {
-     "label": "6",
-     "value": 5
-    },
-    {
-     "label": "7",
-     "value": 6
-    },
-    {
-     "label": "8",
-     "value": 7
-    },
-    {
-     "label": "9",
-     "value": 8
-    },
-    {
-     "label": "10",
-     "value": 9
-    },
-    {
-     "label": "11",
-     "value": 10
-    },
-    {
-     "label": "12",
-     "value": 11
-    },
-    {
-     "label": "13",
-     "value": 12
-    },
-    {
-     "label": "14",
-     "value": 13
-    },
-    {
-     "label": "15",
-     "value": 14
-    },
-    {
-     "label": "16",
-     "value": 15
-    },
-    {
-     "label": "Off",
-     "value": 16
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.rcv_max.p2",
-   "tip": "The highest channel of the part's range (parts 1 and 2)"
-  },
-  {
-   "type": "plate",
-   "name": "note_low_2_label",
-   "rect": [
-    329,
-    98,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Keys",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "note_low_2",
-   "rect": [
-    389,
-    98,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_low.p2"
-  },
-  {
-   "type": "plate",
-   "name": "note_low_2_to",
-   "rect": [
-    469,
-    98,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "note_high_2",
-   "rect": [
-    501,
-    98,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_high.p2"
-  },
-  {
-   "type": "plate",
-   "name": "vel_low_2_label",
-   "rect": [
-    329,
-    124,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
    "text": {
     "text": "Velocity",
     "font": "caption_grey_12",
-    "align": "center"
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "vel_rule_2",
+   "rect": [
+    393,
+    180,
+    213,
+    1
+   ],
+   "fill": {
+    "colour": "#00000026"
+   }
+  },
+  {
+   "type": "custom",
+   "name": "velocity_2",
+   "rect": [
+    329,
+    190,
+    128,
+    56
+   ],
+   "kind": "velocity",
+   "fill": {
+    "image": "displays/op_screen"
+   },
+   "surface": false,
+   "low": "part.vel_low.p2",
+   "high": "part.vel_high.p2",
+   "depth": "part.vel_depth.p2",
+   "offset": "part.vel_offset.p2",
+   "tip": "Velocity in, across; velocity out, up. The left handle drags the range's low end and the offset, the right one the high end and the depth",
+   "grid": "#ffffff24",
+   "area": "#86eac24d",
+   "area2": "#86eac205",
+   "curve": "#86eac2ff",
+   "glow": "#86eac222",
+   "handle": "#effff8ff",
+   "ring": "#25292cff",
+   "off": "#00000066"
+  },
+  {
+   "type": "plate",
+   "name": "vel_range_2_label",
+   "rect": [
+    463,
+    190,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Range"
    },
    "pad": [
     1,
@@ -2584,9 +2319,9 @@
    "type": "number",
    "name": "vel_low_2",
    "rect": [
-    389,
-    124,
-    76,
+    513,
+    190,
+    45,
     18
    ],
    "fill": {
@@ -2607,39 +2342,16 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_low.p2"
-  },
-  {
-   "type": "plate",
-   "name": "vel_low_2_to",
-   "rect": [
-    469,
-    124,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
+   "param": "part.vel_low.p2",
+   "tip": "The softest velocity it plays"
   },
   {
    "type": "number",
    "name": "vel_high_2",
    "rect": [
-    501,
-    124,
-    76,
+    561,
+    190,
+    45,
     18
    ],
    "fill": {
@@ -2660,824 +2372,422 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_high.p2"
+   "param": "part.vel_high.p2",
+   "tip": "The hardest velocity it plays"
   },
   {
-   "type": "dropdown",
+   "type": "plate",
+   "name": "vel_depth_2_label",
+   "rect": [
+    463,
+    209,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Depth"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "vel_depth_2",
+   "rect": [
+    513,
+    209,
+    93,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vel_depth.p2",
+   "tip": "Velocity sense depth: 64 plays velocity as it comes"
+  },
+  {
+   "type": "plate",
+   "name": "vel_offset_2_label",
+   "rect": [
+    463,
+    228,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Offset"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "vel_offset_2",
+   "rect": [
+    513,
+    228,
+    93,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vel_offset.p2",
+   "tip": "Velocity sense offset: 64 adds nothing"
+  },
+  {
+   "type": "button",
    "name": "poly_2",
    "rect": [
     329,
-    150,
-    90,
-    18
+    252,
+    64,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "Mono",
-     "value": 0
-    },
-    {
-     "label": "Poly",
-     "value": 1
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.poly.p2"
-  },
-  {
-   "type": "dropdown",
-   "name": "priority_2",
-   "rect": [
-    425,
-    150,
-    90,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "Last",
-     "value": 0
-    },
-    {
-     "label": "Top",
-     "value": 1
-    },
-    {
-     "label": "Bottom",
-     "value": 2
-    },
-    {
-     "label": "First",
-     "value": 3
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.priority.p2",
-   "tip": "Mono priority"
-  },
-  {
-   "type": "plate",
-   "name": "shift_2_label",
-   "rect": [
-    521,
-    150,
-    44,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Shift",
     "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "shift_2",
-   "rect": [
-    567,
-    150,
-    40,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
     "align": "center",
-    "valign": "middle"
+    "valign": "middle",
+    "text": "Poly"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_shift.p2",
-   "tip": "Note shift"
-  },
-  {
-   "type": "plate",
-   "name": "category_2_label",
-   "rect": [
-    329,
-    176,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Category",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "category_2",
-   "rect": [
-    389,
-    176,
-    122,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
+   "hoverTiles": true,
    "pressOffset": [
-    2,
-    2
+    1,
+    1
    ],
-   "items": [
-    {
-     "label": "--",
-     "value": 0
-    },
-    {
-     "label": "Piano",
-     "value": 1
-    },
-    {
-     "label": "Chromatic",
-     "value": 2
-    },
-    {
-     "label": "Organ",
-     "value": 3
-    },
-    {
-     "label": "Guitar",
-     "value": 4
-    },
-    {
-     "label": "Bass",
-     "value": 5
-    },
-    {
-     "label": "Strings",
-     "value": 6
-    },
-    {
-     "label": "Ensemble",
-     "value": 7
-    },
-    {
-     "label": "Brass",
-     "value": 8
-    },
-    {
-     "label": "Reed",
-     "value": 9
-    },
-    {
-     "label": "Pipe",
-     "value": 10
-    },
-    {
-     "label": "Synth Lead",
-     "value": 11
-    },
-    {
-     "label": "Synth Pad",
-     "value": 12,
-     "columnBreak": true
-    },
-    {
-     "label": "Synth FX",
-     "value": 13
-    },
-    {
-     "label": "Ethnic",
-     "value": 14
-    },
-    {
-     "label": "Percussive",
-     "value": 15
-    },
-    {
-     "label": "Sound FX",
-     "value": 16
-    },
-    {
-     "label": "Drums",
-     "value": 17
-    },
-    {
-     "label": "Synth Comp",
-     "value": 18
-    },
-    {
-     "label": "Vocal",
-     "value": 19
-    },
-    {
-     "label": "Combination",
-     "value": 20
-    },
-    {
-     "label": "Material Wave",
-     "value": 21
-    },
-    {
-     "label": "Sequence",
-     "value": 22
-    }
-   ],
-   "captionFromItem": true,
-   "param": "voice.category.p2",
-   "tip": "The voice's category, as the browser files it"
-  },
-  {
-   "type": "plate",
-   "name": "pan_lfo_2_label",
-   "rect": [
-    513,
-    176,
-    52,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Pan LFO",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
    "pad": [
+    24,
     1,
     2,
-    1,
-    2
-   ]
+    1
+   ],
+   "param": "part.poly.p2",
+   "action": {
+    "value": 1
+   },
+   "tip": "Polyphonic: every note held sounds"
   },
   {
-   "type": "number",
-   "name": "pan_lfo_2",
+   "type": "plate",
+   "name": "poly_2_icon",
    "rect": [
-    567,
-    176,
-    40,
+    332,
+    254,
+    22,
     18
    ],
+   "layer": 4,
    "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.pan_lfo.p2",
-   "tip": "Pan LFO depth"
-  },
-  {
-   "type": "plate",
-   "name": "volume_2_label",
-   "rect": [
-    317,
-    199,
-    80,
-    21
-   ],
-   "layer": 1,
-   "text": {
-    "text": "Volume",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "plate",
-   "name": "volume_2_track",
-   "rect": [
-    347,
-    220,
-    20,
-    236
-   ],
-   "fill": {
-    "image": "faders/track_long_narrow"
+    "image": "icons/kbd_poly"
    }
   },
   {
-   "type": "dial",
-   "name": "volume_2",
+   "type": "button",
+   "name": "mono_2",
    "rect": [
-    336,
-    220,
-    42,
-    236
-   ],
-   "image": "faders/pot_cap",
-   "slider": true,
-   "sensitivity": 1.5,
-   "fine": 0.2,
-   "wheel": 0.09,
-   "reset": "default",
-   "param": "part.volume.p2"
-  },
-  {
-   "type": "number",
-   "name": "volume_2_value",
-   "rect": [
-    327,
-    459,
-    60,
+    397,
+    252,
+    64,
     22
    ],
-   "text": {
-    "text": "",
-    "font": "label_white_13",
-    "align": "center",
-    "valign": "middle"
+   "fill": {
+    "image": "buttons/nav_small"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle",
+    "text": "Mono"
+   },
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.volume.p2"
+   "pad": [
+    24,
+    1,
+    2,
+    1
+   ],
+   "param": "part.poly.p2",
+   "action": {
+    "value": 0
+   },
+   "tip": "Monophonic: one note at a time"
   },
   {
    "type": "plate",
-   "name": "pan_2_label",
+   "name": "mono_2_icon",
    "rect": [
-    391,
-    199,
-    80,
-    21
+    400,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Pan",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "layer": 4,
+   "fill": {
+    "image": "icons/kbd_mono"
+   }
   },
   {
-   "type": "dial",
-   "name": "pan_2",
+   "type": "button",
+   "name": "prio_last_2",
    "rect": [
-    409,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.pan.p2"
-  },
-  {
-   "type": "number",
-   "name": "pan_2_value",
-   "rect": [
-    401,
-    265,
-    60,
+    467,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.pan.p2"
+   "param": "part.priority.p2",
+   "action": {
+    "value": 0
+   },
+   "tip": "Last: the note played last sounds",
+   "showIf": {
+    "param": "part.poly.p2",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "rev_send_2_label",
+   "name": "prio_last_2_icon",
    "rect": [
-    461,
-    199,
-    80,
-    21
+    473,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Reverb",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_last"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p2",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "rev_send_2",
+   "type": "button",
+   "name": "prio_top_2",
    "rect": [
-    479,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.rev_send.p2"
-  },
-  {
-   "type": "number",
-   "name": "rev_send_2_value",
-   "rect": [
-    471,
-    265,
-    60,
+    502,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.rev_send.p2"
+   "param": "part.priority.p2",
+   "action": {
+    "value": 1
+   },
+   "tip": "Top: the highest note held sounds",
+   "showIf": {
+    "param": "part.poly.p2",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "var_send_2_label",
+   "name": "prio_top_2_icon",
    "rect": [
-    531,
-    199,
-    80,
-    21
+    508,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Variation",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_top"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p2",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "var_send_2",
+   "type": "button",
+   "name": "prio_bottom_2",
    "rect": [
-    549,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.var_send.p2"
-  },
-  {
-   "type": "number",
-   "name": "var_send_2_value",
-   "rect": [
-    541,
-    265,
-    60,
+    537,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.var_send.p2"
+   "param": "part.priority.p2",
+   "action": {
+    "value": 2
+   },
+   "tip": "Bottom: the lowest note held sounds",
+   "showIf": {
+    "param": "part.poly.p2",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "dry_2_label",
+   "name": "prio_bottom_2_icon",
    "rect": [
-    391,
-    291,
-    80,
-    21
+    543,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Dry",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_bottom"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p2",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "dry_2",
+   "type": "button",
+   "name": "prio_first_2",
    "rect": [
-    409,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.dry.p2"
-  },
-  {
-   "type": "number",
-   "name": "dry_2_value",
-   "rect": [
-    401,
-    357,
-    60,
+    572,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.dry.p2"
+   "param": "part.priority.p2",
+   "action": {
+    "value": 3
+   },
+   "tip": "First: the note held longest sounds",
+   "showIf": {
+    "param": "part.poly.p2",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "vn_balance_2_label",
+   "name": "prio_first_2_icon",
    "rect": [
-    461,
-    291,
-    80,
-    21
+    578,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "V/N Bal",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_first"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "dial",
-   "name": "vn_balance_2",
-   "rect": [
-    479,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.vn_balance.p2"
-  },
-  {
-   "type": "number",
-   "name": "vn_balance_2_value",
-   "rect": [
-    471,
-    357,
-    60,
-    22
-   ],
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.vn_balance.p2"
-  },
-  {
-   "type": "plate",
-   "name": "detune_2_label",
-   "rect": [
-    531,
-    291,
-    80,
-    21
-   ],
-   "layer": 1,
-   "text": {
-    "text": "Detune",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "dial",
-   "name": "detune_2",
-   "rect": [
-    549,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.detune.p2"
-  },
-  {
-   "type": "number",
-   "name": "detune_2_value",
-   "rect": [
-    541,
-    357,
-    60,
-    22
-   ],
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.detune.p2"
+   "showIf": {
+    "param": "part.poly.p2",
+    "equals": 0
+   }
   },
   {
    "type": "button",
    "name": "ins_2",
    "rect": [
-    403,
-    400,
-    98,
+    329,
+    280,
+    136,
     18
    ],
    "fill": {
@@ -3506,9 +2816,9 @@
    "type": "button",
    "name": "filter_2",
    "rect": [
-    507,
-    400,
-    98,
+    470,
+    280,
+    136,
     18
    ],
    "fill": {
@@ -3536,9 +2846,9 @@
    "type": "button",
    "name": "sustain_2",
    "rect": [
-    403,
-    424,
-    98,
+    329,
+    302,
+    136,
     18
    ],
    "fill": {
@@ -3567,9 +2877,9 @@
    "type": "button",
    "name": "porta_2",
    "rect": [
-    507,
-    424,
-    98,
+    470,
+    302,
+    136,
     18
    ],
    "fill": {
@@ -3595,94 +2905,65 @@
   },
   {
    "type": "plate",
-   "name": "vel_depth_2_label",
+   "name": "volume_2_label",
    "rect": [
-    403,
-    450,
-    58,
+    321,
+    324,
+    64,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Vel Dep",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Volume"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
-  },
-  {
-   "type": "number",
-   "name": "vel_depth_2",
-   "rect": [
-    463,
-    450,
-    38,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.vel_depth.p2",
-   "tip": "Velocity sense depth"
   },
   {
    "type": "plate",
-   "name": "vel_offset_2_label",
+   "name": "volume_2_track",
    "rect": [
-    507,
-    450,
-    58,
-    18
+    343,
+    346,
+    20,
+    170
    ],
    "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Vel Ofs",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
+    "image": "faders/track_parts"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "volume_2",
+   "rect": [
+    332,
+    342,
+    42,
+    178
+   ],
+   "image": "faders/pot_cap",
+   "slider": true,
+   "sensitivity": 1.5,
+   "fine": 0.2,
+   "wheel": 0.09,
+   "reset": "default",
+   "param": "part.volume.p2"
   },
   {
    "type": "number",
-   "name": "vel_offset_2",
+   "name": "volume_2_value",
    "rect": [
-    567,
-    450,
-    38,
-    18
+    321,
+    522,
+    64,
+    16
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -3690,53 +2971,513 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_offset.p2",
-   "tip": "Velocity sense offset"
+   "param": "part.volume.p2"
+  },
+  {
+   "type": "plate",
+   "name": "pan_2_label",
+   "rect": [
+    387,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Pan"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "pan_2",
+   "rect": [
+    402,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan.p2"
+  },
+  {
+   "type": "number",
+   "name": "pan_2_value",
+   "rect": [
+    387,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.pan.p2"
+  },
+  {
+   "type": "plate",
+   "name": "rev_send_2_label",
+   "rect": [
+    461,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Reverb"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "rev_send_2",
+   "rect": [
+    476,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.rev_send.p2"
+  },
+  {
+   "type": "number",
+   "name": "rev_send_2_value",
+   "rect": [
+    461,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.rev_send.p2"
+  },
+  {
+   "type": "plate",
+   "name": "var_send_2_label",
+   "rect": [
+    535,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Variation"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "var_send_2",
+   "rect": [
+    550,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.var_send.p2"
+  },
+  {
+   "type": "number",
+   "name": "var_send_2_value",
+   "rect": [
+    535,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.var_send.p2"
+  },
+  {
+   "type": "plate",
+   "name": "dry_2_label",
+   "rect": [
+    387,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Dry"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "dry_2",
+   "rect": [
+    402,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.dry.p2"
+  },
+  {
+   "type": "number",
+   "name": "dry_2_value",
+   "rect": [
+    387,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.dry.p2"
+  },
+  {
+   "type": "plate",
+   "name": "vn_balance_2_label",
+   "rect": [
+    461,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "V/N Bal"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "vn_balance_2",
+   "rect": [
+    476,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.vn_balance.p2"
+  },
+  {
+   "type": "number",
+   "name": "vn_balance_2_value",
+   "rect": [
+    461,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vn_balance.p2"
+  },
+  {
+   "type": "plate",
+   "name": "detune_2_label",
+   "rect": [
+    535,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Detune"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "detune_2",
+   "rect": [
+    550,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.detune.p2"
+  },
+  {
+   "type": "number",
+   "name": "detune_2_value",
+   "rect": [
+    535,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.detune.p2"
+  },
+  {
+   "type": "plate",
+   "name": "pan_lfo_2_label",
+   "rect": [
+    387,
+    476,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Pan LFO"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "pan_lfo_2",
+   "rect": [
+    402,
+    492,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan_lfo.p2",
+   "tip": "Pan LFO depth"
+  },
+  {
+   "type": "number",
+   "name": "pan_lfo_2_value",
+   "rect": [
+    387,
+    536,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.pan_lfo.p2"
   },
   {
    "type": "plate",
    "name": "expr_2_label",
    "rect": [
-    403,
+    461,
     476,
-    58,
+    74,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Expr Lo",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Expr Lo"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
   },
   {
-   "type": "number",
+   "type": "dial",
    "name": "expr_2",
    "rect": [
-    463,
     476,
-    38,
-    18
+    492,
+    44,
+    44
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.expr_low.p2",
+   "tip": "Expression low limit"
+  },
+  {
+   "type": "number",
+   "name": "expr_2_value",
+   "rect": [
+    461,
+    536,
+    74,
+    14
+   ],
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -3744,53 +3485,64 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.expr_low.p2",
-   "tip": "Expression low limit"
+   "param": "part.expr_low.p2"
   },
   {
    "type": "plate",
    "name": "pan_scale_2_label",
    "rect": [
-    504,
+    535,
     476,
-    64,
+    74,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Pan Scale",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Pan Scale"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
   },
   {
-   "type": "number",
+   "type": "dial",
    "name": "pan_scale_2",
    "rect": [
-    567,
-    476,
-    38,
-    18
+    550,
+    492,
+    44,
+    44
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan_scaling.p2",
+   "tip": "Pan scaling across the keys"
+  },
+  {
+   "type": "number",
+   "name": "pan_scale_2_value",
+   "rect": [
+    535,
+    536,
+    74,
+    14
+   ],
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -3798,10 +3550,10 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
@@ -3815,7 +3567,7 @@
     624,
     36,
     297,
-    470
+    520
    ],
    "layer": 0,
    "fill": {
@@ -3873,16 +3625,16 @@
    "rect": [
     634,
     46,
-    58,
+    52,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Voice",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Voice"
    },
    "pad": [
     1,
@@ -3893,18 +3645,18 @@
   },
   {
    "type": "dropdown",
-   "name": "bank_3",
+   "name": "voice_3",
    "rect": [
-    694,
+    690,
     46,
-    76,
+    221,
     18
    ],
    "fill": {
     "image": "buttons/dropdown_small"
    },
    "text": {
-    "text": "...",
+    "text": "{data:part.voice.p3|...}",
     "font": "value_dark_12",
     "valign": "middle"
    },
@@ -3918,70 +3670,61 @@
     2,
     2
    ],
+   "param": "part.bank.p3",
    "items": [
     {
-     "label": "off",
+     "label": "Choose in the Browser...",
+     "value": -1,
+     "action": {
+      "goto": "page_library",
+      "stack": "pages",
+      "set": {
+       "browse": "voice",
+       "part": "p3"
+      }
+     }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Off",
      "value": 0
-    },
-    {
-     "label": "Int",
-     "value": 1
-    },
-    {
-     "label": "PrA",
-     "value": 2
-    },
-    {
-     "label": "PrB",
-     "value": 3
-    },
-    {
-     "label": "PrC",
-     "value": 4
-    },
-    {
-     "label": "PrD",
-     "value": 5
-    },
-    {
-     "label": "PrE",
-     "value": 6
-    },
-    {
-     "label": "PrF",
-     "value": 7
-    },
-    {
-     "label": "PrG",
-     "value": 8
-    },
-    {
-     "label": "PrH",
-     "value": 9
-    },
-    {
-     "label": "PrI",
-     "value": 10
-    },
-    {
-     "label": "PrJ",
-     "value": 11
-    },
-    {
-     "label": "PrK",
-     "value": 12
     }
    ],
-   "captionFromItem": true,
-   "param": "part.bank.p3"
+   "tip": "The voice part 3 plays: choose one in the Browser, or turn the part off"
+  },
+  {
+   "type": "plate",
+   "name": "rcv_3_label",
+   "rect": [
+    634,
+    70,
+    52,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "MIDI Ch"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
   },
   {
    "type": "number",
-   "name": "program_3",
+   "name": "rcv_3",
    "rect": [
-    774,
-    46,
-    50,
+    690,
+    70,
+    64,
     18
    ],
    "fill": {
@@ -4002,20 +3745,83 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.program.p3",
-   "tip": "Voice number",
-   "showIf": {
-    "param": "part.bank.p3",
-    "notEquals": 1
-   }
+   "param": "part.rcv_ch.p3",
+   "tip": "The channel this part receives on: 1-16, the performance channel (Pfm), or off"
+  },
+  {
+   "type": "custom",
+   "name": "keys_3",
+   "rect": [
+    634,
+    94,
+    277,
+    50
+   ],
+   "kind": "key_range",
+   "low": "part.note_low.p3",
+   "high": "part.note_high.p3",
+   "shift": "part.note_shift.p3",
+   "text": {
+    "font": "value_dark_12"
+   },
+   "surface": false,
+   "arrow": "#111416ff",
+   "rail": "#11141666",
+   "labelLeft": 67,
+   "tip": "Drag a key to move the nearer end of the range. The triangle over the keys is the note shift, where middle C lands: drag it along its line, or double-click there for none"
+  },
+  {
+   "type": "plate",
+   "name": "shift_3_label",
+   "rect": [
+    634,
+    94,
+    74,
+    16
+   ],
+   "text": {
+    "text": "Note Shift",
+    "font": "caption_grey_12",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "note_low_3_label",
+   "rect": [
+    634,
+    148,
+    52,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Keys"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
   },
   {
    "type": "number",
-   "name": "user_3",
+   "name": "note_low_3",
    "rect": [
-    774,
-    46,
-    55,
+    690,
+    148,
+    58,
     18
    ],
    "fill": {
@@ -4033,33 +3839,82 @@
     2,
     2
    ],
-   "format": "U%03.0f",
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.user.p3",
-   "tip": "User voice number",
-   "showIf": {
-    "param": "part.bank.p3",
-    "equals": 1
-   }
+   "param": "part.note_low.p3",
+   "tip": "The lowest note it plays"
+  },
+  {
+   "type": "plate",
+   "name": "note_low_3_to",
+   "rect": [
+    750,
+    148,
+    22,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "to"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "note_high_3",
+   "rect": [
+    774,
+    148,
+    58,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.note_high.p3",
+   "tip": "The highest note it plays"
   },
   {
    "type": "plate",
    "name": "reserve_3_label",
    "rect": [
-    832,
-    46,
-    38,
+    838,
+    148,
+    34,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Rsv",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Rsv"
    },
    "pad": [
     1,
@@ -4072,9 +3927,9 @@
    "type": "number",
    "name": "reserve_3",
    "rect": [
-    872,
-    46,
-    40,
+    874,
+    148,
+    37,
     18
    ],
    "fill": {
@@ -4096,259 +3951,86 @@
    "reset": false,
    "editable": true,
    "param": "part.note_reserve.p3",
-   "tip": "Notes reserved for this part"
+   "tip": "Notes reserved for this part, of the 32"
   },
   {
    "type": "plate",
-   "name": "rcv_3_label",
+   "name": "vel_title_3",
    "rect": [
     634,
-    72,
-    58,
-    18
+    170,
+    64,
+    16
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "MIDI Ch",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "rcv_3",
-   "rect": [
-    694,
-    72,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "1",
-     "value": 0
-    },
-    {
-     "label": "2",
-     "value": 1
-    },
-    {
-     "label": "3",
-     "value": 2
-    },
-    {
-     "label": "4",
-     "value": 3
-    },
-    {
-     "label": "5",
-     "value": 4
-    },
-    {
-     "label": "6",
-     "value": 5
-    },
-    {
-     "label": "7",
-     "value": 6
-    },
-    {
-     "label": "8",
-     "value": 7
-    },
-    {
-     "label": "9",
-     "value": 8
-    },
-    {
-     "label": "10",
-     "value": 9
-    },
-    {
-     "label": "11",
-     "value": 10
-    },
-    {
-     "label": "12",
-     "value": 11
-    },
-    {
-     "label": "13",
-     "value": 12
-    },
-    {
-     "label": "14",
-     "value": 13
-    },
-    {
-     "label": "15",
-     "value": 14
-    },
-    {
-     "label": "16",
-     "value": 15
-    },
-    {
-     "label": "Pfm",
-     "value": 16
-    },
-    {
-     "label": "Off",
-     "value": 17
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.rcv_ch.p3",
-   "tip": "The channel this part receives on: 1-16, the performance channel, or off"
-  },
-  {
-   "type": "plate",
-   "name": "note_low_3_label",
-   "rect": [
-    634,
-    98,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Keys",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "note_low_3",
-   "rect": [
-    694,
-    98,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_low.p3"
-  },
-  {
-   "type": "plate",
-   "name": "note_low_3_to",
-   "rect": [
-    774,
-    98,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "note_high_3",
-   "rect": [
-    806,
-    98,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_high.p3"
-  },
-  {
-   "type": "plate",
-   "name": "vel_low_3_label",
-   "rect": [
-    634,
-    124,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
    "text": {
     "text": "Velocity",
     "font": "caption_grey_12",
-    "align": "center"
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "vel_rule_3",
+   "rect": [
+    698,
+    180,
+    213,
+    1
+   ],
+   "fill": {
+    "colour": "#00000026"
+   }
+  },
+  {
+   "type": "custom",
+   "name": "velocity_3",
+   "rect": [
+    634,
+    190,
+    128,
+    56
+   ],
+   "kind": "velocity",
+   "fill": {
+    "image": "displays/op_screen"
+   },
+   "surface": false,
+   "low": "part.vel_low.p3",
+   "high": "part.vel_high.p3",
+   "depth": "part.vel_depth.p3",
+   "offset": "part.vel_offset.p3",
+   "tip": "Velocity in, across; velocity out, up. The left handle drags the range's low end and the offset, the right one the high end and the depth",
+   "grid": "#ffffff24",
+   "area": "#86eac24d",
+   "area2": "#86eac205",
+   "curve": "#86eac2ff",
+   "glow": "#86eac222",
+   "handle": "#effff8ff",
+   "ring": "#25292cff",
+   "off": "#00000066"
+  },
+  {
+   "type": "plate",
+   "name": "vel_range_3_label",
+   "rect": [
+    768,
+    190,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Range"
    },
    "pad": [
     1,
@@ -4361,9 +4043,9 @@
    "type": "number",
    "name": "vel_low_3",
    "rect": [
-    694,
-    124,
-    76,
+    818,
+    190,
+    45,
     18
    ],
    "fill": {
@@ -4384,39 +4066,16 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_low.p3"
-  },
-  {
-   "type": "plate",
-   "name": "vel_low_3_to",
-   "rect": [
-    774,
-    124,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
+   "param": "part.vel_low.p3",
+   "tip": "The softest velocity it plays"
   },
   {
    "type": "number",
    "name": "vel_high_3",
    "rect": [
-    806,
-    124,
-    76,
+    866,
+    190,
+    45,
     18
    ],
    "fill": {
@@ -4437,824 +4096,422 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_high.p3"
+   "param": "part.vel_high.p3",
+   "tip": "The hardest velocity it plays"
   },
   {
-   "type": "dropdown",
+   "type": "plate",
+   "name": "vel_depth_3_label",
+   "rect": [
+    768,
+    209,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Depth"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "vel_depth_3",
+   "rect": [
+    818,
+    209,
+    93,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vel_depth.p3",
+   "tip": "Velocity sense depth: 64 plays velocity as it comes"
+  },
+  {
+   "type": "plate",
+   "name": "vel_offset_3_label",
+   "rect": [
+    768,
+    228,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Offset"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "vel_offset_3",
+   "rect": [
+    818,
+    228,
+    93,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vel_offset.p3",
+   "tip": "Velocity sense offset: 64 adds nothing"
+  },
+  {
+   "type": "button",
    "name": "poly_3",
    "rect": [
     634,
-    150,
-    90,
-    18
+    252,
+    64,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "Mono",
-     "value": 0
-    },
-    {
-     "label": "Poly",
-     "value": 1
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.poly.p3"
-  },
-  {
-   "type": "dropdown",
-   "name": "priority_3",
-   "rect": [
-    730,
-    150,
-    90,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "Last",
-     "value": 0
-    },
-    {
-     "label": "Top",
-     "value": 1
-    },
-    {
-     "label": "Bottom",
-     "value": 2
-    },
-    {
-     "label": "First",
-     "value": 3
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.priority.p3",
-   "tip": "Mono priority"
-  },
-  {
-   "type": "plate",
-   "name": "shift_3_label",
-   "rect": [
-    826,
-    150,
-    44,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Shift",
     "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "shift_3",
-   "rect": [
-    872,
-    150,
-    40,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
     "align": "center",
-    "valign": "middle"
+    "valign": "middle",
+    "text": "Poly"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_shift.p3",
-   "tip": "Note shift"
-  },
-  {
-   "type": "plate",
-   "name": "category_3_label",
-   "rect": [
-    634,
-    176,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Category",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "category_3",
-   "rect": [
-    694,
-    176,
-    122,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
+   "hoverTiles": true,
    "pressOffset": [
-    2,
-    2
+    1,
+    1
    ],
-   "items": [
-    {
-     "label": "--",
-     "value": 0
-    },
-    {
-     "label": "Piano",
-     "value": 1
-    },
-    {
-     "label": "Chromatic",
-     "value": 2
-    },
-    {
-     "label": "Organ",
-     "value": 3
-    },
-    {
-     "label": "Guitar",
-     "value": 4
-    },
-    {
-     "label": "Bass",
-     "value": 5
-    },
-    {
-     "label": "Strings",
-     "value": 6
-    },
-    {
-     "label": "Ensemble",
-     "value": 7
-    },
-    {
-     "label": "Brass",
-     "value": 8
-    },
-    {
-     "label": "Reed",
-     "value": 9
-    },
-    {
-     "label": "Pipe",
-     "value": 10
-    },
-    {
-     "label": "Synth Lead",
-     "value": 11
-    },
-    {
-     "label": "Synth Pad",
-     "value": 12,
-     "columnBreak": true
-    },
-    {
-     "label": "Synth FX",
-     "value": 13
-    },
-    {
-     "label": "Ethnic",
-     "value": 14
-    },
-    {
-     "label": "Percussive",
-     "value": 15
-    },
-    {
-     "label": "Sound FX",
-     "value": 16
-    },
-    {
-     "label": "Drums",
-     "value": 17
-    },
-    {
-     "label": "Synth Comp",
-     "value": 18
-    },
-    {
-     "label": "Vocal",
-     "value": 19
-    },
-    {
-     "label": "Combination",
-     "value": 20
-    },
-    {
-     "label": "Material Wave",
-     "value": 21
-    },
-    {
-     "label": "Sequence",
-     "value": 22
-    }
-   ],
-   "captionFromItem": true,
-   "param": "voice.category.p3",
-   "tip": "The voice's category, as the browser files it"
-  },
-  {
-   "type": "plate",
-   "name": "pan_lfo_3_label",
-   "rect": [
-    818,
-    176,
-    52,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Pan LFO",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
    "pad": [
+    24,
     1,
     2,
-    1,
-    2
-   ]
+    1
+   ],
+   "param": "part.poly.p3",
+   "action": {
+    "value": 1
+   },
+   "tip": "Polyphonic: every note held sounds"
   },
   {
-   "type": "number",
-   "name": "pan_lfo_3",
+   "type": "plate",
+   "name": "poly_3_icon",
    "rect": [
-    872,
-    176,
-    40,
+    637,
+    254,
+    22,
     18
    ],
+   "layer": 4,
    "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.pan_lfo.p3",
-   "tip": "Pan LFO depth"
-  },
-  {
-   "type": "plate",
-   "name": "volume_3_label",
-   "rect": [
-    622,
-    199,
-    80,
-    21
-   ],
-   "layer": 1,
-   "text": {
-    "text": "Volume",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "plate",
-   "name": "volume_3_track",
-   "rect": [
-    652,
-    220,
-    20,
-    236
-   ],
-   "fill": {
-    "image": "faders/track_long_narrow"
+    "image": "icons/kbd_poly"
    }
   },
   {
-   "type": "dial",
-   "name": "volume_3",
+   "type": "button",
+   "name": "mono_3",
    "rect": [
-    641,
-    220,
-    42,
-    236
-   ],
-   "image": "faders/pot_cap",
-   "slider": true,
-   "sensitivity": 1.5,
-   "fine": 0.2,
-   "wheel": 0.09,
-   "reset": "default",
-   "param": "part.volume.p3"
-  },
-  {
-   "type": "number",
-   "name": "volume_3_value",
-   "rect": [
-    632,
-    459,
-    60,
+    702,
+    252,
+    64,
     22
    ],
-   "text": {
-    "text": "",
-    "font": "label_white_13",
-    "align": "center",
-    "valign": "middle"
+   "fill": {
+    "image": "buttons/nav_small"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle",
+    "text": "Mono"
+   },
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.volume.p3"
+   "pad": [
+    24,
+    1,
+    2,
+    1
+   ],
+   "param": "part.poly.p3",
+   "action": {
+    "value": 0
+   },
+   "tip": "Monophonic: one note at a time"
   },
   {
    "type": "plate",
-   "name": "pan_3_label",
+   "name": "mono_3_icon",
    "rect": [
-    696,
-    199,
-    80,
-    21
+    705,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Pan",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "layer": 4,
+   "fill": {
+    "image": "icons/kbd_mono"
+   }
   },
   {
-   "type": "dial",
-   "name": "pan_3",
+   "type": "button",
+   "name": "prio_last_3",
    "rect": [
-    714,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.pan.p3"
-  },
-  {
-   "type": "number",
-   "name": "pan_3_value",
-   "rect": [
-    706,
-    265,
-    60,
+    772,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.pan.p3"
+   "param": "part.priority.p3",
+   "action": {
+    "value": 0
+   },
+   "tip": "Last: the note played last sounds",
+   "showIf": {
+    "param": "part.poly.p3",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "rev_send_3_label",
+   "name": "prio_last_3_icon",
    "rect": [
-    766,
-    199,
-    80,
-    21
+    778,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Reverb",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_last"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p3",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "rev_send_3",
+   "type": "button",
+   "name": "prio_top_3",
    "rect": [
-    784,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.rev_send.p3"
-  },
-  {
-   "type": "number",
-   "name": "rev_send_3_value",
-   "rect": [
-    776,
-    265,
-    60,
+    807,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.rev_send.p3"
+   "param": "part.priority.p3",
+   "action": {
+    "value": 1
+   },
+   "tip": "Top: the highest note held sounds",
+   "showIf": {
+    "param": "part.poly.p3",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "var_send_3_label",
+   "name": "prio_top_3_icon",
    "rect": [
-    836,
-    199,
-    80,
-    21
+    813,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Variation",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_top"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p3",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "var_send_3",
+   "type": "button",
+   "name": "prio_bottom_3",
    "rect": [
-    854,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.var_send.p3"
-  },
-  {
-   "type": "number",
-   "name": "var_send_3_value",
-   "rect": [
-    846,
-    265,
-    60,
+    842,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.var_send.p3"
+   "param": "part.priority.p3",
+   "action": {
+    "value": 2
+   },
+   "tip": "Bottom: the lowest note held sounds",
+   "showIf": {
+    "param": "part.poly.p3",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "dry_3_label",
+   "name": "prio_bottom_3_icon",
    "rect": [
-    696,
-    291,
-    80,
-    21
+    848,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Dry",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_bottom"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p3",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "dry_3",
+   "type": "button",
+   "name": "prio_first_3",
    "rect": [
-    714,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.dry.p3"
-  },
-  {
-   "type": "number",
-   "name": "dry_3_value",
-   "rect": [
-    706,
-    357,
-    60,
+    877,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.dry.p3"
+   "param": "part.priority.p3",
+   "action": {
+    "value": 3
+   },
+   "tip": "First: the note held longest sounds",
+   "showIf": {
+    "param": "part.poly.p3",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "vn_balance_3_label",
+   "name": "prio_first_3_icon",
    "rect": [
-    766,
-    291,
-    80,
-    21
+    883,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "V/N Bal",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_first"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "dial",
-   "name": "vn_balance_3",
-   "rect": [
-    784,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.vn_balance.p3"
-  },
-  {
-   "type": "number",
-   "name": "vn_balance_3_value",
-   "rect": [
-    776,
-    357,
-    60,
-    22
-   ],
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.vn_balance.p3"
-  },
-  {
-   "type": "plate",
-   "name": "detune_3_label",
-   "rect": [
-    836,
-    291,
-    80,
-    21
-   ],
-   "layer": 1,
-   "text": {
-    "text": "Detune",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "dial",
-   "name": "detune_3",
-   "rect": [
-    854,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.detune.p3"
-  },
-  {
-   "type": "number",
-   "name": "detune_3_value",
-   "rect": [
-    846,
-    357,
-    60,
-    22
-   ],
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.detune.p3"
+   "showIf": {
+    "param": "part.poly.p3",
+    "equals": 0
+   }
   },
   {
    "type": "button",
    "name": "ins_3",
    "rect": [
-    708,
-    400,
-    98,
+    634,
+    280,
+    136,
     18
    ],
    "fill": {
@@ -5283,9 +4540,9 @@
    "type": "button",
    "name": "filter_3",
    "rect": [
-    812,
-    400,
-    98,
+    775,
+    280,
+    136,
     18
    ],
    "fill": {
@@ -5313,9 +4570,9 @@
    "type": "button",
    "name": "sustain_3",
    "rect": [
-    708,
-    424,
-    98,
+    634,
+    302,
+    136,
     18
    ],
    "fill": {
@@ -5344,9 +4601,9 @@
    "type": "button",
    "name": "porta_3",
    "rect": [
-    812,
-    424,
-    98,
+    775,
+    302,
+    136,
     18
    ],
    "fill": {
@@ -5372,94 +4629,65 @@
   },
   {
    "type": "plate",
-   "name": "vel_depth_3_label",
+   "name": "volume_3_label",
    "rect": [
-    708,
-    450,
-    58,
+    626,
+    324,
+    64,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Vel Dep",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Volume"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
-  },
-  {
-   "type": "number",
-   "name": "vel_depth_3",
-   "rect": [
-    768,
-    450,
-    38,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.vel_depth.p3",
-   "tip": "Velocity sense depth"
   },
   {
    "type": "plate",
-   "name": "vel_offset_3_label",
+   "name": "volume_3_track",
    "rect": [
-    812,
-    450,
-    58,
-    18
+    648,
+    346,
+    20,
+    170
    ],
    "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Vel Ofs",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
+    "image": "faders/track_parts"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "volume_3",
+   "rect": [
+    637,
+    342,
+    42,
+    178
+   ],
+   "image": "faders/pot_cap",
+   "slider": true,
+   "sensitivity": 1.5,
+   "fine": 0.2,
+   "wheel": 0.09,
+   "reset": "default",
+   "param": "part.volume.p3"
   },
   {
    "type": "number",
-   "name": "vel_offset_3",
+   "name": "volume_3_value",
    "rect": [
-    872,
-    450,
-    38,
-    18
+    626,
+    522,
+    64,
+    16
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -5467,53 +4695,513 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_offset.p3",
-   "tip": "Velocity sense offset"
+   "param": "part.volume.p3"
+  },
+  {
+   "type": "plate",
+   "name": "pan_3_label",
+   "rect": [
+    692,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Pan"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "pan_3",
+   "rect": [
+    707,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan.p3"
+  },
+  {
+   "type": "number",
+   "name": "pan_3_value",
+   "rect": [
+    692,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.pan.p3"
+  },
+  {
+   "type": "plate",
+   "name": "rev_send_3_label",
+   "rect": [
+    766,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Reverb"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "rev_send_3",
+   "rect": [
+    781,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.rev_send.p3"
+  },
+  {
+   "type": "number",
+   "name": "rev_send_3_value",
+   "rect": [
+    766,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.rev_send.p3"
+  },
+  {
+   "type": "plate",
+   "name": "var_send_3_label",
+   "rect": [
+    840,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Variation"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "var_send_3",
+   "rect": [
+    855,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.var_send.p3"
+  },
+  {
+   "type": "number",
+   "name": "var_send_3_value",
+   "rect": [
+    840,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.var_send.p3"
+  },
+  {
+   "type": "plate",
+   "name": "dry_3_label",
+   "rect": [
+    692,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Dry"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "dry_3",
+   "rect": [
+    707,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.dry.p3"
+  },
+  {
+   "type": "number",
+   "name": "dry_3_value",
+   "rect": [
+    692,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.dry.p3"
+  },
+  {
+   "type": "plate",
+   "name": "vn_balance_3_label",
+   "rect": [
+    766,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "V/N Bal"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "vn_balance_3",
+   "rect": [
+    781,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.vn_balance.p3"
+  },
+  {
+   "type": "number",
+   "name": "vn_balance_3_value",
+   "rect": [
+    766,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vn_balance.p3"
+  },
+  {
+   "type": "plate",
+   "name": "detune_3_label",
+   "rect": [
+    840,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Detune"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "detune_3",
+   "rect": [
+    855,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.detune.p3"
+  },
+  {
+   "type": "number",
+   "name": "detune_3_value",
+   "rect": [
+    840,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.detune.p3"
+  },
+  {
+   "type": "plate",
+   "name": "pan_lfo_3_label",
+   "rect": [
+    692,
+    476,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Pan LFO"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "pan_lfo_3",
+   "rect": [
+    707,
+    492,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan_lfo.p3",
+   "tip": "Pan LFO depth"
+  },
+  {
+   "type": "number",
+   "name": "pan_lfo_3_value",
+   "rect": [
+    692,
+    536,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.pan_lfo.p3"
   },
   {
    "type": "plate",
    "name": "expr_3_label",
    "rect": [
-    708,
+    766,
     476,
-    58,
+    74,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Expr Lo",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Expr Lo"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
   },
   {
-   "type": "number",
+   "type": "dial",
    "name": "expr_3",
    "rect": [
-    768,
-    476,
-    38,
-    18
+    781,
+    492,
+    44,
+    44
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.expr_low.p3",
+   "tip": "Expression low limit"
+  },
+  {
+   "type": "number",
+   "name": "expr_3_value",
+   "rect": [
+    766,
+    536,
+    74,
+    14
+   ],
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -5521,53 +5209,64 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.expr_low.p3",
-   "tip": "Expression low limit"
+   "param": "part.expr_low.p3"
   },
   {
    "type": "plate",
    "name": "pan_scale_3_label",
    "rect": [
-    809,
+    840,
     476,
-    64,
+    74,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Pan Scale",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Pan Scale"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
   },
   {
-   "type": "number",
+   "type": "dial",
    "name": "pan_scale_3",
    "rect": [
-    872,
-    476,
-    38,
-    18
+    855,
+    492,
+    44,
+    44
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan_scaling.p3",
+   "tip": "Pan scaling across the keys"
+  },
+  {
+   "type": "number",
+   "name": "pan_scale_3_value",
+   "rect": [
+    840,
+    536,
+    74,
+    14
+   ],
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -5575,10 +5274,10 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
@@ -5592,7 +5291,7 @@
     929,
     36,
     297,
-    470
+    520
    ],
    "layer": 0,
    "fill": {
@@ -5650,16 +5349,16 @@
    "rect": [
     939,
     46,
-    58,
+    52,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Voice",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Voice"
    },
    "pad": [
     1,
@@ -5670,18 +5369,18 @@
   },
   {
    "type": "dropdown",
-   "name": "bank_4",
+   "name": "voice_4",
    "rect": [
-    999,
+    995,
     46,
-    76,
+    221,
     18
    ],
    "fill": {
     "image": "buttons/dropdown_small"
    },
    "text": {
-    "text": "...",
+    "text": "{data:part.voice.p4|...}",
     "font": "value_dark_12",
     "valign": "middle"
    },
@@ -5695,70 +5394,61 @@
     2,
     2
    ],
+   "param": "part.bank.p4",
    "items": [
     {
-     "label": "off",
+     "label": "Choose in the Browser...",
+     "value": -1,
+     "action": {
+      "goto": "page_library",
+      "stack": "pages",
+      "set": {
+       "browse": "voice",
+       "part": "p4"
+      }
+     }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Off",
      "value": 0
-    },
-    {
-     "label": "Int",
-     "value": 1
-    },
-    {
-     "label": "PrA",
-     "value": 2
-    },
-    {
-     "label": "PrB",
-     "value": 3
-    },
-    {
-     "label": "PrC",
-     "value": 4
-    },
-    {
-     "label": "PrD",
-     "value": 5
-    },
-    {
-     "label": "PrE",
-     "value": 6
-    },
-    {
-     "label": "PrF",
-     "value": 7
-    },
-    {
-     "label": "PrG",
-     "value": 8
-    },
-    {
-     "label": "PrH",
-     "value": 9
-    },
-    {
-     "label": "PrI",
-     "value": 10
-    },
-    {
-     "label": "PrJ",
-     "value": 11
-    },
-    {
-     "label": "PrK",
-     "value": 12
     }
    ],
-   "captionFromItem": true,
-   "param": "part.bank.p4"
+   "tip": "The voice part 4 plays: choose one in the Browser, or turn the part off"
+  },
+  {
+   "type": "plate",
+   "name": "rcv_4_label",
+   "rect": [
+    939,
+    70,
+    52,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "MIDI Ch"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
   },
   {
    "type": "number",
-   "name": "program_4",
+   "name": "rcv_4",
    "rect": [
-    1079,
-    46,
-    50,
+    995,
+    70,
+    64,
     18
    ],
    "fill": {
@@ -5779,20 +5469,83 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.program.p4",
-   "tip": "Voice number",
-   "showIf": {
-    "param": "part.bank.p4",
-    "notEquals": 1
-   }
+   "param": "part.rcv_ch.p4",
+   "tip": "The channel this part receives on: 1-16, the performance channel (Pfm), or off"
+  },
+  {
+   "type": "custom",
+   "name": "keys_4",
+   "rect": [
+    939,
+    94,
+    277,
+    50
+   ],
+   "kind": "key_range",
+   "low": "part.note_low.p4",
+   "high": "part.note_high.p4",
+   "shift": "part.note_shift.p4",
+   "text": {
+    "font": "value_dark_12"
+   },
+   "surface": false,
+   "arrow": "#111416ff",
+   "rail": "#11141666",
+   "labelLeft": 67,
+   "tip": "Drag a key to move the nearer end of the range. The triangle over the keys is the note shift, where middle C lands: drag it along its line, or double-click there for none"
+  },
+  {
+   "type": "plate",
+   "name": "shift_4_label",
+   "rect": [
+    939,
+    94,
+    74,
+    16
+   ],
+   "text": {
+    "text": "Note Shift",
+    "font": "caption_grey_12",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "note_low_4_label",
+   "rect": [
+    939,
+    148,
+    52,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Keys"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
   },
   {
    "type": "number",
-   "name": "user_4",
+   "name": "note_low_4",
    "rect": [
-    1079,
-    46,
-    55,
+    995,
+    148,
+    58,
     18
    ],
    "fill": {
@@ -5810,33 +5563,82 @@
     2,
     2
    ],
-   "format": "U%03.0f",
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.user.p4",
-   "tip": "User voice number",
-   "showIf": {
-    "param": "part.bank.p4",
-    "equals": 1
-   }
+   "param": "part.note_low.p4",
+   "tip": "The lowest note it plays"
+  },
+  {
+   "type": "plate",
+   "name": "note_low_4_to",
+   "rect": [
+    1055,
+    148,
+    22,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "to"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "note_high_4",
+   "rect": [
+    1079,
+    148,
+    58,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.note_high.p4",
+   "tip": "The highest note it plays"
   },
   {
    "type": "plate",
    "name": "reserve_4_label",
    "rect": [
-    1137,
-    46,
-    38,
+    1143,
+    148,
+    34,
     18
    ],
    "fill": {
     "image": "panels/label_plate"
    },
    "text": {
-    "text": "Rsv",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Rsv"
    },
    "pad": [
     1,
@@ -5849,9 +5651,9 @@
    "type": "number",
    "name": "reserve_4",
    "rect": [
-    1177,
-    46,
-    40,
+    1179,
+    148,
+    37,
     18
    ],
    "fill": {
@@ -5873,259 +5675,86 @@
    "reset": false,
    "editable": true,
    "param": "part.note_reserve.p4",
-   "tip": "Notes reserved for this part"
+   "tip": "Notes reserved for this part, of the 32"
   },
   {
    "type": "plate",
-   "name": "rcv_4_label",
+   "name": "vel_title_4",
    "rect": [
     939,
-    72,
-    58,
-    18
+    170,
+    64,
+    16
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "MIDI Ch",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "rcv_4",
-   "rect": [
-    999,
-    72,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "1",
-     "value": 0
-    },
-    {
-     "label": "2",
-     "value": 1
-    },
-    {
-     "label": "3",
-     "value": 2
-    },
-    {
-     "label": "4",
-     "value": 3
-    },
-    {
-     "label": "5",
-     "value": 4
-    },
-    {
-     "label": "6",
-     "value": 5
-    },
-    {
-     "label": "7",
-     "value": 6
-    },
-    {
-     "label": "8",
-     "value": 7
-    },
-    {
-     "label": "9",
-     "value": 8
-    },
-    {
-     "label": "10",
-     "value": 9
-    },
-    {
-     "label": "11",
-     "value": 10
-    },
-    {
-     "label": "12",
-     "value": 11
-    },
-    {
-     "label": "13",
-     "value": 12
-    },
-    {
-     "label": "14",
-     "value": 13
-    },
-    {
-     "label": "15",
-     "value": 14
-    },
-    {
-     "label": "16",
-     "value": 15
-    },
-    {
-     "label": "Pfm",
-     "value": 16
-    },
-    {
-     "label": "Off",
-     "value": 17
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.rcv_ch.p4",
-   "tip": "The channel this part receives on: 1-16, the performance channel, or off"
-  },
-  {
-   "type": "plate",
-   "name": "note_low_4_label",
-   "rect": [
-    939,
-    98,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Keys",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "note_low_4",
-   "rect": [
-    999,
-    98,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_low.p4"
-  },
-  {
-   "type": "plate",
-   "name": "note_low_4_to",
-   "rect": [
-    1079,
-    98,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "note_high_4",
-   "rect": [
-    1111,
-    98,
-    76,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_high.p4"
-  },
-  {
-   "type": "plate",
-   "name": "vel_low_4_label",
-   "rect": [
-    939,
-    124,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
    "text": {
     "text": "Velocity",
     "font": "caption_grey_12",
-    "align": "center"
+    "valign": "middle"
+   },
+   "pad": [
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "vel_rule_4",
+   "rect": [
+    1003,
+    180,
+    213,
+    1
+   ],
+   "fill": {
+    "colour": "#00000026"
+   }
+  },
+  {
+   "type": "custom",
+   "name": "velocity_4",
+   "rect": [
+    939,
+    190,
+    128,
+    56
+   ],
+   "kind": "velocity",
+   "fill": {
+    "image": "displays/op_screen"
+   },
+   "surface": false,
+   "low": "part.vel_low.p4",
+   "high": "part.vel_high.p4",
+   "depth": "part.vel_depth.p4",
+   "offset": "part.vel_offset.p4",
+   "tip": "Velocity in, across; velocity out, up. The left handle drags the range's low end and the offset, the right one the high end and the depth",
+   "grid": "#ffffff24",
+   "area": "#86eac24d",
+   "area2": "#86eac205",
+   "curve": "#86eac2ff",
+   "glow": "#86eac222",
+   "handle": "#effff8ff",
+   "ring": "#25292cff",
+   "off": "#00000066"
+  },
+  {
+   "type": "plate",
+   "name": "vel_range_4_label",
+   "rect": [
+    1073,
+    190,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Range"
    },
    "pad": [
     1,
@@ -6138,9 +5767,9 @@
    "type": "number",
    "name": "vel_low_4",
    "rect": [
-    999,
-    124,
-    76,
+    1123,
+    190,
+    45,
     18
    ],
    "fill": {
@@ -6161,39 +5790,16 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_low.p4"
-  },
-  {
-   "type": "plate",
-   "name": "vel_low_4_to",
-   "rect": [
-    1079,
-    124,
-    30,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "to",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
+   "param": "part.vel_low.p4",
+   "tip": "The softest velocity it plays"
   },
   {
    "type": "number",
    "name": "vel_high_4",
    "rect": [
-    1111,
-    124,
-    76,
+    1171,
+    190,
+    45,
     18
    ],
    "fill": {
@@ -6214,824 +5820,422 @@
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_high.p4"
+   "param": "part.vel_high.p4",
+   "tip": "The hardest velocity it plays"
   },
   {
-   "type": "dropdown",
+   "type": "plate",
+   "name": "vel_depth_4_label",
+   "rect": [
+    1073,
+    209,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Depth"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "vel_depth_4",
+   "rect": [
+    1123,
+    209,
+    93,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vel_depth.p4",
+   "tip": "Velocity sense depth: 64 plays velocity as it comes"
+  },
+  {
+   "type": "plate",
+   "name": "vel_offset_4_label",
+   "rect": [
+    1073,
+    228,
+    46,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Offset"
+   },
+   "pad": [
+    1,
+    2,
+    1,
+    2
+   ]
+  },
+  {
+   "type": "number",
+   "name": "vel_offset_4",
+   "rect": [
+    1123,
+    228,
+    93,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vel_offset.p4",
+   "tip": "Velocity sense offset: 64 adds nothing"
+  },
+  {
+   "type": "button",
    "name": "poly_4",
    "rect": [
     939,
-    150,
-    90,
-    18
+    252,
+    64,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/nav_small"
    },
    "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "Mono",
-     "value": 0
-    },
-    {
-     "label": "Poly",
-     "value": 1
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.poly.p4"
-  },
-  {
-   "type": "dropdown",
-   "name": "priority_4",
-   "rect": [
-    1035,
-    150,
-    90,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
-    2,
-    2
-   ],
-   "items": [
-    {
-     "label": "Last",
-     "value": 0
-    },
-    {
-     "label": "Top",
-     "value": 1
-    },
-    {
-     "label": "Bottom",
-     "value": 2
-    },
-    {
-     "label": "First",
-     "value": 3
-    }
-   ],
-   "captionFromItem": true,
-   "param": "part.priority.p4",
-   "tip": "Mono priority"
-  },
-  {
-   "type": "plate",
-   "name": "shift_4_label",
-   "rect": [
-    1131,
-    150,
-    44,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Shift",
     "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "number",
-   "name": "shift_4",
-   "rect": [
-    1177,
-    150,
-    40,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
     "align": "center",
-    "valign": "middle"
+    "valign": "middle",
+    "text": "Poly"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.note_shift.p4",
-   "tip": "Note shift"
-  },
-  {
-   "type": "plate",
-   "name": "category_4_label",
-   "rect": [
-    939,
-    176,
-    58,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Category",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
-  },
-  {
-   "type": "dropdown",
-   "name": "category_4",
-   "rect": [
-    999,
-    176,
-    122,
-    18
-   ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
-   "text": {
-    "text": "...",
-    "font": "value_dark_12",
-    "valign": "middle"
-   },
-   "pad": [
-    11,
-    2,
-    21,
-    2
-   ],
+   "hoverTiles": true,
    "pressOffset": [
-    2,
-    2
+    1,
+    1
    ],
-   "items": [
-    {
-     "label": "--",
-     "value": 0
-    },
-    {
-     "label": "Piano",
-     "value": 1
-    },
-    {
-     "label": "Chromatic",
-     "value": 2
-    },
-    {
-     "label": "Organ",
-     "value": 3
-    },
-    {
-     "label": "Guitar",
-     "value": 4
-    },
-    {
-     "label": "Bass",
-     "value": 5
-    },
-    {
-     "label": "Strings",
-     "value": 6
-    },
-    {
-     "label": "Ensemble",
-     "value": 7
-    },
-    {
-     "label": "Brass",
-     "value": 8
-    },
-    {
-     "label": "Reed",
-     "value": 9
-    },
-    {
-     "label": "Pipe",
-     "value": 10
-    },
-    {
-     "label": "Synth Lead",
-     "value": 11
-    },
-    {
-     "label": "Synth Pad",
-     "value": 12,
-     "columnBreak": true
-    },
-    {
-     "label": "Synth FX",
-     "value": 13
-    },
-    {
-     "label": "Ethnic",
-     "value": 14
-    },
-    {
-     "label": "Percussive",
-     "value": 15
-    },
-    {
-     "label": "Sound FX",
-     "value": 16
-    },
-    {
-     "label": "Drums",
-     "value": 17
-    },
-    {
-     "label": "Synth Comp",
-     "value": 18
-    },
-    {
-     "label": "Vocal",
-     "value": 19
-    },
-    {
-     "label": "Combination",
-     "value": 20
-    },
-    {
-     "label": "Material Wave",
-     "value": 21
-    },
-    {
-     "label": "Sequence",
-     "value": 22
-    }
-   ],
-   "captionFromItem": true,
-   "param": "voice.category.p4",
-   "tip": "The voice's category, as the browser files it"
-  },
-  {
-   "type": "plate",
-   "name": "pan_lfo_4_label",
-   "rect": [
-    1123,
-    176,
-    52,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Pan LFO",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
    "pad": [
+    24,
     1,
     2,
-    1,
-    2
-   ]
+    1
+   ],
+   "param": "part.poly.p4",
+   "action": {
+    "value": 1
+   },
+   "tip": "Polyphonic: every note held sounds"
   },
   {
-   "type": "number",
-   "name": "pan_lfo_4",
+   "type": "plate",
+   "name": "poly_4_icon",
    "rect": [
-    1177,
-    176,
-    40,
+    942,
+    254,
+    22,
     18
    ],
+   "layer": 4,
    "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.pan_lfo.p4",
-   "tip": "Pan LFO depth"
-  },
-  {
-   "type": "plate",
-   "name": "volume_4_label",
-   "rect": [
-    927,
-    199,
-    80,
-    21
-   ],
-   "layer": 1,
-   "text": {
-    "text": "Volume",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "plate",
-   "name": "volume_4_track",
-   "rect": [
-    957,
-    220,
-    20,
-    236
-   ],
-   "fill": {
-    "image": "faders/track_long_narrow"
+    "image": "icons/kbd_poly"
    }
   },
   {
-   "type": "dial",
-   "name": "volume_4",
+   "type": "button",
+   "name": "mono_4",
    "rect": [
-    946,
-    220,
-    42,
-    236
-   ],
-   "image": "faders/pot_cap",
-   "slider": true,
-   "sensitivity": 1.5,
-   "fine": 0.2,
-   "wheel": 0.09,
-   "reset": "default",
-   "param": "part.volume.p4"
-  },
-  {
-   "type": "number",
-   "name": "volume_4_value",
-   "rect": [
-    937,
-    459,
-    60,
+    1007,
+    252,
+    64,
     22
    ],
-   "text": {
-    "text": "",
-    "font": "label_white_13",
-    "align": "center",
-    "valign": "middle"
+   "fill": {
+    "image": "buttons/nav_small"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle",
+    "text": "Mono"
+   },
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.volume.p4"
+   "pad": [
+    24,
+    1,
+    2,
+    1
+   ],
+   "param": "part.poly.p4",
+   "action": {
+    "value": 0
+   },
+   "tip": "Monophonic: one note at a time"
   },
   {
    "type": "plate",
-   "name": "pan_4_label",
+   "name": "mono_4_icon",
    "rect": [
-    1001,
-    199,
-    80,
-    21
+    1010,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Pan",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "layer": 4,
+   "fill": {
+    "image": "icons/kbd_mono"
+   }
   },
   {
-   "type": "dial",
-   "name": "pan_4",
+   "type": "button",
+   "name": "prio_last_4",
    "rect": [
-    1019,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.pan.p4"
-  },
-  {
-   "type": "number",
-   "name": "pan_4_value",
-   "rect": [
-    1011,
-    265,
-    60,
+    1077,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.pan.p4"
+   "param": "part.priority.p4",
+   "action": {
+    "value": 0
+   },
+   "tip": "Last: the note played last sounds",
+   "showIf": {
+    "param": "part.poly.p4",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "rev_send_4_label",
+   "name": "prio_last_4_icon",
    "rect": [
-    1071,
-    199,
-    80,
-    21
+    1083,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Reverb",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_last"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p4",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "rev_send_4",
+   "type": "button",
+   "name": "prio_top_4",
    "rect": [
-    1089,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.rev_send.p4"
-  },
-  {
-   "type": "number",
-   "name": "rev_send_4_value",
-   "rect": [
-    1081,
-    265,
-    60,
+    1112,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.rev_send.p4"
+   "param": "part.priority.p4",
+   "action": {
+    "value": 1
+   },
+   "tip": "Top: the highest note held sounds",
+   "showIf": {
+    "param": "part.poly.p4",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "var_send_4_label",
+   "name": "prio_top_4_icon",
    "rect": [
-    1141,
-    199,
-    80,
-    21
+    1118,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Variation",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_top"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p4",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "var_send_4",
+   "type": "button",
+   "name": "prio_bottom_4",
    "rect": [
-    1159,
-    220,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.var_send.p4"
-  },
-  {
-   "type": "number",
-   "name": "var_send_4_value",
-   "rect": [
-    1151,
-    265,
-    60,
+    1147,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.var_send.p4"
+   "param": "part.priority.p4",
+   "action": {
+    "value": 2
+   },
+   "tip": "Bottom: the lowest note held sounds",
+   "showIf": {
+    "param": "part.poly.p4",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "dry_4_label",
+   "name": "prio_bottom_4_icon",
    "rect": [
-    1001,
-    291,
-    80,
-    21
+    1153,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "Dry",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_bottom"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
+   "showIf": {
+    "param": "part.poly.p4",
+    "equals": 0
+   }
   },
   {
-   "type": "dial",
-   "name": "dry_4",
+   "type": "button",
+   "name": "prio_first_4",
    "rect": [
-    1019,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.dry.p4"
-  },
-  {
-   "type": "number",
-   "name": "dry_4_value",
-   "rect": [
-    1011,
-    357,
-    60,
+    1182,
+    252,
+    34,
     22
    ],
+   "fill": {
+    "image": "buttons/nav_small"
+   },
    "text": {
-    "text": "",
-    "font": "value_dark_12",
+    "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
    ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.dry.p4"
+   "param": "part.priority.p4",
+   "action": {
+    "value": 3
+   },
+   "tip": "First: the note held longest sounds",
+   "showIf": {
+    "param": "part.poly.p4",
+    "equals": 0
+   }
   },
   {
    "type": "plate",
-   "name": "vn_balance_4_label",
+   "name": "prio_first_4_icon",
    "rect": [
-    1071,
-    291,
-    80,
-    21
+    1188,
+    254,
+    22,
+    18
    ],
-   "layer": 1,
-   "text": {
-    "text": "V/N Bal",
-    "font": "caption_grey_12",
-    "align": "center"
+   "layer": 4,
+   "fill": {
+    "image": "icons/prio_first"
    },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "dial",
-   "name": "vn_balance_4",
-   "rect": [
-    1089,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.vn_balance.p4"
-  },
-  {
-   "type": "number",
-   "name": "vn_balance_4_value",
-   "rect": [
-    1081,
-    357,
-    60,
-    22
-   ],
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.vn_balance.p4"
-  },
-  {
-   "type": "plate",
-   "name": "detune_4_label",
-   "rect": [
-    1141,
-    291,
-    80,
-    21
-   ],
-   "layer": 1,
-   "text": {
-    "text": "Detune",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ]
-  },
-  {
-   "type": "dial",
-   "name": "detune_4",
-   "rect": [
-    1159,
-    312,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "sensitivity": 1.61111,
-   "fine": 0.2,
-   "wheel": 0.029,
-   "reset": "default",
-   "param": "part.detune.p4"
-  },
-  {
-   "type": "number",
-   "name": "detune_4_value",
-   "rect": [
-    1151,
-    357,
-    60,
-    22
-   ],
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.detune.p4"
+   "showIf": {
+    "param": "part.poly.p4",
+    "equals": 0
+   }
   },
   {
    "type": "button",
    "name": "ins_4",
    "rect": [
-    1013,
-    400,
-    98,
+    939,
+    280,
+    136,
     18
    ],
    "fill": {
@@ -7060,9 +6264,9 @@
    "type": "button",
    "name": "filter_4",
    "rect": [
-    1117,
-    400,
-    98,
+    1080,
+    280,
+    136,
     18
    ],
    "fill": {
@@ -7090,9 +6294,9 @@
    "type": "button",
    "name": "sustain_4",
    "rect": [
-    1013,
-    424,
-    98,
+    939,
+    302,
+    136,
     18
    ],
    "fill": {
@@ -7121,9 +6325,9 @@
    "type": "button",
    "name": "porta_4",
    "rect": [
-    1117,
-    424,
-    98,
+    1080,
+    302,
+    136,
     18
    ],
    "fill": {
@@ -7149,94 +6353,65 @@
   },
   {
    "type": "plate",
-   "name": "vel_depth_4_label",
+   "name": "volume_4_label",
    "rect": [
-    1013,
-    450,
-    58,
+    931,
+    324,
+    64,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Vel Dep",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Volume"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
-  },
-  {
-   "type": "number",
-   "name": "vel_depth_4",
-   "rect": [
-    1073,
-    450,
-    38,
-    18
-   ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    2,
-    2,
-    2
-   ],
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "param": "part.vel_depth.p4",
-   "tip": "Velocity sense depth"
   },
   {
    "type": "plate",
-   "name": "vel_offset_4_label",
+   "name": "volume_4_track",
    "rect": [
-    1117,
-    450,
-    58,
-    18
+    953,
+    346,
+    20,
+    170
    ],
    "fill": {
-    "image": "panels/label_plate"
-   },
-   "text": {
-    "text": "Vel Ofs",
-    "font": "caption_grey_12",
-    "align": "center"
-   },
-   "pad": [
-    1,
-    2,
-    1,
-    2
-   ]
+    "image": "faders/track_parts"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "volume_4",
+   "rect": [
+    942,
+    342,
+    42,
+    178
+   ],
+   "image": "faders/pot_cap",
+   "slider": true,
+   "sensitivity": 1.5,
+   "fine": 0.2,
+   "wheel": 0.09,
+   "reset": "default",
+   "param": "part.volume.p4"
   },
   {
    "type": "number",
-   "name": "vel_offset_4",
+   "name": "volume_4_value",
    "rect": [
-    1177,
-    450,
-    38,
-    18
+    931,
+    522,
+    64,
+    16
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -7244,53 +6419,513 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.vel_offset.p4",
-   "tip": "Velocity sense offset"
+   "param": "part.volume.p4"
+  },
+  {
+   "type": "plate",
+   "name": "pan_4_label",
+   "rect": [
+    997,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Pan"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "pan_4",
+   "rect": [
+    1012,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan.p4"
+  },
+  {
+   "type": "number",
+   "name": "pan_4_value",
+   "rect": [
+    997,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.pan.p4"
+  },
+  {
+   "type": "plate",
+   "name": "rev_send_4_label",
+   "rect": [
+    1071,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Reverb"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "rev_send_4",
+   "rect": [
+    1086,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.rev_send.p4"
+  },
+  {
+   "type": "number",
+   "name": "rev_send_4_value",
+   "rect": [
+    1071,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.rev_send.p4"
+  },
+  {
+   "type": "plate",
+   "name": "var_send_4_label",
+   "rect": [
+    1145,
+    324,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Variation"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "var_send_4",
+   "rect": [
+    1160,
+    340,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.var_send.p4"
+  },
+  {
+   "type": "number",
+   "name": "var_send_4_value",
+   "rect": [
+    1145,
+    384,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.var_send.p4"
+  },
+  {
+   "type": "plate",
+   "name": "dry_4_label",
+   "rect": [
+    997,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Dry"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "dry_4",
+   "rect": [
+    1012,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.dry.p4"
+  },
+  {
+   "type": "number",
+   "name": "dry_4_value",
+   "rect": [
+    997,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.dry.p4"
+  },
+  {
+   "type": "plate",
+   "name": "vn_balance_4_label",
+   "rect": [
+    1071,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "V/N Bal"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "vn_balance_4",
+   "rect": [
+    1086,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.vn_balance.p4"
+  },
+  {
+   "type": "number",
+   "name": "vn_balance_4_value",
+   "rect": [
+    1071,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.vn_balance.p4"
+  },
+  {
+   "type": "plate",
+   "name": "detune_4_label",
+   "rect": [
+    1145,
+    400,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Detune"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "detune_4",
+   "rect": [
+    1160,
+    416,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.detune.p4"
+  },
+  {
+   "type": "number",
+   "name": "detune_4_value",
+   "rect": [
+    1145,
+    460,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.detune.p4"
+  },
+  {
+   "type": "plate",
+   "name": "pan_lfo_4_label",
+   "rect": [
+    997,
+    476,
+    74,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "text": "Pan LFO"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "dial",
+   "name": "pan_lfo_4",
+   "rect": [
+    1012,
+    492,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan_lfo.p4",
+   "tip": "Pan LFO depth"
+  },
+  {
+   "type": "number",
+   "name": "pan_lfo_4_value",
+   "rect": [
+    997,
+    536,
+    74,
+    14
+   ],
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "param": "part.pan_lfo.p4"
   },
   {
    "type": "plate",
    "name": "expr_4_label",
    "rect": [
-    1013,
+    1071,
     476,
-    58,
+    74,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Expr Lo",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Expr Lo"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
   },
   {
-   "type": "number",
+   "type": "dial",
    "name": "expr_4",
    "rect": [
-    1073,
-    476,
-    38,
-    18
+    1086,
+    492,
+    44,
+    44
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.expr_low.p4",
+   "tip": "Expression low limit"
+  },
+  {
+   "type": "number",
+   "name": "expr_4_value",
+   "rect": [
+    1071,
+    536,
+    74,
+    14
+   ],
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -7298,53 +6933,64 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,
    "editable": true,
-   "param": "part.expr_low.p4",
-   "tip": "Expression low limit"
+   "param": "part.expr_low.p4"
   },
   {
    "type": "plate",
    "name": "pan_scale_4_label",
    "rect": [
-    1114,
+    1145,
     476,
-    64,
+    74,
     18
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "layer": 1,
    "text": {
-    "text": "Pan Scale",
     "font": "caption_grey_12",
-    "align": "center"
+    "align": "center",
+    "text": "Pan Scale"
    },
    "pad": [
-    1,
     2,
-    1,
+    2,
+    2,
     2
    ]
   },
   {
-   "type": "number",
+   "type": "dial",
    "name": "pan_scale_4",
    "rect": [
-    1177,
-    476,
-    38,
-    18
+    1160,
+    492,
+    44,
+    44
    ],
-   "fill": {
-    "image": "panels/label_plate"
-   },
+   "image": "knobs/rotary_small",
+   "sensitivity": 1.61111,
+   "fine": 0.2,
+   "wheel": 0.029,
+   "reset": "default",
+   "param": "part.pan_scaling.p4",
+   "tip": "Pan scaling across the keys"
+  },
+  {
+   "type": "number",
+   "name": "pan_scale_4_value",
+   "rect": [
+    1145,
+    536,
+    74,
+    14
+   ],
    "text": {
     "text": "",
     "font": "value_dark_12",
@@ -7352,10 +6998,10 @@
     "valign": "middle"
    },
    "pad": [
-    2,
-    2,
-    2,
-    2
+    0,
+    0,
+    0,
+    0
    ],
    "fine": 0.2,
    "reset": false,

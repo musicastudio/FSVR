@@ -40,7 +40,7 @@ The header is the unit's front panel: the performance's volume, the LCD, a pod o
 - **Editor** and **Keys** hide the editor pages and the keyboard, and the window shrinks to what is left.
 - **The keyboard** along the bottom has 88 keys, A0 to C8. The pitch and mod wheels lie on their sides above it: drag right to raise them, so the pitch wheel bends up to the right and springs back when you let go.
 
-The tabs across the top open the pages: Browser, Parts, Performance, Effects, Fseq and Easy. The operator column on the right is the operator panel: 1 to 8 pick an operator, V and N its voiced or unvoiced (noise generator) half, and it shows the operator's waveform as the engine makes it, with its most used settings and its amplitude EG; Edit Operator opens its whole page. Under it are the expert pages: Operators and Envelopes (all eight at once), Modulation (controller sets, LFOs, the Formant and FM routes), Key Scaling, Filter and Pitch. Values read as the unit's display reads them: -24..+24, L63..R63, C-2..G8, the effect parameters in hertz, milliseconds or their named choices, an operator's frequency as a ratio or in hertz.
+The tabs across the top open the pages: Browser, Parts, Operators, Performance, Effects, Fseq and Quick Control. The Operators tab holds the expert pages as sub-tabs along its top: Operator (one operator's every setting), All Operators and Envelopes (all eight at once), Modulation (controller sets, LFOs, the Formant and FM routes), Key Scaling, Filter and Pitch. The operator column on the right is the operator panel: 1 to 8 pick an operator, V and N its voiced or unvoiced (noise generator) half, and it shows the operator's waveform as the engine makes it with its first 16 harmonics under it, under a header bar that names the spectral form and opens the forms, then its most used settings, its frequency (a ratio, or hertz in Fixed: drag it or step it) and its amplitude EG; Edit Operator opens its page on the Operators tab, and the buttons under it open the other expert pages there. Every number box has a down button at its left end and an up button at its right. Values read as the unit's display reads them: -24..+24, L63..R63, C-2..G8, the effect parameters in hertz, milliseconds or their named choices, an operator's frequency as a ratio or in hertz.
 
 The expert pages share the algorithm matrix on the right. Its header holds the algorithm's number, with ▼ and ▲ to step it (or drag it, scroll it or double-click to type one), and the Feedback pot. **Select Algorithm** swaps the matrix for a browser of all 88, drawn as small matrices, 2x2, 3x3 or 4x4 at a time, scrolled with the wheel or the bar, and opened on the current one; click one to take it, or Cancel to keep the one you had.
 
@@ -54,7 +54,7 @@ Every page has a chord, so you can get around without the mouse. Hover any butto
 | **Alt+O** / **Alt+E** | Ops / Env, all eight operators or envelopes at once |
 | **Alt+M** / **Alt+K** / **Alt+F** / **Alt+P** | Mod / KeySc / Filter / Pitch |
 | **Alt+X** / **Alt+S** | Effects / Fseq |
-| **Alt+B** / **Alt+Z** / **Alt+T** / **Alt+R** | Browser / Easy / Parts / Performance |
+| **Alt+B** / **Alt+Z** / **Alt+T** / **Alt+R** | Browser / Quick Control / Parts / Performance |
 | **Alt+N** | Voiced and unvoiced, back and forth (the V and N switches) |
 | **Shift+1** to **Shift+4** | The part the edit pages show |
 
@@ -86,7 +86,7 @@ The Fseq page is a bank manager of its own: the 90 presets with a lock, then you
 
 ## The morph square
 
-The Easy page holds the part's quick edits and the morph square: four corner voices, A to D, blended into the voice the part plays.
+The Quick Control page holds the part's quick edits and the morph square: four corner voices, A to D, blended into the voice the part plays.
 
 - With **Edit All** lit (a fresh part), a voice you load goes into all four corners and the edit pages edit all four, so the part plays as it always did.
 - Click a **corner** to edit it alone: a voice you load then goes into that corner only, and the edit pages show and edit it.
@@ -101,7 +101,7 @@ Notes, bend, aftertouch, controllers, RPN and NRPN, clock and sysex reach the en
 
 ## Sessions
 
-The session holds every param, the engine's own bulk dumps, the morph corners and your MIDI learn assignments, so a project reopens exactly as it was saved. The params hosts see are every FS1R param for all four parts, the morph square, the knobs and the performance, voice and Fseq numbers; the editor's own state (pages, the browser's position, the selected part, the scale) is saved with it but not listed. The window's size, 0.5x to 2x, is the scale in the LCD's bottom right corner: click it. Each size is drawn at its own resolution, not magnified.
+The session holds every param, the engine's own bulk dumps, the morph corners and your MIDI learn assignments, so a project reopens exactly as it was saved. The params hosts see are every FS1R param for all four parts, the morph square, the knobs and the performance, voice and Fseq numbers; the editor's own state (pages, the browser's position, the selected part, the scale) is saved with it but not listed. The window's size, 0.5x to 2x, is the scale in the LCD's top right corner: click it. Each size is drawn at its own resolution, not magnified.
 
 ## What is modelled and what is read
 

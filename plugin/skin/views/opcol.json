@@ -1,7 +1,7 @@
 {
  "size": [
   255,
-  570
+  600
  ],
  "widgets": [
   {
@@ -387,7 +387,7 @@
     12,
     68,
     231,
-    84
+    108
    ],
    "layer": 2,
    "fill": {
@@ -396,433 +396,26 @@
    "surface": false
   },
   {
-   "type": "plot",
-   "name": "wave",
-   "rect": [
-    18,
-    88,
-    219,
-    60
-   ],
-   "key": "live.wave.{part}.{op}",
-   "line": "#17301fff",
-   "showIf": {
-    "var": "layer",
-    "equals": "v"
-   },
-   "tip": "The operator's waveform alone, as the engine makes it"
-  },
-  {
-   "type": "number",
-   "name": "wave_form",
-   "rect": [
-    18,
-    71,
-    110,
-    16
-   ],
-   "param": "op.{op}.v.form.{part}",
-   "text": {
-    "text": "",
-    "font": "lcd_small",
-    "valign": "middle"
-   },
-   "drag": false,
-   "showIf": {
-    "var": "layer",
-    "equals": "v"
-   }
-  },
-  {
-   "type": "number",
-   "name": "wave_ratio",
-   "rect": [
-    128,
-    71,
-    109,
-    16
-   ],
-   "param": "op.{op}.{layer}.coarse.{part}",
-   "text": {
-    "text": "",
-    "font": "lcd_small",
-    "align": "right",
-    "valign": "middle"
-   },
-   "drag": false,
-   "format": "%.0f",
-   "valueText": {
-    "table": "op_ratio",
-    "col": "op.{op}.{layer}.fine.{part}"
-   },
-   "showIf": {
-    "all": [
-     {
-      "var": "layer",
-      "equals": "v"
-     },
-     {
-      "param": "op.{op}.v.mode.{part}",
-      "equals": 0
-     }
-    ]
-   }
-  },
-  {
-   "type": "number",
-   "name": "wave_fixed",
-   "rect": [
-    128,
-    71,
-    109,
-    16
-   ],
-   "param": "op.{op}.{layer}.coarse.{part}",
-   "text": {
-    "text": "",
-    "font": "lcd_small",
-    "align": "right",
-    "valign": "middle"
-   },
-   "drag": false,
-   "format": "%.0f",
-   "valueText": {
-    "table": "fixed_freq",
-    "col": "op.{op}.{layer}.fine.{part}"
-   },
-   "showIf": {
-    "all": [
-     {
-      "var": "layer",
-      "equals": "v"
-     },
-     {
-      "param": "op.{op}.v.mode.{part}",
-      "equals": 1
-     }
-    ]
-   }
-  },
-  {
-   "type": "plate",
-   "name": "noise",
-   "rect": [
-    18,
-    96,
-    219,
-    30
-   ],
-   "text": {
-    "text": "NOISE BAND",
-    "font": "lcd_small",
-    "align": "center",
-    "valign": "middle"
-   },
-   "showIf": {
-    "var": "layer",
-    "equals": "u"
-   }
-  },
-  {
-   "type": "plate",
-   "name": "coarse_label",
-   "rect": [
-    12,
-    156,
-    58,
-    16
-   ],
-   "text": {
-    "text": "Coarse",
-    "font": "caption_grey_12",
-    "align": "center",
-    "valign": "middle"
-   }
-  },
-  {
-   "type": "dial",
-   "name": "coarse",
-   "rect": [
-    19,
-    172,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "param": "op.{op}.{layer}.coarse.{part}",
-   "fine": 0.2,
-   "wheel": 0.05
-  },
-  {
-   "type": "number",
-   "name": "coarse_value",
-   "rect": [
-    12,
-    216,
-    58,
-    14
-   ],
-   "param": "op.{op}.{layer}.coarse.{part}",
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "fine": 0.2,
-   "reset": false,
-   "editable": true
-  },
-  {
-   "type": "plate",
-   "name": "fine_label",
-   "rect": [
-    70,
-    156,
-    58,
-    16
-   ],
-   "text": {
-    "text": "Fine",
-    "font": "caption_grey_12",
-    "align": "center",
-    "valign": "middle"
-   }
-  },
-  {
-   "type": "dial",
-   "name": "fine",
-   "rect": [
-    77,
-    172,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "param": "op.{op}.{layer}.fine.{part}",
-   "fine": 0.2,
-   "wheel": 0.05
-  },
-  {
-   "type": "number",
-   "name": "fine_value",
-   "rect": [
-    70,
-    216,
-    58,
-    14
-   ],
-   "param": "op.{op}.{layer}.fine.{part}",
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "fine": 0.2,
-   "reset": false,
-   "editable": true
-  },
-  {
-   "type": "plate",
-   "name": "detune_label",
-   "rect": [
-    128,
-    156,
-    58,
-    16
-   ],
-   "text": {
-    "text": "Detune",
-    "font": "caption_grey_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "showIf": {
-    "var": "layer",
-    "equals": "v"
-   }
-  },
-  {
-   "type": "dial",
-   "name": "detune",
-   "rect": [
-    135,
-    172,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "param": "op.{op}.v.detune.{part}",
-   "fine": 0.2,
-   "wheel": 0.05,
-   "showIf": {
-    "var": "layer",
-    "equals": "v"
-   }
-  },
-  {
-   "type": "number",
-   "name": "detune_value",
-   "rect": [
-    128,
-    216,
-    58,
-    14
-   ],
-   "param": "op.{op}.v.detune.{part}",
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "showIf": {
-    "var": "layer",
-    "equals": "v"
-   }
-  },
-  {
-   "type": "plate",
-   "name": "bandwidth_label",
-   "rect": [
-    128,
-    156,
-    58,
-    16
-   ],
-   "text": {
-    "text": "Width",
-    "font": "caption_grey_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "showIf": {
-    "var": "layer",
-    "equals": "u"
-   }
-  },
-  {
-   "type": "dial",
-   "name": "bandwidth",
-   "rect": [
-    135,
-    172,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "param": "op.{op}.u.bandwidth.{part}",
-   "fine": 0.2,
-   "wheel": 0.05,
-   "showIf": {
-    "var": "layer",
-    "equals": "u"
-   },
-   "tip": "Bandwidth"
-  },
-  {
-   "type": "number",
-   "name": "bandwidth_value",
-   "rect": [
-    128,
-    216,
-    58,
-    14
-   ],
-   "param": "op.{op}.u.bandwidth.{part}",
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "fine": 0.2,
-   "reset": false,
-   "editable": true,
-   "showIf": {
-    "var": "layer",
-    "equals": "u"
-   }
-  },
-  {
-   "type": "plate",
-   "name": "level_label",
-   "rect": [
-    186,
-    156,
-    58,
-    16
-   ],
-   "text": {
-    "text": "Level",
-    "font": "caption_grey_12",
-    "align": "center",
-    "valign": "middle"
-   }
-  },
-  {
-   "type": "dial",
-   "name": "level",
-   "rect": [
-    193,
-    172,
-    44,
-    44
-   ],
-   "image": "knobs/rotary_small",
-   "param": "op.{op}.{layer}.level.{part}",
-   "fine": 0.2,
-   "wheel": 0.05
-  },
-  {
-   "type": "number",
-   "name": "level_value",
-   "rect": [
-    186,
-    216,
-    58,
-    14
-   ],
-   "param": "op.{op}.{layer}.level.{part}",
-   "text": {
-    "text": "",
-    "font": "value_dark_12",
-    "align": "center",
-    "valign": "middle"
-   },
-   "fine": 0.2,
-   "reset": false,
-   "editable": true
-  },
-  {
    "type": "dropdown",
    "name": "form",
    "rect": [
-    12,
-    250,
-    106,
-    20
+    16,
+    72,
+    223,
+    22
    ],
    "fill": {
-    "image": "buttons/dropdown_small"
+    "image": "buttons/dropdown_header"
    },
    "text": {
     "text": "...",
-    "font": "value_dark_12",
+    "font": "header_light",
     "valign": "middle"
    },
    "pad": [
-    8,
-    2,
-    21,
-    2
-   ],
-   "pressOffset": [
+    10,
     1,
+    26,
     1
    ],
    "items": [
@@ -865,59 +458,544 @@
     "var": "layer",
     "equals": "v"
    },
-   "tip": "Spectral form"
+   "tip": "Spectral form. Sine: one partial. All 1 and 2: a group of harmonics from the operator's frequency up; Odd 1 and 2: the odd ones of it. Res 1 and 2: the group with a resonant peak. Formant: a band of harmonics centred on the operator's frequency, as wide as Width, the way a voice's formant is",
+   "hoverTiles": true
   },
   {
-   "type": "dropdown",
-   "name": "mode",
+   "type": "plate",
+   "name": "noise",
+   "rect": [
+    16,
+    72,
+    223,
+    22
+   ],
+   "text": {
+    "text": "Noise",
+    "font": "header_light",
+    "valign": "middle"
+   },
+   "showIf": {
+    "var": "layer",
+    "equals": "u"
+   },
+   "fill": {
+    "image": "panels/header_band"
+   },
+   "pad": [
+    10,
+    1,
+    10,
+    1
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "noise_note",
+   "rect": [
+    18,
+    104,
+    219,
+    60
+   ],
+   "text": {
+    "text": "A band of noise",
+    "font": "library_text_grey_10",
+    "align": "center",
+    "valign": "middle"
+   },
+   "showIf": {
+    "var": "layer",
+    "equals": "u"
+   }
+  },
+  {
+   "type": "plot",
+   "name": "wave",
+   "rect": [
+    20,
+    100,
+    215,
+    38
+   ],
+   "key": "live.wave.{part}.{op}",
+   "line": "#86eac2ff",
+   "showIf": {
+    "var": "layer",
+    "equals": "v"
+   },
+   "tip": "The operator's waveform alone, as the engine makes it",
+   "glow": "#86eac222"
+  },
+  {
+   "type": "plot",
+   "name": "harmonics",
+   "rect": [
+    20,
+    144,
+    215,
+    26
+   ],
+   "key": "live.harmonics.{part}.{op}",
+   "draw": "bars",
+   "line": "#86eac299",
+   "showIf": {
+    "var": "layer",
+    "equals": "v"
+   },
+   "tip": "Its first 16 harmonics: one line for Sine, a band around the operator's frequency for Formant"
+  },
+  {
+   "type": "number",
+   "name": "wave_ratio",
    "rect": [
     12,
-    278,
+    298,
     106,
     20
    ],
-   "fill": {
-    "image": "buttons/dropdown_small"
-   },
+   "param": "op.{op}.{layer}.coarse.{part}",
    "text": {
-    "text": "...",
+    "text": "",
     "font": "value_dark_12",
+    "align": "center",
     "valign": "middle"
    },
+   "format": "%.0f",
+   "valueText": {
+    "table": "op_ratio",
+    "col": "op.{op}.{layer}.fine.{part}"
+   },
+   "showIf": {
+    "all": [
+     {
+      "var": "layer",
+      "equals": "v"
+     },
+     {
+      "param": "op.{op}.v.mode.{part}",
+      "equals": 0
+     }
+    ]
+   },
+   "fill": {
+    "image": "panels/label_plate"
+   },
    "pad": [
-    8,
     2,
-    21,
+    2,
+    2,
     2
    ],
+   "fine": 0.2,
+   "reset": false,
+   "tip": "The frequency as a multiple of the note's: drag it or step it to change Coarse, and Fine for between"
+  },
+  {
+   "type": "number",
+   "name": "wave_fixed",
+   "rect": [
+    12,
+    298,
+    106,
+    20
+   ],
+   "param": "op.{op}.{layer}.coarse.{part}",
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "format": "%.0f",
+   "valueText": {
+    "table": "fixed_freq",
+    "col": "op.{op}.{layer}.fine.{part}"
+   },
+   "showIf": {
+    "all": [
+     {
+      "var": "layer",
+      "equals": "v"
+     },
+     {
+      "param": "op.{op}.v.mode.{part}",
+      "equals": 1
+     }
+    ]
+   },
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "fine": 0.2,
+   "reset": false,
+   "tip": "The fixed frequency in Hz: drag it or step it to change Coarse, and Fine for between"
+  },
+  {
+   "type": "plate",
+   "name": "coarse_label",
+   "rect": [
+    12,
+    180,
+    58,
+    16
+   ],
+   "text": {
+    "text": "Coarse",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "coarse",
+   "rect": [
+    19,
+    196,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small_orange",
+   "param": "op.{op}.{layer}.coarse.{part}",
+   "fine": 0.2,
+   "wheel": 0.05
+  },
+  {
+   "type": "number",
+   "name": "coarse_value",
+   "rect": [
+    12,
+    240,
+    58,
+    14
+   ],
+   "param": "op.{op}.{layer}.coarse.{part}",
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "fine": 0.2,
+   "reset": false,
+   "editable": true
+  },
+  {
+   "type": "plate",
+   "name": "fine_label",
+   "rect": [
+    70,
+    180,
+    58,
+    16
+   ],
+   "text": {
+    "text": "Fine",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "fine",
+   "rect": [
+    77,
+    196,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small_orange",
+   "param": "op.{op}.{layer}.fine.{part}",
+   "fine": 0.2,
+   "wheel": 0.05
+  },
+  {
+   "type": "number",
+   "name": "fine_value",
+   "rect": [
+    70,
+    240,
+    58,
+    14
+   ],
+   "param": "op.{op}.{layer}.fine.{part}",
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "fine": 0.2,
+   "reset": false,
+   "editable": true
+  },
+  {
+   "type": "plate",
+   "name": "detune_label",
+   "rect": [
+    128,
+    180,
+    58,
+    16
+   ],
+   "text": {
+    "text": "Detune",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "showIf": {
+    "var": "layer",
+    "equals": "v"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "detune",
+   "rect": [
+    135,
+    196,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small_orange",
+   "param": "op.{op}.v.detune.{part}",
+   "fine": 0.2,
+   "wheel": 0.05,
+   "showIf": {
+    "var": "layer",
+    "equals": "v"
+   }
+  },
+  {
+   "type": "number",
+   "name": "detune_value",
+   "rect": [
+    128,
+    240,
+    58,
+    14
+   ],
+   "param": "op.{op}.v.detune.{part}",
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "showIf": {
+    "var": "layer",
+    "equals": "v"
+   }
+  },
+  {
+   "type": "plate",
+   "name": "bandwidth_label",
+   "rect": [
+    128,
+    180,
+    58,
+    16
+   ],
+   "text": {
+    "text": "Width",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "showIf": {
+    "var": "layer",
+    "equals": "u"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "bandwidth",
+   "rect": [
+    135,
+    196,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small_orange",
+   "param": "op.{op}.u.bandwidth.{part}",
+   "fine": 0.2,
+   "wheel": 0.05,
+   "showIf": {
+    "var": "layer",
+    "equals": "u"
+   },
+   "tip": "Bandwidth"
+  },
+  {
+   "type": "number",
+   "name": "bandwidth_value",
+   "rect": [
+    128,
+    240,
+    58,
+    14
+   ],
+   "param": "op.{op}.u.bandwidth.{part}",
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "fine": 0.2,
+   "reset": false,
+   "editable": true,
+   "showIf": {
+    "var": "layer",
+    "equals": "u"
+   }
+  },
+  {
+   "type": "plate",
+   "name": "level_label",
+   "rect": [
+    186,
+    180,
+    58,
+    16
+   ],
+   "text": {
+    "text": "Level",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "level",
+   "rect": [
+    193,
+    196,
+    44,
+    44
+   ],
+   "image": "knobs/rotary_small_orange",
+   "param": "op.{op}.{layer}.level.{part}",
+   "fine": 0.2,
+   "wheel": 0.05
+  },
+  {
+   "type": "number",
+   "name": "level_value",
+   "rect": [
+    186,
+    240,
+    58,
+    14
+   ],
+   "param": "op.{op}.{layer}.level.{part}",
+   "text": {
+    "text": "",
+    "font": "value_dark_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "fine": 0.2,
+   "reset": false,
+   "editable": true
+  },
+  {
+   "fill": {
+    "image": "buttons/nav_small"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle",
+    "text": "Ratio"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "hoverTiles": true,
    "pressOffset": [
     1,
     1
    ],
-   "items": [
-    {
-     "label": "Ratio",
-     "value": 0
-    },
-    {
-     "label": "Fixed",
-     "value": 1
-    }
-   ],
-   "captionFromItem": true,
    "param": "op.{op}.v.mode.{part}",
    "showIf": {
     "var": "layer",
     "equals": "v"
    },
-   "tip": "Frequency: a ratio of the note, or fixed"
+   "type": "button",
+   "name": "mode_ratio",
+   "rect": [
+    12,
+    272,
+    52,
+    22
+   ],
+   "action": {
+    "value": 0
+   },
+   "tip": "Ratio: the frequency follows the note"
+  },
+  {
+   "fill": {
+    "image": "buttons/nav_small"
+   },
+   "text": {
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle",
+    "text": "Fixed"
+   },
+   "pad": [
+    2,
+    2,
+    2,
+    2
+   ],
+   "hoverTiles": true,
+   "pressOffset": [
+    1,
+    1
+   ],
+   "param": "op.{op}.v.mode.{part}",
+   "showIf": {
+    "var": "layer",
+    "equals": "v"
+   },
+   "type": "button",
+   "name": "mode_fixed",
+   "rect": [
+    66,
+    272,
+    52,
+    22
+   ],
+   "action": {
+    "value": 1
+   },
+   "tip": "Fixed: the frequency stays put whatever the note"
   },
   {
    "type": "dropdown",
    "name": "pitch_mode",
    "rect": [
     12,
-    250,
+    272,
     106,
     20
    ],
@@ -966,12 +1044,12 @@
    "name": "form_label",
    "rect": [
     12,
-    232,
+    256,
     106,
     16
    ],
    "text": {
-    "text": "Form",
+    "text": "Frequency ratio",
     "font": "caption_grey_12",
     "valign": "middle"
    },
@@ -982,8 +1060,49 @@
     0
    ],
    "showIf": {
-    "var": "layer",
-    "equals": "v"
+    "all": [
+     {
+      "var": "layer",
+      "equals": "v"
+     },
+     {
+      "param": "op.{op}.v.mode.{part}",
+      "equals": 0
+     }
+    ]
+   }
+  },
+  {
+   "type": "plate",
+   "name": "freq_hz_label",
+   "rect": [
+    12,
+    256,
+    106,
+    16
+   ],
+   "text": {
+    "text": "Frequency, Hz",
+    "font": "caption_grey_12",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    0,
+    0
+   ],
+   "showIf": {
+    "all": [
+     {
+      "var": "layer",
+      "equals": "v"
+     },
+     {
+      "param": "op.{op}.v.mode.{part}",
+      "equals": 1
+     }
+    ]
    }
   },
   {
@@ -991,7 +1110,7 @@
    "name": "pitch_label",
    "rect": [
     12,
-    232,
+    256,
     106,
     16
    ],
@@ -1016,7 +1135,7 @@
    "name": "skirt_label",
    "rect": [
     128,
-    232,
+    256,
     58,
     16
    ],
@@ -1032,21 +1151,34 @@
    "name": "skirt",
    "rect": [
     135,
-    248,
+    272,
     44,
     44
    ],
-   "image": "knobs/rotary_small",
+   "image": "knobs/rotary_small_orange",
    "param": "op.{op}.{layer}.skirt.{part}",
    "fine": 0.2,
-   "wheel": 0.05
+   "wheel": 0.05,
+   "enableIf": {
+    "any": [
+     {
+      "var": "layer",
+      "equals": "u"
+     },
+     {
+      "param": "op.{op}.v.form.{part}",
+      "notEquals": 0
+     }
+    ]
+   },
+   "tip": "How steeply the group falls away; a sine has none"
   },
   {
    "type": "number",
    "name": "skirt_value",
    "rect": [
     128,
-    292,
+    316,
     58,
     14
    ],
@@ -1059,26 +1191,86 @@
    },
    "fine": 0.2,
    "reset": false,
-   "editable": true
+   "editable": true,
+   "enableIf": {
+    "any": [
+     {
+      "var": "layer",
+      "equals": "u"
+     },
+     {
+      "param": "op.{op}.v.form.{part}",
+      "notEquals": 0
+     }
+    ]
+   }
   },
   {
    "type": "plate",
    "name": "band_ratio_label",
    "rect": [
     186,
-    232,
+    256,
     58,
     16
    ],
    "text": {
-    "text": "Ratio",
+    "text": "Width",
     "font": "caption_grey_12",
     "align": "center",
     "valign": "middle"
    },
    "showIf": {
-    "var": "layer",
-    "equals": "v"
+    "all": [
+     {
+      "var": "layer",
+      "equals": "v"
+     },
+     {
+      "param": "op.{op}.v.form.{part}",
+      "notEquals": 5
+     },
+     {
+      "param": "op.{op}.v.form.{part}",
+      "notEquals": 6
+     }
+    ]
+   }
+  },
+  {
+   "type": "plate",
+   "name": "band_ratio_res_label",
+   "rect": [
+    186,
+    256,
+    58,
+    16
+   ],
+   "text": {
+    "text": "Reson",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "showIf": {
+    "all": [
+     {
+      "var": "layer",
+      "equals": "v"
+     },
+     {
+      "any": [
+       {
+        "param": "op.{op}.v.form.{part}",
+        "equals": 5
+       },
+       {
+        "param": "op.{op}.v.form.{part}",
+        "equals": 6
+       }
+      ]
+     }
+    ]
    }
   },
   {
@@ -1086,11 +1278,11 @@
    "name": "band_ratio",
    "rect": [
     193,
-    248,
+    272,
     44,
     44
    ],
-   "image": "knobs/rotary_small",
+   "image": "knobs/rotary_small_orange",
    "param": "op.{op}.v.band_ratio.{part}",
    "fine": 0.2,
    "wheel": 0.05,
@@ -1098,14 +1290,18 @@
     "var": "layer",
     "equals": "v"
    },
-   "tip": "Band ratio: where the Res forms' peak sits"
+   "tip": "Formant: the band's width. Res 1 and 2: the resonance. The other forms read neither (voice byte 6)",
+   "enableIf": {
+    "param": "op.{op}.v.form.{part}",
+    "atLeast": 5
+   }
   },
   {
    "type": "number",
    "name": "band_ratio_value",
    "rect": [
     186,
-    292,
+    316,
     58,
     14
    ],
@@ -1122,6 +1318,10 @@
    "showIf": {
     "var": "layer",
     "equals": "v"
+   },
+   "enableIf": {
+    "param": "op.{op}.v.form.{part}",
+    "atLeast": 5
    }
   },
   {
@@ -1129,7 +1329,7 @@
    "name": "resonance_label",
    "rect": [
     186,
-    232,
+    256,
     58,
     16
    ],
@@ -1149,11 +1349,11 @@
    "name": "resonance",
    "rect": [
     193,
-    248,
+    272,
     44,
     44
    ],
-   "image": "knobs/rotary_small",
+   "image": "knobs/rotary_small_orange",
    "param": "op.{op}.u.resonance.{part}",
    "fine": 0.2,
    "wheel": 0.05,
@@ -1168,7 +1368,7 @@
    "name": "resonance_value",
    "rect": [
     186,
-    292,
+    316,
     58,
     14
    ],
@@ -1192,7 +1392,7 @@
    "name": "eg_title",
    "rect": [
     12,
-    308,
+    332,
     160,
     16
    ],
@@ -1208,9 +1408,9 @@
    "name": "eg_screen",
    "rect": [
     12,
-    326,
+    350,
     231,
-    74
+    80
    ],
    "layer": 2,
    "fill": {
@@ -1223,9 +1423,9 @@
    "name": "envelope",
    "rect": [
     16,
-    330,
+    354,
     223,
-    66
+    72
    ],
    "kind": "stage_env",
    "surface": false,
@@ -1258,18 +1458,22 @@
     ]
    ],
    "tip": "Drag a point: sideways its time, up and down its level",
-   "grid": "#5d8a5aff",
-   "area": "#17301f40",
-   "curve": "#17301fff",
-   "handle": "#9fd29aff",
-   "dots": "#17301fff"
+   "grid": "#ffffff24",
+   "area": "#86eac24d",
+   "curve": "#86eac2ff",
+   "handle": "#effff8ff",
+   "dots": "#ffffff59",
+   "area2": "#86eac205",
+   "glow": "#86eac222",
+   "ring": "#25292cff",
+   "width": 1
   },
   {
    "type": "button",
    "name": "edit",
    "rect": [
     12,
-    406,
+    436,
     231,
     26
    ],
@@ -1284,9 +1488,9 @@
    },
    "pad": [
     2,
+    0,
     2,
-    2,
-    2
+    5
    ],
    "press": "up",
    "pressedTiles": true,
@@ -1305,7 +1509,7 @@
    "name": "page_all_ops",
    "rect": [
     10,
-    438,
+    468,
     116,
     38
    ],
@@ -1339,7 +1543,7 @@
    "name": "page_all_ops_icon",
    "rect": [
     16,
-    445,
+    475,
     24,
     24
    ],
@@ -1353,7 +1557,7 @@
    "name": "page_all_envs",
    "rect": [
     129,
-    438,
+    468,
     116,
     38
    ],
@@ -1387,7 +1591,7 @@
    "name": "page_all_envs_icon",
    "rect": [
     135,
-    445,
+    475,
     24,
     24
    ],
@@ -1401,7 +1605,7 @@
    "name": "page_mod",
    "rect": [
     10,
-    481,
+    511,
     116,
     38
    ],
@@ -1435,7 +1639,7 @@
    "name": "page_mod_icon",
    "rect": [
     16,
-    488,
+    518,
     24,
     24
    ],
@@ -1449,7 +1653,7 @@
    "name": "page_keysc",
    "rect": [
     129,
-    481,
+    511,
     116,
     38
    ],
@@ -1483,7 +1687,7 @@
    "name": "page_keysc_icon",
    "rect": [
     135,
-    488,
+    518,
     24,
     24
    ],
@@ -1497,7 +1701,7 @@
    "name": "page_filter",
    "rect": [
     10,
-    524,
+    554,
     116,
     38
    ],
@@ -1531,7 +1735,7 @@
    "name": "page_filter_icon",
    "rect": [
     16,
-    531,
+    561,
     24,
     24
    ],
@@ -1545,7 +1749,7 @@
    "name": "page_pitch",
    "rect": [
     129,
-    524,
+    554,
     116,
     38
    ],
@@ -1579,7 +1783,7 @@
    "name": "page_pitch_icon",
    "rect": [
     135,
-    531,
+    561,
     24,
     24
    ],
