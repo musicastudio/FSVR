@@ -13,7 +13,7 @@ cmake_minimum_required(VERSION 3.24)
 # Before project(): C++17, the static C++ runtime, and on macOS universal binaries (arm64 and x86_64, so
 # the same build runs on Apple silicon and Intel Macs; issue #3 was an arm64-only build) for 10.15 and up.
 include(hollow/cmake/HollowDefaults.cmake)
-project(fsvr VERSION 0.5.1 LANGUAGES C CXX)
+project(fsvr VERSION 0.5.2 LANGUAGES C CXX)
 if(APPLE)
   enable_language(OBJC OBJCXX)
 endif()
