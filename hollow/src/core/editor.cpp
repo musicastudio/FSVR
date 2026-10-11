@@ -1874,6 +1874,8 @@ void keyLog(const char* fmt, ...) {
 
 bool Gui::wantsKeys() const { return !menus_.empty() || editing_on_ || live(listFocus_) || !modalShown_.empty(); }
 
+bool Gui::charPending() const { return charPending_; }
+
 // Text entry, a menu or a list is done with the keyboard. A skin with shortcuts keeps it anyway, since its
 // chords have to work without a click first; one without hands it back, as the editor always did.
 void Gui::releaseKeys() {
@@ -1968,6 +1970,7 @@ std::string Gui::tipText(const Hit& h) const {
 }
 
 bool Gui::keyDown(Key k, bool shift, bool ctrl, bool alt, unsigned ch, bool fromHost) {
+    charPending_ = false;   // set again below for a key whose character the text entry is still waiting for
     if (!menus_.empty()) {   // arrows move over the top menu's items (skipping separators, wrapping), Enter picks
         Menu& m = menus_.back();
         size_t level = menus_.size() - 1;
@@ -2078,6 +2081,12 @@ bool Gui::keyDown(Key k, bool shift, bool ctrl, bool alt, unsigned ch, bool from
         move = false;
         break;
     case KeyNone:
+        // A printable key: nothing to do with the key itself, since the character it types is the whole of
+        // it and comes next. The press is still the entry's, so the host never sees it, but the character
+        // that follows must reach keyChar rather than being taken along with the key. An Alt or Ctrl chord
+        // types nothing and so has no character to wait for; AltGr, which arrives as both of them held,
+        // types one and does.
+        charPending_ = (ctrl && alt) || (!ctrl && !alt);
         return true;
     }
     if (move && !shift) e.anchor = e.caret;
@@ -3017,6 +3026,7 @@ void Gui::setSkin(const Skin* skin) {
 
 struct Editor::Impl {
     Gui gui;
+    void* parent = nullptr;   // the host window the view lives in
     Impl(std::shared_ptr<Skin> skin, State& state, Host& host) : gui(skin.get(), state, &host) {
         gui.watch(std::move(skin));
         gui.applyUi(state.ui());
@@ -3028,8 +3038,14 @@ Editor::Editor(std::shared_ptr<Skin> skin, State& state, Host& host)
 
 Editor::~Editor() { detach(); }
 
+// A host may move an open editor into another window of its own: Cubase's "Always on top" swaps the
+// plug-in window, and clap-wrapper's VST3 view hands the new one to set_parent without destroying the
+// GUI first (WrappedView::removed only forgets the old one). The view leaves the old window and opens
+// in the new one, or the new window stays empty.
 bool Editor::attach(void* parent) {
     Gui& g = impl_->gui;
+    if (g.window && parent != impl_->parent) detach();
+    impl_->parent = parent;
     if (!g.window) {
         g.state().setData(kModalKey, "");   // a new window never opens on a modal an old one left
         g.window = platformOpen(parent, &g);
