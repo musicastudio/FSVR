@@ -8,6 +8,83 @@ Entries that have a dedicated working document (`aeg.md`, `skirt.md`, `noise.md`
 
 ---
 
+## 2026-10-17, the unit cuts the sound before a performance, and that is not what keeps it from popping
+
+mkruselj reported loud pops switching performances in the plug-in, A032 against A033 and A071 against A072
+by ear, and then A073 R.P.M. into A072 Mouth Pop. Reproduced offline through `Synth` with a note held: A071
+Relaxxx into A072 clipped at full scale and rang on at 0.30 for a second against a signal of 0.055, A073
+into A072 clipped from a signal of 0.037. Silence either side of the switch pops not at all, so it needs
+signal in the section.
+
+**Three mechanisms, each isolated by clearing one thing at the switch.**
+
+- The **registers**. The host silences a window it is about to reprogram by loading the window's clear
+  program (`EffectHost::clearWindow`), whose whole body is a run of writes zeroing that window's registers:
+  `ins_m14.cpp` does `r[67]` to `r[86]`, `dly_m11.cpp` `r[87]` to `r[102]`, `var_m11.cpp` `r[103]` to
+  `r[118]`. On the unit the chip runs it for as long as the upload takes; here `clearWindow` and
+  `uploadWindow` are one synchronous call, so it never got a sample to run in and the next type took the old
+  one's registers. Gate Reverb into Distortion returned a tone the window had been playing at 0.02 at full
+  scale. Running it once, as the chip does, is the firmware's own behaviour and fixes that.
+- The **cells**. `ins_m04`'s `m[44]` is the touch wah's envelope follower, and `ins_m03` (Early Reflections)
+  leaves a delay tap there, which opens the wah into the overdrive behind it. The clear program refreshes
+  only the window's input and LFO cells, so `m[42]` to `m[51]` came across. Zeroing exactly `m[42..44]` took
+  A073 into A072 from 1.00 to 0.088.
+- The **delay memory**. A new echo in the variation window read a second of the previous performance out of
+  it. No chip program can write delay memory at all, because the chip addresses it by slot.
+
+**All sound off before the load is the unit's behaviour, and it is now the engine's.** mkruselj, on his own
+FS1R: a performance change stops the sound first, and it is all sound off rather than all notes off, the
+notes cut where they are rather than released. `perf_from_bytes` now calls `all_off()` before any byte
+changes. Until this, only the plug-in's preset browser did it (`loadFactoryPerf`), so a performance bulk
+from a host, an editor or the MIDI in left notes sounding and they carried on through the new performance's
+voices. No `FUN_` for it yet: reported off the unit, not read off the disassembly.
+
+**It is not what keeps the unit from popping, which was the obvious next hypothesis.** If the unit silences
+and then takes its time - and it is slow at performance changes - the state might decay or flush before the
+new programs run. Measured by cutting the sound and then running the old programs on zero input for a while
+before the load (`build/probe_time.cpp`, against the code as it was):
+
+| wait | A073 into A072 | A071 into A072 | A020 Vox Morph into A021 |
+|---|---|---|---|
+| 0 ms | 1.00000 | 1.00000 | 0.26849 |
+| 20 ms | 1.00000 | 1.00000 | 0.02708 |
+| 100 ms | 1.00000 | 1.00000 | 0.01842 |
+| 800 ms | 1.00000 | 1.00000 | 0.00599 |
+
+The wait does nothing for either carried-state case, at any length. It does fix the third column, which is a
+different thing: a load writes every mixer gain, return, pan and EQ word between one sample and the next,
+and a gain step on audio still sounding is a click of its own. The wait fixes it only by removing the audio
+to step. And the delay memory does not flush while waiting because the reverb tail keeps writing its own
+output into it: `|ram|` stayed between 9 and 19 across all ten waits on A071, and the tail itself is loud,
+peaking 0.15 to 0.63 during the silence.
+
+**So either the unit pops on these pairs too, or a cell is not what we model it as.** A chip program reaches
+its window's registers and no further, and nothing reaches delay memory, so the firmware has no way to
+prevent either carryover and time does not do it. The one thing that would change the answer is the cell
+model: if a cell on the chip is a latch the hardware reloads rather than a store that holds,
+`m[44] = cell(sat((v29 * v32) + m[44]))` is not an integrator and this entry's second mechanism does not
+exist. **The test on hardware:** hold a note under A073 R.P.M., switch to A072 Mouth Pop, and listen for a
+clipped burst. Clean means the cell model is wrong and `ins_m04` is where to look.
+
+**Answered the same day: mkruselj ran it on his own FS1R and it is clean.** So the cells do not survive a
+window's reload on the unit and the model is wrong, by one of two routes: the chip clears its cell file when a
+window is uploaded, or the real clear program zeroes more than the one here does. `m[44]` is in any case not
+an envelope follower but the second integrator of the wah's state-variable filter, whose first is `r[74]` -
+`v22` is the difference node, `r[74] += v29 * v22`, `m[44] += v29 * v31`, both integrators sharing the
+frequency multiplier `v29` that `t[9]` also carries. The window's clear program zeroes `r[74]` and not
+`m[44]`, which is half of each integrator pair and not a thing hardware would do, so this is a bug in
+`src/effects/` rather than a divergence. It cannot be settled without the EPROM or the VOP3 interpreter,
+neither of which is on this machine. The delay memory and the mixer step have not been tried on the unit.
+
+FSVR clears all of it on a performance load and fades the section in over 8 ms for the mixer step, which is
+recorded as ours in [Differences.md](Differences.md). Across all 766 switches between neighbouring factory
+performances with a note held, sixty stepped more than twice above the level either side of them and nine
+more than four times; with the state cleared, twenty-one and six; with the fade as well, none. The fade is
+not made redundant by all sound off: with the engine cutting the sound and the fade cancelled it is
+twenty-one and six again, because the effect tails are still live when the mixer words land.
+
+---
+
 ## 2026-10-16, pitch bend keeps the LSB's top bits, and source PB is -128..127
 
 Found by WouterVanNifterick in PR #43 (merged): source PB is a raw signed byte, -128..127, where the engine fed

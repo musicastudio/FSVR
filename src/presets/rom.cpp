@@ -26,6 +26,13 @@ int bank_voice_index(int bank, int prog) {
 
 void perf_from_bytes(Synth& S, const Rom* R, const uint8_t* d) {
     Perf& P = S.perf;
+    // The unit stops the sound before it takes a performance, and it is all sound off rather than all notes
+    // off: the notes are cut where they are rather than released (mkruselj, on his own FS1R). So the channels
+    // go while they still belong to the performance that owned them, before any of its bytes change. Until
+    // this was here only the plug-in's own preset browser did it, so a performance bulk from a host, an
+    // editor or the MIDI in left notes sounding, and they carried on through the new performance's voices.
+    // No FUN_ for it yet: this is the unit's behaviour as reported, not read off the disassembly.
+    S.all_off();
     memcpy(P.c, d, 80); memcpy(P.fx, d + 80, 112);
     for (int i = 0; i < 4; i++) {
         Part& pt = P.part[i]; memcpy(pt.p, d + 192 + 52 * i, 52); pt.nheld = 0; pt.lastPitch = -1; pt.reset_ctl();

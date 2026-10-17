@@ -942,6 +942,48 @@ int selftest(Synth& S) {
             for (int i = 0; i < len; i++) { re += x[i] * cs[(k * i) & (len - 1)]; im -= x[i] * sn[(k * i) & (len - 1)]; }
             double e = re * re + im * im; all += e; if (k * (double)SR / len > 4000) high += e; }
         ck("effect chip: the variation Rotary SP has no noise above 4 kHz", 10 * log10(high / all + 1e-30) < -70); }
+      // 5b. a type change leaves the window it reloads with no state of its own. The host silences the window with
+      // its clear program (EffectHost::clearWindow), and that program's whole job is to zero the window's registers,
+      // so the type that follows starts from zero rather than inheriting what the old one held. Gate Reverb into
+      // Distortion is the pair a performance change hit hardest: the distortion took the old registers for its
+      // own, and a tone the window had been playing at 0.02 came back out of it at full scale.
+      { auto t = fresh({{176, 64}, {179, 127}});               // insertion pan centre, level 127
+        fx::setType(t->host, fx::INSERTION, 26);               // Gate Reverb
+        drive(*t, 1, tone(1000, SR / 2, SR / 2), l, r);
+        double driven = 0, held = 0, after = 0;
+        for (size_t i = 0; i < l.size(); i++) driven = std::max(driven, std::max(fabs(l[i]), fabs(r[i])));
+        for (int i = 67; i < 87; i++) held = std::max(held, fabs(t->state.r[i]));   // the insertion window's registers
+        fx::setType(t->host, fx::INSERTION, 21);               // Distortion
+        for (int i = 67; i < 87; i++) after = std::max(after, fabs(t->state.r[i]));
+        ck("effect chip: an insertion type change zeroes the window's registers", held > 1 && after == 0);
+        drive(*t, 1, std::vector<double>(SR / 10, 0.0), l, r);
+        double burst = 0;
+        for (size_t i = 0; i < l.size(); i++) burst = std::max(burst, std::max(fabs(l[i]), fabs(r[i])));
+        ck("effect chip: a type change does not step the window above the level it was playing", burst < driven); }
+      // 5c. a performance load starts the whole section from silence (Effects::load). Ours: a chip program
+      // reaches a window's registers and nothing else, so the cells and the delay memory are cleared here
+      // instead; and because the new performance's mixer words all land in one sample, the section fades in
+      // rather than stepping, but only when a load finds something sounding - a render that opens by loading
+      // its performance must not open with a fade.
+      { auto t = fresh({{168, 1}, {169, 64}, {170, 100}});     // Hall 1, pan centre, return 100
+        drive(*t, 3, tone(1000, SR / 2, SR / 2), l, r);
+        double ram = 0, cells = 0;
+        for (double v : t->state.ram) ram = std::max(ram, fabs(v));
+        for (double v : t->state.m) cells = std::max(cells, fabs(v));
+        ck("effect chip: a reverb leaves state behind it", ram > 0.01 && cells > 0.01);
+        uint8_t c[192]; memcpy(c, init, 192);
+        t->load(c);
+        double left = 0;                                       // nothing a program computed survives the load
+        for (double v : t->state.ram) left = std::max(left, fabs(v));
+        for (double v : t->state.r) left = std::max(left, fabs(v));
+        for (double v : t->state.t) left = std::max(left, fabs(v));
+        for (int i = 42; i <= 55; i++) left = std::max(left, fabs(t->state.m[i]));
+        // the cells the clear programs refill from this sample's inputs and LFOs are not state and are not checked
+        ck("effect chip: a performance load clears the state the programs carry", left == 0);
+        ck("effect chip: a load under something sounding fades the section in", t->fade > 0);
+        auto q = fresh({});                                    // nothing has ever played through this one
+        q->load(c);
+        ck("effect chip: a load into silence does not fade", q->fade == 0); }
       // 6. through the engine: a part with its insertion switch on is heard through the insertion and has no dry path
       { auto peak = [&] { std::vector<float> a(256), b(256); float m = 0;
             for (int k = 0; k < 10; k++) S.render(a.data(), b.data(), 256);   // the chip rings down what the last run left, some 15 ms
@@ -956,6 +998,19 @@ int selftest(Synth& S) {
         ck("engine: a note sounds through the effects", direct > 0.001f);
         ck("engine: a part on the insertion is heard through it", inserted > direct * 0.1f);
         ck("engine: a part on the insertion has no dry path", silent < direct * 0.001f);
+        init_perf(S.perf); }
+      // 6b. taking a performance cuts the sound first, as the unit does: all sound off, so the channels go
+      // where they are rather than releasing. Before this only the plug-in's preset browser did it and a
+      // performance bulk from a host or the MIDI in left notes playing on through the new voices.
+      { std::vector<float> a(256), b(256);
+        uint8_t bulk[400];                                       // the performance as its own bulk
+        memcpy(bulk, (const uint8_t*)&S.perf, 192);
+        for (int p = 0; p < 4; p++) memcpy(bulk + 192 + 52 * p, S.perf.part[p].p, 52);
+        S.midi_in(0x90, 60, 100);
+        for (int k = 0; k < 8; k++) S.render(a.data(), b.data(), 256);
+        const int sounding = S.active_chans();
+        perf_from_bytes(S, nullptr, bulk);
+        ck("engine: a performance cuts the sound before it loads", sounding > 0 && S.active_chans() == 0);
         init_perf(S.perf); }
       // 7. the host's register writes, pinned: its start and a load, every type with each parameter at both ends,
       //    the mixer and EQ bytes, the controller offsets, and a load of every byte.

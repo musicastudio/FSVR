@@ -4,6 +4,7 @@
 // Built without FMA contraction, like the host.
 #include "effects/effects.h"
 #include <algorithm>
+#include <cmath>
 #include <cstring>
 #include "fs1r/cal.h"
 #include "fs1r/vop3_regs.h"
@@ -28,6 +29,30 @@ const Loadable INSERTION[] = {
     {0, effects::ins_m00}, {1, effects::ins_m01}, {2, effects::ins_m02}, {3, effects::ins_m03}, {4, effects::ins_m04},
     {5, effects::ins_m05}, {7, effects::ins_m07}, {10, effects::ins_m10}, {12, effects::ins_m12}, {13, effects::ins_m13},
     {14, effects::ins_m14}};
+
+// What a window's clear program cannot reach, by window. Ours.
+//
+// The clear program zeroes the window's own registers and refreshes its input and tap cells, and that is
+// all a chip program can do: it has no way to write the rest of the cell file, and no way at all to write
+// delay memory, which the chip addresses by slot. So a type change used to hand the next program the last
+// one's cells and the last one's delay memory as its own state. Both were measured to be loud: m[44] is the
+// touch wah's envelope follower, and coming from Early Reflections it started life holding a delay tap,
+// which opened the filter into the overdrive behind it and clipped (A073 R.P.M. into A072 Mouth Pop); the
+// reverb delay's block fed a new echo a second of the performance before it (A071 Relaxxx into A072).
+//
+// The cells are the ones the window's programs write and its clear program does not, less those every
+// window writes each sample (56-63, which are shared and always refreshed). The delay block is the span
+// EffectHost::clearWindow spreads the window's slots over, which is the firmware's own statement of which
+// block belongs to which window. The reverb window has no clear program and so no entry: its state lives
+// in the base program, which every performance runs.
+struct Leftover { int cell, cells; uint32_t ram, ramEnd; };
+const Leftover LEFTOVER[5] = {
+    {0, 0, 0, 0},                                                        // reverb: no clear program
+    {0, 0, 0, 0},                                                        // aux: never reloaded
+    {42, 10, vop3host::AREA[2], vop3host::AREA[3]},                      // insertion: m[42]-m[51]
+    {0, 0, vop3host::AREA[3], vop3host::AREA[4]},                        // reverb delay: cells all covered
+    {54, 2, vop3host::AREA[4], vop3host::TOP},                           // variation: m[54], m[55]
+};
 }
 
 // A register write from the host. The constants are the programs' parameters, the slots their delay offsets,
@@ -58,12 +83,50 @@ void Effects::load(int window, int msb) {
         for (const Loadable& p : list) if (p.msb == msb) return p.run;
         return nullptr;   // ponytail: the host routes every type to a listed msb; another would run nothing
     };
+    int at = -1;
     switch (window) {
-        case vop3host::REVERB_DELAY: stage[2] = find(DELAY); break;
-        case vop3host::VARIATION:    stage[3] = find(VARIATION); break;
-        case vop3host::INSERTION:    stage[4] = find(INSERTION); break;
-        default: break;                          // aux has the one program
+        case vop3host::REVERB_DELAY: stage[at = 2] = find(DELAY); break;
+        case vop3host::VARIATION:    stage[at = 3] = find(VARIATION); break;
+        case vop3host::INSERTION:    stage[at = 4] = find(INSERTION); break;
+        default: return;                         // aux has the one program
     }
+    if (msb != vop3host::WINDOWS[window].clearEntry) return;
+    // The window is being reprogrammed, and the host has loaded the program that clears it
+    // (EffectHost::clearWindow). The clear program zeroes the window's registers and nothing else
+    // (ins_m14.cpp and the two others); the unit's chip runs it for as long as the upload takes, which is
+    // where the window loses them, but an upload costs no samples here, so run it once. Then take the rest
+    // of the window's state, which no chip program can reach (LEFTOVER). Together these are what make the
+    // new program start from silence instead of from the old one's state.
+    if (stage[at]) stage[at](state);
+    const Leftover& left = LEFTOVER[window];
+    std::fill_n(state.m + left.cell, left.cells, 0.0);
+    std::fill(state.ram.begin() + left.ram, state.ram.begin() + left.ramEnd, 0.0);
+}
+
+// A whole performance. Ours: the effect section starts it from silence.
+//
+// A performance change rebuilds all five windows, and nothing the last performance's programs computed
+// means anything to the new ones: a register is one program's filter state and the next program's
+// something else, a cell likewise, and the delay memory is a second of the last performance's audio
+// addressed by slots the new types place differently. Carried over, that state is what the next programs
+// take for their own, and the measured results were bursts to full scale into the overdrives, wahs and
+// echoes - the louder the better, since the state was loudest when something was playing.
+//
+// Clearing it costs the wet paths the time they take to refill, measured at about 30 ms to 90 % on a
+// reverb-heavy performance and nothing at all on the dry path, which reads as the effects fading in
+// rather than as a click. The firmware cannot do this: its clear programs reach a window's registers and
+// no more, and the chip has no instruction that writes delay memory. k[] and offset[] are the host's and
+// are not ours to touch; in[], lfo[] and out[] are rewritten every sample.
+// The clearing leaves one thing behind: every mixer gain, return, pan and EQ word of the new performance
+// lands between one sample and the next, and a gain step on audio that is still sounding is a click of its
+// own, with nothing to do with what the programs carried. So the section fades in over FADE_SAMPLES.
+void Effects::load(const uint8_t* common) {
+    std::fill_n(state.r, 128, 0.0);
+    std::fill_n(state.m, 64, 0.0);
+    std::fill_n(state.t, 16, 0.0);
+    std::fill(state.ram.begin(), state.ram.end(), 0.0);
+    fade = level > 1e-5 ? FADE_SAMPLES : 0;      // nothing sounding, nothing to fade
+    host.load(common);
 }
 
 void Effects::sync(uint8_t* c) {
@@ -108,4 +171,10 @@ void Effects::run(const double bus[8], double& l, double& r) {
     s.ptr = (s.ptr - 1) & (effects::State::RAM_WORDS - 1);
     l = fsvr::word::dac(s.out[0]) / cal::WORD;
     r = fsvr::word::dac(s.out[8]) / cal::WORD;
+    if (fade > 0) {                              // ours: a performance load comes back up (load)
+        const double g = 0.5 - 0.5 * std::cos(3.14159265358979323846 * (FADE_SAMPLES - --fade) / FADE_SAMPLES);
+        l *= g;
+        r *= g;
+    }
+    level = std::fmax(std::fabs(l) + std::fabs(r), level * 0.9999);   // ours: was anything sounding (load)
 }
