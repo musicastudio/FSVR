@@ -30,7 +30,8 @@ else()
     find_package(Threads REQUIRED)
     list(APPEND HOLLOW_CORE_SOURCES "${HOLLOW_FRAMEWORK_DIR}/src/platform/linux.cpp")
     list(APPEND HOLLOW_CORE_INCLUDES ${X11_INCLUDE_DIR})
-    set(HOLLOW_CORE_LIBS ${X11_LIBRARIES} Threads::Threads)
+    # ${CMAKE_DL_LIBS} for dladdr, which platformModuleDir uses to find the binary it is linked into.
+    set(HOLLOW_CORE_LIBS ${X11_LIBRARIES} Threads::Threads ${CMAKE_DL_LIBS})
 endif()
 
 set(HOLLOW_RENDER_SOURCES "${HOLLOW_FRAMEWORK_DIR}/tools/render.cpp" ${HOLLOW_CORE_SOURCES})

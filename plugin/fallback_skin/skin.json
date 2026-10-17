@@ -1,0 +1,23 @@
+{
+ "format": 1,
+ "name": "FSVR",
+ "root": "missing",
+ "density": 1,
+ "fonts": {
+  "title": {
+   "file": "SairaSemiCondensed-Regular.ttf",
+   "size": 28.0,
+   "colour": "#e8eef0ff"
+  },
+  "body": {
+   "file": "SairaSemiCondensed-Regular.ttf",
+   "size": 15.0,
+   "colour": "#b4c2c6ff"
+  },
+  "path": {
+   "file": "SairaSemiCondensed-Regular.ttf",
+   "size": 14.0,
+   "colour": "#7fd6a0ff"
+  }
+ }
+}

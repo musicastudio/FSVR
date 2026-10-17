@@ -1,6 +1,8 @@
 # hollow_add_plugin(<target>
 #     NAME "My Synth"                      file and display name of every format
-#     SKIN <dir>                           the skin folder, embedded into the binaries
+#     SKIN <dir>                           the skin folder, loaded off disk at run time (see below)
+#     FALLBACK_SKIN <dir>                  the small skin embedded in the binaries, shown when no folder
+#                                          is found: a few files, not the product's real skin
 #     SOURCES plugin.cpp ...               pluginInfo(), createProcessor() and any DSP
 #     BUNDLE_ID com.example.my-synth       must equal Info::id; the CLAP id and the bundle id
 #     [VERSION 1.0.0]                      bundle version (default: the project version)
@@ -18,11 +20,18 @@
 #   Linux:       CLAP, VST3, standalone (clap-wrapper), VST2 .so; the editor is an X11 window
 # Everything lands under <build>/out/ (per-format folders on Windows; VST2 in out/VST2 everywhere).
 # The DXi needs VST2 in the list, since it lives in that DLL.
+#
+# The skin is read from disk, not compiled in: loadSkin() looks at $HOLLOW_SKIN_DIR, then skin/ beside the
+# binary, then the product's installed folder. With HOLLOW_STAGE_SKIN the build copies SKIN beside each
+# format in BIN, which is how a release is packed; it is off by default because that is tens of megabytes
+# per format on every build, and a developer sets HOLLOW_SKIN_DIR instead (which also live-reloads). An
+# unstaged build compiles the source skin's path in as a last resort, so it runs with nothing set.
 set(HOLLOW_FORMATS "CLAP;VST3;AUV2;STANDALONE;VST2;DXI" CACHE STRING "Formats to build, where the platform has them")
+option(HOLLOW_STAGE_SKIN "Copy the skin folder beside each format in BIN, as a release is packed" OFF)
 
 function(hollow_add_plugin target)
-  cmake_parse_arguments(P "" "NAME;SKIN;BUNDLE_ID;VERSION;VENDOR;AU_TYPE;AU_MANUFACTURER;AU_SUBTYPE;DXI_CLSID;BIN;WINDOWS_ICON;MACOS_ICON" "SOURCES" ${ARGN})
-  foreach(arg NAME SKIN BUNDLE_ID SOURCES)
+  cmake_parse_arguments(P "" "NAME;SKIN;FALLBACK_SKIN;BUNDLE_ID;VERSION;VENDOR;AU_TYPE;AU_MANUFACTURER;AU_SUBTYPE;DXI_CLSID;BIN;WINDOWS_ICON;MACOS_ICON" "SOURCES" ${ARGN})
+  foreach(arg NAME SKIN FALLBACK_SKIN BUNDLE_ID SOURCES)
     if(NOT P_${arg})
       message(FATAL_ERROR "hollow_add_plugin(${target}): ${arg} is required")
     endif()
@@ -46,10 +55,21 @@ function(hollow_add_plugin target)
   set(fw "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/..")
   set(out "${CMAKE_BINARY_DIR}/out")
 
-  # The product: its own sources plus its skin, on the core.
-  hollow_embed_skin("${P_SKIN}" "${CMAKE_CURRENT_BINARY_DIR}/${target}_skin.cpp")
+  # The product: its own sources plus the fallback skin, on the core. The real skin is not in here.
+  hollow_embed_skin("${P_FALLBACK_SKIN}" "${CMAKE_CURRENT_BINARY_DIR}/${target}_skin.cpp")
   add_library(${target}_lib STATIC ${P_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/${target}_skin.cpp")
   target_link_libraries(${target}_lib PUBLIC hollow_core)
+
+  # NAME is the folder the product owns under Program Files, Application Support or /usr/share, so the
+  # core can name the installed skin without knowing the product. Unstaged, the source skin is the last
+  # place looked, so a locally built binary runs with no environment set; a staged build defines neither
+  # that nor an absolute path into anyone's working copy.
+  # These are on the shared hollow_core, so a build tree holds one product. That is how it is used, and a
+  # second one would need the core per product rather than a define here.
+  target_compile_definitions(hollow_core PUBLIC HOLLOW_PRODUCT_NAME="${P_NAME}")
+  if(NOT HOLLOW_STAGE_SKIN)
+    target_compile_definitions(hollow_core PUBLIC HOLLOW_SOURCE_SKIN_DIR="${P_SKIN}")
+  endif()
 
   # CLAP, and through clap-wrapper VST3, AUv2 and the standalone (64-bit only, see framework/CMakeLists.txt).
   if(COMMAND make_clapfirst_plugins AND "CLAP" IN_LIST HOLLOW_FORMATS)
@@ -212,10 +232,17 @@ function(hollow_add_plugin target)
       if(copy STREQUAL "copy_directory")   # a bundle is replaced, not merged: no file of an older build stays in it
         set(clear COMMAND "${CMAKE_COMMAND}" -E rm -rf "${to}")
       endif()
+      # The skin beside the format, so the folder zips as something that runs on its own. Off by default:
+      # this is tens of megabytes per format, and nothing local needs it.
+      set(stage "")
+      if(HOLLOW_STAGE_SKIN)
+        set(stage COMMAND "${CMAKE_COMMAND}" -E copy_directory "${P_SKIN}" "${P_BIN}/${dir}/skin")
+      endif()
       add_custom_command(TARGET ${tgt} POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${P_BIN}/${dir}"
         ${clear}
         COMMAND "${CMAKE_COMMAND}" -E ${copy} "${from}" "${to}"
+        ${stage}
         VERBATIM)
     endforeach()
   endif()

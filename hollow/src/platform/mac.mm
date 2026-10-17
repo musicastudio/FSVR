@@ -7,6 +7,7 @@
 #include <objc/runtime.h>
 #include <cmath>
 #include <cstdio>
+#include <dlfcn.h>
 
 namespace hollow {
 
@@ -91,6 +92,7 @@ static Key keyOfCode(NSInteger code) {
     case 36: case 76: return KeyEnter;
     case 53: return KeyEscape;
     case 48: return KeyTab;
+    case 96: return KeyF5;   // kVK_F5
     default: return KeyNone;
     }
 }
@@ -308,6 +310,25 @@ void platformOpenUrl(const std::string& url) {
     NSString* s = [NSString stringWithUTF8String:url.c_str()];
     NSURL* u = s ? [NSURL URLWithString:s] : nil;
     if (u) [[NSWorkspace sharedWorkspace] openURL:u];
+}
+
+// Every format here but the bare VST2 .so is a bundle, and the binary sits in <Bundle>/Contents/MacOS.
+// The skin belongs beside the bundle, where the installer and the format zips put it, so walk out of the
+// bundle when we are in one; a loose binary just loses its file name.
+std::string platformModuleDir() {
+    Dl_info info{};
+    if (!dladdr((const void*)&platformModuleDir, &info) || !info.dli_fname) return {};
+    std::string path = info.dli_fname;
+    size_t cut = path.find_last_of('/');
+    if (cut == std::string::npos) return {};
+    path.resize(cut);
+    const std::string macos = "/Contents/MacOS";
+    if (path.size() > macos.size() && path.compare(path.size() - macos.size(), macos.size(), macos) == 0) {
+        path.resize(path.size() - macos.size());        // the bundle itself
+        cut = path.find_last_of('/');
+        path = cut == std::string::npos ? std::string() : path.substr(0, cut);   // and its folder
+    }
+    return path;
 }
 
 // clap-wrapper's standalone app delegate answers its Audio Settings menu item with this action.

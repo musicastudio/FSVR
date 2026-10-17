@@ -69,7 +69,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python tools/contributors.py --check && python tools/contributors.py ${{ github.repository }}
       - name: Configure
-        run: cmake -B build/plugin -S . -DFSVR_BUILD_PLUGIN=ON ${{ matrix.name == 'windows' && '-A x64' || matrix.name == 'windows-x86' && '-A Win32' || '-DCMAKE_BUILD_TYPE=Release' }}
+        # HOLLOW_STAGE_SKIN puts the skin folder beside each format in bin/, which is what the Zip step
+        # below and the release job's per-format split then carry: the binaries no longer hold it.
+        run: cmake -B build/plugin -S . -DFSVR_BUILD_PLUGIN=ON -DHOLLOW_STAGE_SKIN=ON ${{ matrix.name == 'windows' && '-A x64' || matrix.name == 'windows-x86' && '-A Win32' || '-DCMAKE_BUILD_TYPE=Release' }}
       - name: Build
         run: cmake --build build/plugin --config Release ${{ inputs.standalone && '--target fsvr_standalone' || '' }}
       # check_plugin and check_gui drive the processor and its editor with the worker running on its own

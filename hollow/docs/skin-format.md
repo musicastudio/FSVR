@@ -333,4 +333,4 @@ Without `"scales"` the runtime draws at scale 1 into a buffer and presents it at
 
 ## Live editing
 
-When the environment variable `HOLLOW_SKIN_DIR` points at a skin folder, the runtime loads the skin from there instead of the copy embedded in the plug-in, and reloads it about once a second when any file's modification time changes. Point it at the skin folder (`hollow.py run` points FSVR's standalone at `../FSVR/plugin/skin`), open the standalone, and edits saved from the web editor appear in the running plug-in.
+The runtime reads the skin off disk, and `HOLLOW_SKIN_DIR` is both the first folder it looks in and the only one it watches: it re-stats that folder about twice a second and reloads when any file's modification time changes. The installed skin is never polled, since every instance would pay for it; **F5** reloads whichever skin is in use, in the standalone and wherever `HOLLOW_SKIN_DIR` is set; a plug-in with an installed skin leaves F5 to its host. Point it at the skin folder (`hollow.py run` points FSVR's standalone at `../FSVR/plugin/skin`), open the standalone, and edits saved from the web editor appear in the running plug-in.

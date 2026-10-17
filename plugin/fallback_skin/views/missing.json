@@ -1,0 +1,145 @@
+{
+ "size": [
+  700,
+  320
+ ],
+ "fill": {
+  "colour": "#1c2426ff"
+ },
+ "widgets": [
+  {
+   "type": "plate",
+   "name": "title_missing",
+   "rect": [
+    32,
+    36,
+    636,
+    36
+   ],
+   "layer": 0,
+   "text": {
+    "text": "{product}: the skin is missing",
+    "font": "title",
+    "align": "left",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "showIf": {
+    "var": "skin_state",
+    "equals": "missing"
+   }
+  },
+  {
+   "type": "plate",
+   "name": "title_broken",
+   "rect": [
+    32,
+    36,
+    636,
+    36
+   ],
+   "layer": 0,
+   "text": {
+    "text": "{product}: the skin could not be read",
+    "font": "title",
+    "align": "left",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "showIf": {
+    "var": "skin_state",
+    "equals": "broken"
+   }
+  },
+  {
+   "type": "plate",
+   "name": "lead_missing",
+   "rect": [
+    32,
+    78,
+    636,
+    40
+   ],
+   "layer": 0,
+   "multiline": true,
+   "text": {
+    "text": "The audio engine is running; only the interface needs these files.\nPut the skin folder in one of these places, then press F5 (or reopen the plug-in):",
+    "font": "body",
+    "align": "left",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "showIf": {
+    "var": "skin_state",
+    "equals": "missing"
+   }
+  },
+  {
+   "type": "plate",
+   "name": "lead_broken",
+   "rect": [
+    32,
+    78,
+    636,
+    40
+   ],
+   "layer": 0,
+   "multiline": true,
+   "text": {
+    "text": "The audio engine is running; only the interface needs these files.\nFix what is named below, then press F5 (or reopen the plug-in):",
+    "font": "body",
+    "align": "left",
+    "valign": "middle"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "showIf": {
+    "var": "skin_state",
+    "equals": "broken"
+   }
+  },
+  {
+   "type": "plate",
+   "name": "paths",
+   "rect": [
+    32,
+    130,
+    636,
+    150
+   ],
+   "layer": 0,
+   "multiline": true,
+   "text": {
+    "text": "{skin_search}",
+    "font": "path",
+    "align": "left",
+    "valign": "top"
+   },
+   "pad": [
+    0,
+    0,
+    0,
+    0
+   ]
+  }
+ ]
+}

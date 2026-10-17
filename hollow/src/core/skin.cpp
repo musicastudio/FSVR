@@ -1193,21 +1193,91 @@ uint64_t skinDirStamp(const std::string& dir) {
     return h;
 }
 
-std::shared_ptr<Skin> loadSkin() {
-    std::string err;
+namespace {
+const char* env(const char* name) {
 #if defined(_MSC_VER)
 #pragma warning(suppress : 4996)   // getenv is fine here: read once, never stored
 #endif
-    const char* env = std::getenv("HOLLOW_SKIN_DIR");
-    if (env && *env) {
-        if (auto s = loadSkinDir(env, &err)) return s;
-        std::fprintf(stderr, "hollow: HOLLOW_SKIN_DIR %s: %s", env, err.c_str());
-    }
+    const char* v = std::getenv(name);
+    return v && *v ? v : nullptr;
+}
+} // namespace
+
+std::vector<std::string> skinSearchPaths() {
+    std::vector<std::string> paths;
+    if (const char* v = env("HOLLOW_SKIN_DIR")) paths.push_back(v);
+    if (std::string mod = platformModuleDir(); !mod.empty()) paths.push_back(mod + "/" + kSkinFolder);
+#if defined(_WIN32)
+    // ProgramW6432 rather than the Program Files known folder: in the 32-bit DXi process that one resolves
+    // to "Program Files (x86)" and would never find the 64-bit install. It is unset on 32-bit Windows.
+    const char* pf = env("ProgramW6432");
+    if (!pf) pf = env("ProgramFiles");
+    if (pf) paths.push_back(std::string(pf) + "\\" + kHollowProductName + "\\" + kSkinFolder);
+#elif defined(__APPLE__)
+    paths.push_back(std::string("/Library/Application Support/") + kHollowProductName + "/" + kSkinFolder);
+#else
+    // The plug-in folders here are per-user (~/.clap, ~/.vst3, ~/.vst), so a user install comes first.
+    if (const char* xdg = env("XDG_DATA_HOME"))
+        paths.push_back(std::string(xdg) + "/" + kHollowProductName + "/" + kSkinFolder);
+    else if (const char* home = env("HOME"))
+        paths.push_back(std::string(home) + "/.local/share/" + kHollowProductName + "/" + kSkinFolder);
+    paths.push_back(std::string("/usr/share/") + kHollowProductName + "/" + kSkinFolder);
+#endif
+#ifdef HOLLOW_SOURCE_SKIN_DIR
+    paths.push_back(HOLLOW_SOURCE_SKIN_DIR);   // unstaged developer builds only; never defined in a release
+#endif
+    return paths;
+}
+
+std::shared_ptr<Skin> loadEmbeddedSkin(const std::vector<SkinAttempt>& tried) {
+    std::string err;
     auto files = std::make_shared<Files>();
     for (size_t i = 0; i < kSkinFileCount; ++i) (*files)[kSkinFiles[i].path].assign((const char*)kSkinFiles[i].data, kSkinFiles[i].size);
     auto skin = loadFiles(files, &err);
     if (!skin) skin = std::make_shared<Skin>();   // an empty skin still opens, as a blank window
-    if (env && *env) skin->dir = env;              // keep watching the folder until it loads
+
+    // What this skin is for. A folder that is there but will not parse is the case worth naming: its error
+    // is the whole answer ("views/page_master.json: expected string at line 399"), and it used to reach
+    // only stderr, which nobody running a plug-in or a standalone ever sees.
+    std::vector<SkinAttempt> attempts = tried;
+    if (attempts.empty())
+        for (const std::string& dir : skinSearchPaths()) attempts.push_back({dir, std::string()});
+    bool broken = false;
+    std::string lines;
+    for (const SkinAttempt& a : attempts) {
+        skin->searched.push_back(a.first);
+        broken = broken || !a.second.empty();
+        lines += (lines.empty() ? "" : "\n") + a.first + (a.second.empty() ? "" : "  -  " + a.second);
+    }
+    skin->vars.emplace_back("skin_search", lines);
+    skin->vars.emplace_back("skin_state", broken ? "broken" : "missing");
+    skin->vars.emplace_back("product", kHollowProductName);
+    return skin;
+}
+
+std::shared_ptr<Skin> loadSkin() {
+    const char* watched = env("HOLLOW_SKIN_DIR");
+    std::vector<SkinAttempt> tried;
+    std::error_code ec;
+    for (const std::string& dir : skinSearchPaths()) {
+        if (!fs::is_directory(fs::u8path(dir), ec)) {
+            tried.push_back({dir, std::string()});   // not there, which is not worth reporting as an error
+            continue;
+        }
+        std::string err;
+        if (auto s = loadSkinDir(dir, &err)) {
+            s->watch = watched && dir == watched;   // only the developer's folder is polled for edits
+            return s;
+        }
+        if (err.empty()) err = "could not be read";
+        std::fprintf(stderr, "hollow: skin %s: %s\n", dir.c_str(), err.c_str());
+        tried.push_back({dir, err});
+    }
+    auto skin = loadEmbeddedSkin(tried);
+    if (watched) {              // keep watching the folder until it loads
+        skin->dir = watched;
+        skin->watch = true;
+    }
     return skin;
 }
 

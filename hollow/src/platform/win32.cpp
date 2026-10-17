@@ -97,6 +97,7 @@ static bool offerKey(Gui& g, WPARAM wp) {
     case VK_RETURN: k = KeyEnter; break;
     case VK_ESCAPE: k = KeyEscape; break;
     case VK_TAB: k = KeyTab; break;
+    case VK_F5: k = KeyF5; break;
     case 'A': k = ctrl ? KeySelectAll : KeyNone; break;
     }
     return g.keyDown(k, GetKeyState(VK_SHIFT) < 0, ctrl, alt, ch);
@@ -554,6 +555,18 @@ unsigned platformKeyChar(unsigned codepoint, bool* shift) {
 void platformOpenUrl(const std::string& url) {
     if (url.compare(0, 7, "http://") == 0 || url.compare(0, 8, "https://") == 0)
         ShellExecuteW(nullptr, L"open", wide(url).c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+}
+
+std::string platformModuleDir() {
+    std::wstring path(MAX_PATH, L'\0');
+    for (;;) {   // a path longer than the buffer comes back truncated, with ERROR_INSUFFICIENT_BUFFER
+        DWORD n = GetModuleFileNameW(thisModule(), &path[0], (DWORD)path.size());
+        if (n == 0) return {};
+        if (n < path.size()) { path.resize(n); break; }
+        path.resize(path.size() * 2);
+    }
+    size_t cut = path.find_last_of(L"\\/");
+    return cut == std::wstring::npos ? std::string() : narrow(path.substr(0, cut));
 }
 
 // clap-wrapper's standalone window opens its settings from its system menu; the command's id is 0

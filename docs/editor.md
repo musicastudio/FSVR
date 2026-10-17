@@ -1,6 +1,6 @@
 # The FSVR editor
 
-The plug-in's editor covers everything the Yamaha FS1R has, in hammered aqua chrome: a [Hollow](../hollow/docs/framework.md) skin in `plugin/skin`, drawn by the framework's software renderer, and a processor (`plugin/plugin.cpp`) that answers it out of the engine. This file records the choices where software and the unit part ways, what the processor does for each control the unit never had, and the usability fixes from a sweep of every page. The skin is edited in place with the Hollow project's web editor, its artwork is rendered in Blender (`blender/`, below) and its text is drawn at run time; [plugin_guide.md](plugin_guide.md) is how to use it.
+The plug-in's editor covers everything the Yamaha FS1R has, in hammered aqua chrome: a [Hollow](../hollow/docs/framework.md) skin in `plugin/skin`, read off disk at run time (below) and drawn by the framework's software renderer, and a processor (`plugin/plugin.cpp`) that answers it out of the engine. This file records the choices where software and the unit part ways, what the processor does for each control the unit never had, and the usability fixes from a sweep of every page. The skin is edited in place with the Hollow project's web editor, its artwork is rendered in Blender (`blender/`, below) and its text is drawn at run time; [plugin_guide.md](plugin_guide.md) is how to use it.
 
 ## Rules
 
@@ -39,6 +39,37 @@ The operator column's panel is the operator page's most used settings, on whiche
 - **The knob beside Skirt says what it is.** Voice byte 6 is two parameters (`docs/skirt.md`): the formant's bandwidth and the Res forms' resonance, and the other forms read neither. So the knob reads Width for Formant and Reson for Res 1 and 2, and is disabled for the forms that ignore it; Skirt is disabled for Sine, the one form it does not shape.
 - **The frequency is a control, not a printout.** Under Ratio and Fixed, a box shows what Coarse and Fine make of the operator's frequency, a multiple of the note's (Frequency ratio) or hertz (Frequency, Hz), from the tables the operator page uses; dragging it or its steppers moves Coarse, and Fine sets what lies between.
 - **The controls.** Coarse, Fine, Detune and Level, then Ratio/Fixed and the frequency with Skirt and Band Ratio. When the spectral form is Formant, Detune stays and Transpose sits beside a Fixed mark, with the frequency in Hz under them: semitones on that operator's pitch, leaving the formant frequency where Coarse and Fine put it. The operator page has the same parameter. For an unvoiced operator Bandwidth, the pitch mode (Normal, Link FO, Link FF) and Resonance take their places. The amplitude EG is the operator page's own envelope, dragged the same way.
+
+## Where the skin lives
+
+The skin is read off disk at run time, not compiled into the binaries: 35 MB in each of six formats was
+most of a release's size, and a skin on disk can be replaced, edited and reloaded without a new build.
+`loadSkin()` (`hollow/src/core/skin.cpp`) takes the first of these that loads:
+
+1. `$HOLLOW_SKIN_DIR`. This is the one that is also **watched**: the editor re-stats the folder twice a
+   second and reloads on any change, so skin editing is live. No other path is polled — every skin has a
+   folder now, and 678 stat calls twice a second in every plug-in instance is not a thing to ship.
+2. `skin/` beside the binary (`platformModuleDir()`), which is what a format zip unpacks to, and on macOS
+   beside the bundle rather than inside it.
+3. The installed folder: `%ProgramW6432%\FSVR\skin`, `/Library/Application Support/FSVR/skin`, or
+   `$XDG_DATA_HOME/FSVR/skin` then `/usr/share/FSVR/skin`. Windows reads `ProgramW6432` rather than the
+   Program Files known folder because the 32-bit DXi would otherwise be sent to `Program Files (x86)`.
+4. The source skin, in a build without `HOLLOW_STAGE_SKIN`, so a locally built binary runs with nothing
+   set. A staged build — CI, and so every release — does not compile that path in.
+
+**F5 reloads** in the standalone, and in a plug-in only while `HOLLOW_SKIN_DIR` is set: a shipped plug-in
+leaves the key to its host, which may well want it, while a skin being edited still reloads inside a host,
+which is often the only place a problem shows. It resolves the paths again, so a skin folder put in place
+after the editor opened is found, and a skin that will not load leaves the one on screen alone.
+
+**When none of them has a skin**, a small skin compiled in (`plugin/fallback_skin/`, one view and one
+font) opens a window saying so and listing the four paths. The engine plays either way;
+`data/fs1r_sysex.json` is the one skin file the processor itself needs, so it is embedded with the
+factory banks (`hollow_embed_files` in `plugin/CMakeLists.txt`) rather than left to the skin folder.
+
+`HOLLOW_STAGE_SKIN=ON` makes the build copy `plugin/skin` beside each format in `bin/`, which is how the
+release is packed. It is off by default: that is tens of megabytes per format on every build, and nothing
+local needs it.
 
 ## The art: Blender
 

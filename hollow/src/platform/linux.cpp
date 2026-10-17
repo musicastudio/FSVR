@@ -11,6 +11,7 @@
 #include <cerrno>
 #include <climits>
 #include <cstdio>
+#include <dlfcn.h>
 #include <cstdlib>
 #include <cstring>
 #include <fcntl.h>
@@ -94,6 +95,7 @@ static Key keyOf(KeySym k, bool ctrl) {
     case XK_Return: case XK_KP_Enter: return KeyEnter;
     case XK_Escape: return KeyEscape;
     case XK_Tab: return KeyTab;
+    case XK_F5: return KeyF5;
     case XK_a: case XK_A: return ctrl ? KeySelectAll : KeyNone;
     default: return KeyNone;
     }
@@ -332,6 +334,14 @@ unsigned platformKeyChar(unsigned, bool* shift) {
 
 void platformOpenUrl(const std::string& url) {
     if (url.compare(0, 7, "http://") == 0 || url.compare(0, 8, "https://") == 0) spawn({"xdg-open", url}, nullptr);
+}
+
+std::string platformModuleDir() {
+    Dl_info info{};
+    if (!dladdr((const void*)&platformModuleDir, &info) || !info.dli_fname) return {};
+    std::string path = info.dli_fname;
+    size_t cut = path.find_last_of('/');
+    return cut == std::string::npos ? std::string() : path.substr(0, cut);
 }
 
 // clap-wrapper's Linux standalone has no settings window.

@@ -17,6 +17,8 @@ The installer (`FSVR-Windows-Installer.exe`, `FSVR-MacOS-Installer.zip`, `FSVR-L
 
 Copy what your host loads into its plug-in folder: on Windows `C:\Program Files\Common Files\CLAP` and `...\VST3`; on macOS `~/Library/Audio/Plug-Ins/CLAP`, `VST3`, `VST` and `Components` (Logic Pro loads only the AU, scans it at launch and validates a new one once); on Linux `~/.clap`, `~/.vst3` and `~/.vst`. The macOS builds are universal, Apple silicon and Intel in one binary. The DXi, for Cakewalk's older hosts, registers with `regsvr32 "FSVR.dll"` from an elevated prompt, the 32-bit DLL from `FSVR-Windows-VST2-32-DXi.zip` (the installer does this for you).
 
+**Take the `skin` folder with it.** Every format zip holds the plug-in and a `skin` folder beside it, and the interface is drawn from those files rather than carried inside the binary, so one format installed by hand needs both. The installer instead puts one copy in a place every format reads — `C:\Program Files\FSVR\skin`, `/Library/Application Support/FSVR/skin`, `/usr/share/FSVR/skin` — and its formats carry none. A plug-in that finds no skin still plays: it opens a window naming the folders it looked in. In the standalone, **F5** makes it look again once you have put one there, and reloads the skin at any time. A plug-in inside a host leaves F5 to the host and picks up a new skin when the host loads it afresh.
+
 Nothing here is signed by an Apple developer account, so the first launch of the macOS standalone needs **Open** from its right-click menu, or one command to drop the quarantine flag the download put on it:
 
 ```bash

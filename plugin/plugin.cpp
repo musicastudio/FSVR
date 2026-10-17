@@ -78,18 +78,18 @@ static std::vector<uint8_t> factoryBytes(const char* name) {
     return f ? std::vector<uint8_t>(f->data, f->data + f->size) : std::vector<uint8_t>();
 }
 
-// The skin's own copy of a data file: HOLLOW_SKIN_DIR's when set (live editing), else the embedded one.
+// A file out of the skin folder, found the way the editor finds the skin itself, so the processor and
+// the editor always read the same one. Falls back to the embedded files: the fallback skin, then the
+// factory table, which carries fs1r_sysex.json so the processor keeps its sysex map with no skin on disk.
 static std::string skinFile(const std::string& path) {
-#if defined(_MSC_VER)
-#pragma warning(suppress : 4996)
-#endif
-    const char* dir = std::getenv("HOLLOW_SKIN_DIR");
-    if (dir && *dir) {
+    for (const std::string& dir : hollow::skinSearchPaths()) {
         std::vector<uint8_t> b;
-        if (readFile(std::string(dir) + "/" + path, b)) return std::string(b.begin(), b.end());
+        if (readFile(dir + "/" + path, b)) return std::string(b.begin(), b.end());
     }
     for (size_t i = 0; i < hollow::kSkinFileCount; ++i)
         if (path == hollow::kSkinFiles[i].path) return std::string((const char*)hollow::kSkinFiles[i].data, hollow::kSkinFiles[i].size);
+    const std::string name = path.substr(path.find_last_of('/') + 1);   // the factory table keys by name
+    if (const hollow::EmbeddedFile* f = factoryFile(name.c_str())) return std::string((const char*)f->data, f->size);
     return {};
 }
 

@@ -7,7 +7,7 @@
 // Escape and close X, the close prompt, the Options page (the scales, the keyboard's two layouts, Modern EG Labels, the Init
 // Patch, Turn off all Effects, Init Current Patch, Init All and Quality / Speed) and the About box; then a sweep of every page's
 // dials, faders, dropdowns and toggles. Exits non-zero on any failure.
-//   build/<dir>/Release/check_gui      (ctest runs it as "gui")
+//   build/<dir>/Release/check_gui      (ctest runs it as "gui", with HOLLOW_SKIN_DIR on plugin/skin)
 // With FSVR_GUI_SHOTS set to a folder it also saves the window as a PNG at each u.shot("name"), to look at.
 #include <hollow/hollow.h>
 #include "core/core.h"
@@ -38,6 +38,16 @@ namespace fs = std::filesystem;
 
 static int fails = 0;
 #define CHECK(c, ...) do { if (!(c)) { std::printf("check_gui: FAIL line %d: ", __LINE__); std::printf(__VA_ARGS__); std::printf("\n"); ++fails; } } while (0)
+
+// The window as a PNG in FSVR_GUI_SHOTS, when it is set.
+static void shotOf(Gui& gui, const char* name) {
+    const char* dir = std::getenv("FSVR_GUI_SHOTS");
+    if (!dir) return;
+    const auto& px = gui.pixels();
+    std::vector<uint8_t> rgba;
+    for (uint32_t p : px) rgba.insert(rgba.end(), {uint8_t(p >> 16), uint8_t(p >> 8), uint8_t(p), 255});
+    stbi_write_png((fs::path(dir) / (std::string(name) + ".png")).string().c_str(), gui.width(), gui.height(), 4, rgba.data(), gui.width() * 4);
+}
 
 struct Ui {   // one instance and its editor, run a block and a GUI tick at a time
     std::shared_ptr<Skin> skin = loadSkin();
@@ -81,14 +91,7 @@ struct Ui {   // one instance and its editor, run a block and a GUI tick at a ti
     std::string data(const std::string& k) const { return st->data(k); }
     int lines(const std::string& k) const { std::string d = st->data(k); return (int)std::count(d.begin(), d.end(), '\n'); }
     bool shows(const std::string& path) { Rect r; return gui.widgetRect(path, r); }
-    void shot(const char* name) {   // the window as a PNG in FSVR_GUI_SHOTS, when it is set
-        const char* dir = std::getenv("FSVR_GUI_SHOTS");
-        if (!dir) return;
-        const auto& px = gui.pixels();
-        std::vector<uint8_t> rgba;
-        for (uint32_t p : px) rgba.insert(rgba.end(), {uint8_t(p >> 16), uint8_t(p >> 8), uint8_t(p), 255});
-        stbi_write_png((fs::path(dir) / (std::string(name) + ".png")).string().c_str(), gui.width(), gui.height(), 4, rgba.data(), gui.width() * 4);
-    }
+    void shot(const char* name) { shotOf(gui, name); }
     std::string ui() const { return gui.uiJson(); }
 
     bool rect(const std::string& path, Rect& r) {
@@ -205,6 +208,13 @@ struct Ui {   // one instance and its editor, run a block and a GUI tick at a ti
 static const char* const kModal = "hollow_modal/";
 
 int main() {
+    // The skin this run loads, kept before the F5 check points HOLLOW_SKIN_DIR at a copy of it. ctest sets
+    // the variable; a build without HOLLOW_STAGE_SKIN compiles the source skin's path in as well.
+    std::string sourceSkin;
+    if (const char* e = std::getenv("HOLLOW_SKIN_DIR")) sourceSkin = e;
+#ifdef HOLLOW_SOURCE_SKIN_DIR
+    if (sourceSkin.empty()) sourceSkin = HOLLOW_SOURCE_SKIN_DIR;
+#endif
     const fs::path tmp = fs::temp_directory_path() / ("fsvr_check_gui_" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));   // runs side by side
     std::error_code ec;
     fs::remove_all(tmp, ec);
@@ -1010,7 +1020,102 @@ int main() {
         std::printf("check_gui: swept %d dials and faders, %d dropdowns and %d toggles on %zu pages\n", dials, drops, toggles, sizeof pages / sizeof pages[0]);
         u.proc.reset();
     }
+
+    // ---- the skin off disk: where it is looked for, the fallback, and F5 --------------------------
+    {
+        const std::string mod = platformModuleDir();
+        CHECK(!mod.empty() && fs::exists(fs::u8path(mod)), "platformModuleDir gave \"%s\"", mod.c_str());
+        const std::vector<std::string> paths = skinSearchPaths();
+        CHECK(paths.size() >= 2, "skinSearchPaths gave %zu paths", paths.size());
+        CHECK(std::find(paths.begin(), paths.end(), mod + "/" + kSkinFolder) != paths.end(),
+              "skinSearchPaths does not look beside the binary (%s)", mod.c_str());
+        if (const char* env = std::getenv("HOLLOW_SKIN_DIR"))
+            CHECK(!paths.empty() && paths[0] == env, "HOLLOW_SKIN_DIR is not looked at first (\"%s\")", paths[0].c_str());
+
+        // The fallback, reached directly: no machine has a state in which every path misses.
+        auto var = [](const Skin& s, const char* k) {
+            for (auto& kv : s.vars)
+                if (kv.first == k) return kv.second;
+            return std::string();
+        };
+        auto fb = loadEmbeddedSkin();
+        CHECK(fb && !fb->views.empty() && fb->view(fb->root), "the fallback skin has no \"%s\" view", fb ? fb->root.c_str() : "");
+        if (fb && fb->view(fb->root)) {
+            State fbState{skinParams(*fb)};
+            Gui g{fb.get(), fbState, nullptr};
+            g.tick();
+            CHECK(!g.pixels().empty(), "the fallback skin painted nothing");
+            shotOf(g, "skin_missing");
+            bool named = false;   // its view names the places the skin was looked for
+            for (auto& w : fb->view(fb->root)->widgets) named = named || w.text.text.find("{skin_search}") != std::string::npos;
+            CHECK(named, "the fallback skin's view does not name the search paths");
+            CHECK(var(*fb, "skin_state") == "missing", "nothing was tried, but the fallback says \"%s\"", var(*fb, "skin_state").c_str());
+        }
+        // A folder that is there but will not parse: its error is the answer, so the window has to carry
+        // it rather than report the skin as missing (stderr is not somewhere a plug-in's user ever looks).
+        const char* kErr = "views/page_master.json: expected string at line 399";
+        auto bad = loadEmbeddedSkin({{"/nowhere", ""}, {"/there/but/broken", kErr}});
+        CHECK(var(*bad, "skin_state") == "broken", "a folder that failed to parse left the state \"%s\"", var(*bad, "skin_state").c_str());
+        CHECK(var(*bad, "skin_search").find(kErr) != std::string::npos,
+              "the parse error is not in the window's text: \"%s\"", var(*bad, "skin_search").c_str());
+        if (bad->view(bad->root)) {   // and the headline says read, not missing
+            State badState{skinParams(*bad)};
+            Gui g{bad.get(), badState, nullptr};
+            g.tick();
+            shotOf(g, "skin_broken");
+            bool missingShown = false, brokenShown = false;
+            for (auto& p : g.probes()) {
+                missingShown = missingShown || p.path.find("title_missing") != std::string::npos;
+                brokenShown = brokenShown || p.path.find("title_broken") != std::string::npos;
+            }
+            CHECK(brokenShown && !missingShown, "a broken skin showed the wrong headline (broken=%d missing=%d)", (int)brokenShown, (int)missingShown);
+        }
+    }
+    if (!sourceSkin.empty()) {   // F5 loads the folder again: an edit to a copy of the skin shows without reopening
+        const fs::path dir = tmp / "skin";
+        fs::copy(fs::u8path(sourceSkin), dir, fs::copy_options::recursive, ec);
+        CHECK(!ec, "could not copy %s to %s: %s", sourceSkin.c_str(), dir.u8string().c_str(), ec.message().c_str());
+#ifdef _WIN32
+        _putenv_s("HOLLOW_SKIN_DIR", dir.u8string().c_str());
+#else
+        setenv("HOLLOW_SKIN_DIR", dir.u8string().c_str(), 1);
+#endif
+        Ui u;
+        CHECK(u.skin->watch, "a skin from HOLLOW_SKIN_DIR is not watched");
+        CHECK(u.until([&] { return u.data("perf.name") == "Zap !"; }), "A001 did not load from the copied skin");
+        u.gui.watch(u.skin);
+        // F5 is the standalone's, and a plug-in's only while a skin folder is being edited: an installed
+        // skin in a host leaves the key to the host, which may want it.
+        CHECK(u.gui.reloadsOnF5(), "F5 is not live with HOLLOW_SKIN_DIR set");
+        {
+            auto installed = std::make_shared<Skin>(*u.skin);
+            installed->watch = false;   // as an installed skin loads: a folder, but not one being edited
+            State st2{skinParams(*installed)};
+            Gui g{installed.get(), st2, nullptr};   // no host: a plug-in, not the standalone
+            g.watch(installed);
+            CHECK(!g.reloadsOnF5(), "a plug-in with an installed skin would take F5 from its host");
+            CHECK(!g.keyDown(KeyF5, false, false), "a plug-in with an installed skin swallowed F5");
+        }
+        const std::string before = u.gui.tipOf("tab_parts");
+        std::string json;
+        {
+            std::ifstream in(dir / "views" / "main.json", std::ios::binary);
+            json.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+        }
+        const std::string from = "\"tip\": \"The four parts' settings\"", to = "\"tip\": \"Reloaded\"";
+        const size_t at = json.find(from);
+        CHECK(at != std::string::npos, "the Parts tab's tip is not in main.json to edit");
+        if (at != std::string::npos) {
+            json.replace(at, from.size(), to);
+            std::ofstream(dir / "views" / "main.json", std::ios::binary).write(json.data(), (std::streamsize)json.size());
+            CHECK(u.gui.keyDown(KeyF5, false, false), "F5 did not reload the skin");
+            u.run(2);
+            CHECK(u.gui.tipOf("tab_parts") == "Reloaded (Alt+T)", "after F5 the Parts tab's tip reads \"%s\", was \"%s\"",
+                  u.gui.tipOf("tab_parts").c_str(), before.c_str());
+        }
+        u.proc.reset();
+    }
     fs::remove_all(tmp, ec);
-    if (!fails) std::printf("check_gui: the top bar, its menus and toggles, every page and the Operators tab's sub-tabs, the keyboard shortcuts and their tooltips, the Parts page's steppers, keyboard, velocity curve and radios, the browser's right-click menus, every dialog, the modal's veil, Escape and close X, the close prompt, the Options page and About all pass\n");
+    if (!fails) std::printf("check_gui: the top bar, its menus and toggles, every page and the Operators tab's sub-tabs, the keyboard shortcuts and their tooltips, the Parts page's steppers, keyboard, velocity curve and radios, the browser's right-click menus, every dialog, the modal's veil, Escape and close X, the close prompt, the Options page, About, where the skin is looked for, the fallback when it is nowhere, and F5 reloading it all pass\n");
     return fails ? 1 : 0;
 }

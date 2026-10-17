@@ -1944,7 +1944,11 @@ bool Gui::charPending() const { return charPending_; }
 // Text entry, a menu or a list is done with the keyboard. A skin with shortcuts keeps it anyway, since its
 // chords have to work without a click first; one without hands it back, as the editor always did.
 void Gui::releaseKeys() {
-    if (window && !wantsKeys() && skin_->keys.empty()) platformFocus(window, false);
+    // The fallback skin (the only one with searched paths) has no chords of its own, and handing the
+    // keyboard back there would take F5 with it, which is the one key that can fix what it is reporting.
+    // Only where F5 is ours, though: in a host we keep nothing we are not going to use.
+    const bool fallback = owned_ && !owned_->searched.empty() && reloadsOnF5();
+    if (window && !wantsKeys() && skin_->keys.empty() && !fallback) platformFocus(window, false);
 }
 
 void Gui::focusLost() {
@@ -2036,6 +2040,12 @@ std::string Gui::tipText(const Hit& h) const {
 
 bool Gui::keyDown(Key k, bool shift, bool ctrl, bool alt, unsigned ch, bool fromHost) {
     charPending_ = false;   // set again below for a key whose character the text entry is still waiting for
+    // Before the menus and the skin's own chords, so a broken skin still reloads; and only where F5 is
+    // ours, so in a host the key falls through unhandled and the host gets it.
+    if (k == KeyF5 && reloadsOnF5()) {
+        closeMenus();
+        return reloadSkin();
+    }
     if (!menus_.empty()) {   // arrows move over the top menu's items (skipping separators, wrapping), Enter picks
         Menu& m = menus_.back();
         size_t level = menus_.size() - 1;
@@ -2153,6 +2163,8 @@ bool Gui::keyDown(Key k, bool shift, bool ctrl, bool alt, unsigned ch, bool from
         // types one and does.
         charPending_ = (ctrl && alt) || (!ctrl && !alt);
         return true;
+    case KeyF5:
+        return false;   // not ours here: text entry has no use for it, and a host may want it
     }
     if (move && !shift) e.anchor = e.caret;
     restartBlink();
@@ -2853,7 +2865,7 @@ void Gui::tick() {
             invalidate(edit_.r);
         }
     }
-    if (owned_ && !owned_->dir.empty() && ticks_ % 30 == 0) {
+    if (owned_ && owned_->watch && ticks_ % 30 == 0) {
         uint64_t stamp = skinDirStamp(owned_->dir);
         if (stamp != stamp_) {
             stamp_ = stamp;
@@ -2870,7 +2882,23 @@ void Gui::tick() {
 
 void Gui::watch(std::shared_ptr<Skin> skin) {
     owned_ = std::move(skin);
-    if (!owned_->dir.empty()) stamp_ = skinDirStamp(owned_->dir);
+    if (owned_->watch) stamp_ = skinDirStamp(owned_->dir);
+}
+
+// F5: the skin again off disk, resolved from scratch so a folder that has appeared since (an install, or
+// a first unzip) is found. A skin that will not load leaves the one showing alone, as the poll does.
+bool Gui::reloadsOnF5() const {
+    return (host_ && host_->standalone()) || (owned_ && owned_->watch);
+}
+
+bool Gui::reloadSkin() {
+    if (!owned_) return false;   // the skin is the host's, not ours to replace
+    auto s = loadSkin();
+    if (!s) return false;
+    setSkin(s.get());            // reads the old tree, so the old skin must still be alive
+    owned_ = s;
+    stamp_ = owned_->watch ? skinDirStamp(owned_->dir) : 0;
+    return true;
 }
 
 // ---- GUI state ----------------------------------------------------------------------------------

@@ -174,7 +174,9 @@ std::unique_ptr<Processor> createProcessor(State& state);
 
 // The keys the editor knows by name. Letters and digits are not here: they travel beside these as the
 // physical key's ASCII code, so this stays a list of editing commands.
-enum Key { KeyNone, KeyLeft, KeyRight, KeyUp, KeyDown, KeyHome, KeyEnd, KeyBackspace, KeyDelete, KeyEnter, KeyEscape, KeyTab, KeySelectAll };
+// KeyF5 reloads the skin off disk; it is the framework's, not a skin shortcut, so it works when the skin
+// that loaded was the fallback.
+enum Key { KeyNone, KeyLeft, KeyRight, KeyUp, KeyDown, KeyHome, KeyEnd, KeyBackspace, KeyDelete, KeyEnter, KeyEscape, KeyTab, KeySelectAll, KeyF5 };
 
 // Opt-in keyboard diagnostics, for working out where a host's keys go: with HOLLOW_KEYLOG set to a file
 // path, the keyboard path appends what it sees there. One pointer test when the variable is unset.
