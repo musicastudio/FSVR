@@ -303,7 +303,12 @@ struct TipStyle {                // skin.json "tooltip"; off = native tooltips
 
 class Skin {
 public:
-    std::string name, root, dir;  // dir: folder it came from (live reload), empty when embedded
+    std::string name, root, dir;  // dir: folder it came from, empty when embedded
+    // Polled for edits and reloaded when it changes. Only HOLLOW_SKIN_DIR sets it: every skin has a dir
+    // now, and stat-walking an installed one twice a second in every instance would be a shipped cost.
+    bool watch = false;
+    // The folders loadSkin() looked in, on the fallback skin only, for its view to name.
+    std::vector<std::string> searched;
     // skin.json "density": pixels per unit of the runtime's own geometry (the custom kinds' drawings,
     // menu and tooltip chrome, defaults of pixel fields, drag rates). 1.5 for a skin drawn at 1.5x.
     double density = 1;
@@ -345,7 +350,24 @@ public:
     const Json& table(const std::string& name) const;   // Null when missing
 };
 
-// Loads a skin folder; null (and *error) on failure. loadSkin() uses it for HOLLOW_SKIN_DIR.
+// The product's name, from hollow_add_plugin's NAME: the folder it owns under Program Files, Application
+// Support or /usr/share. "skin" is what that folder (and the one beside the binary) calls the skin.
+#ifndef HOLLOW_PRODUCT_NAME
+#define HOLLOW_PRODUCT_NAME "Hollow"
+#endif
+constexpr const char* kHollowProductName = HOLLOW_PRODUCT_NAME;
+constexpr const char* kSkinFolder = "skin";
+
+// Where loadSkin() looks, in order, whether or not each exists: $HOLLOW_SKIN_DIR, <module dir>/skin, the
+// installed folder for the platform, and in an unstaged developer build the source skin.
+std::vector<std::string> skinSearchPaths();
+// A folder loadSkin() tried and what went wrong there; an empty error means it simply was not there.
+using SkinAttempt = std::pair<std::string, std::string>;
+// The skin compiled in (embedded_skin.h): the fallback, when no folder in skinSearchPaths() loads. Its
+// view reports `tried`, so a folder that is present but will not parse says so with its parse error
+// rather than being reported as missing. Empty `tried`: the search paths, none of them attempted.
+std::shared_ptr<Skin> loadEmbeddedSkin(const std::vector<SkinAttempt>& tried = {});
+// Loads a skin folder; null (and *error) on failure.
 std::shared_ptr<Skin> loadSkinDir(const std::string& dir, std::string* error = nullptr);
 // The same skin loaded again at another of its scales.
 std::shared_ptr<Skin> scaledSkin(const Skin& base, double scale, std::string* error = nullptr);
@@ -407,6 +429,10 @@ extern const bool kNativeMenus;   // false: the platform has none, and a "native
 void platformTip(PlatformWindow* w, const std::string& text);        // tooltip of the whole window, "" = none
 void platformFocus(PlatformWindow* w, bool on);   // take the keyboard (text entry, menus, lists), or hand it back
 void platformOpenUrl(const std::string& url);
+// The folder holding the binary this code is linked into: the DLL for a plug-in, the executable for the
+// standalone, and beside the bundle rather than inside it where a format is one. "" when it cannot be
+// found. loadSkin() looks for a skin folder here before the installed one.
+std::string platformModuleDir();
 // The key that types this character on the current layout, as an uppercase ASCII letter or digit, 0 when
 // that is not known, and in *shift whether typing it needs Shift held. A host's plug-in API hands over the
 // character a key produced rather than the key, so this is how a chord gets back to the key the window
@@ -522,7 +548,12 @@ public:
     void focusLost();                            // commits text entry, closes menus, drops list focus
     void tick();                                 // about 30 Hz: automation, repeats, tooltips, caret, animation
 
-    void watch(std::shared_ptr<Skin> skin);     // Editor: keep this skin, reload it when Skin::dir changes
+    void watch(std::shared_ptr<Skin> skin);     // Editor: keep this skin, reload it when Skin::watch changes
+    bool reloadSkin();                           // F5: resolve and load the skin again; false if we own none
+    // Whether F5 is ours to take. The standalone's own window, yes; a plug-in only while a skin folder is
+    // being edited (HOLLOW_SKIN_DIR), so a shipped plug-in never takes the key from its host, which may
+    // well want it. Not Gui::standalone(), which also asks whether the platform has a settings window.
+    bool reloadsOnF5() const;
     PlatformWindow* window = nullptr;
 
     // For the custom kinds (kinds.cpp).

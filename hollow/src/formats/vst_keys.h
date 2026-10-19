@@ -30,6 +30,9 @@ inline Key vstVirtualKey(int vkey) {
     case 14: return KeyDown;
     case 19: return KeyEnter;      // KEY_ENTER, the numeric pad's
     case 22: return KeyDelete;
+    // KEY_F5. The run from here is fixed by both SDKs: HELP 23, NUMPAD0..9 24-33, MULTIPLY 34, ADD 35,
+    // SEPARATOR 36, SUBTRACT 37, DECIMAL 38, DIVIDE 39, then F1 40.
+    case 44: return KeyF5;
     default: return KeyNone;
     }
 }

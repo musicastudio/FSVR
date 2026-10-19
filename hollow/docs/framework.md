@@ -2,7 +2,7 @@
 
 > This copy travels with FSVR's `hollow/`, which is Hollow's `framework/` folder. The web editor (`editor/`) and the skin tools (`tools/`) it mentions live in the Hollow project beside this repository.
 
-FSVR's `plugin/` (in the FSVR repository) is a full product on this framework, with a processor, and Hollow's `plugins/fsvr` the smallest one: FSVR's skin in a silent shell. A Hollow product is three things: a `plugin.cpp` that describes it (and makes sound, if it does), a skin folder that is its GUI, and one `hollow_add_plugin()` call. The framework supplies the rest: the formats, the editor window, parameter plumbing, state, GUI scaling and the embedded skin.
+FSVR's `plugin/` (in the FSVR repository) is a full product on this framework, with a processor, and Hollow's `plugins/fsvr` the smallest one: FSVR's skin in a silent shell. A Hollow product is three things: a `plugin.cpp` that describes it (and makes sound, if it does), a skin folder that is its GUI, and one `hollow_add_plugin()` call. The framework supplies the rest: the formats, the editor window, parameter plumbing, state, GUI scaling and finding the skin on disk.
 
 ## 1. The product
 
@@ -48,7 +48,8 @@ In Hollow itself, add the product's folder to the top-level `CMakeLists.txt` and
 ```cmake
 hollow_add_plugin(my_synth
   NAME "My Synth"
-  SKIN "${CMAKE_CURRENT_SOURCE_DIR}/skin"
+  SKIN "${CMAKE_CURRENT_SOURCE_DIR}/skin"                    # read off disk at run time, not compiled in
+  FALLBACK_SKIN "${CMAKE_CURRENT_SOURCE_DIR}/fallback_skin"  # the few files that are, when none is found
   SOURCES plugin.cpp
   BUNDLE_ID com.example.my-synth       # must equal Info::id
   VERSION 1.0.0
@@ -70,6 +71,7 @@ if(APPLE)
 endif()
 add_subdirectory(external/hollow/framework hollow)
 hollow_add_plugin(my_synth NAME "My Synth" SKIN "${CMAKE_CURRENT_SOURCE_DIR}/skin"
+                  FALLBACK_SKIN "${CMAKE_CURRENT_SOURCE_DIR}/fallback_skin"
                   SOURCES src/plugin.cpp BUNDLE_ID com.example.my-synth)
 ```
 
@@ -77,7 +79,8 @@ Configure and build as in the README; the formats land in `build/<dir>/out/`. `-
 
 ## 4. The loop
 
-- `HOLLOW_SKIN_DIR=<skin folder>` makes any build read the skin from disk and reload it on save, so the editor and a running standalone or host work together.
+- `HOLLOW_SKIN_DIR=<skin folder>` is the first place the skin is looked for, and the only one watched: the editor re-stats it twice a second and reloads on save, so the skin editor and a running standalone or host work together. **F5** reloads it at any time. F5 is taken only in the standalone and in a plug-in whose skin folder is being edited this way; a shipped plug-in leaves the key to its host.
+- The skin is not compiled into the binaries. `loadSkin()` takes the first of `$HOLLOW_SKIN_DIR`, `skin/` beside the binary, the product's installed folder (`%ProgramW6432%\<NAME>\skin`, `/Library/Application Support/<NAME>/skin`, `$XDG_DATA_HOME/<NAME>/skin` then `/usr/share/<NAME>/skin`), and in a build without `HOLLOW_STAGE_SKIN` the source skin, so a local build runs with nothing set. When none has a skin, the embedded `FALLBACK_SKIN` opens a window naming all four. `-DHOLLOW_STAGE_SKIN=ON` copies the skin beside each format in `BIN`, which is how a release is packed; it is off by default because that is tens of megabytes per format on every build.
 - `HOLLOW_KEYLOG=<file>` appends what the keyboard path saw: the window's focus grab and what it took, every key message and whether the editor used it, and every key a host delivered through `Editor::key`. For working out where a host's keys go, which is otherwise guesswork on someone else's machine. Unset, it costs one pointer test and writes nothing.
 - `hollow-render <skin> <view> <out.png> [state file] [--scale s]` renders any view without a window, for checks and documentation; a saved state (`hollow-state 1`: params, text data, UI vars and pages) renders the view as that instance would show it, and `--scale` at one of the skin's scales.
 - A button with the action `{ "scale": "menu" }` offers the window's scales, and the choice is saved with the instance: the skin's `"scales"`, each a load of the skin at that size with its art from `scales/<scale>/` (FSVR's are 0.5x to 2x, rendered in Blender), else 1x to 4x pixel repeats of the 1x canvas.
