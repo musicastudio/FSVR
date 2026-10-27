@@ -773,6 +773,21 @@ int selftest(Synth& S) {
       ck("custom matrix: depths read back", S.read_param(0x60, 0, 0x40) == 99 && S.read_param(0x60, 2, 0x43) == 85 && S.read_param(0x60, 1, 0x42) == 80);
       S.all_off(); init_perf(S.perf); }
 
+    // Ours (#92): matrix depth and level edits reach a sounding note, from silence too. Custom mode, op 4 alone and
+    // at level 0 under a held note; raise its level, then give it op 1 as a modulator, each one a parameter change.
+    { init_perf(S.perf); Part& pt = S.perf.part[0]; Voice& V = pt.voice; pt.p[1] = 2; pt.p[4] = 0x10;
+      init_blank_voice(V.raw); V.raw[0x2C] = 0x7F; decode_voice(V);
+      S.all_off(); S.midi_in(0x90, 69, 100);
+      auto energy = [&]() { double e = 0; float l1, r1; for (int n = 0; n < 4800; n++) { S.render(&l1, &r1, 1); for (auto& c : S.ch) if (c.active && c.part == 0) e += c.last * c.last; } return e; };
+      auto edit = [&](int op, int al, int v) { uint8_t m[10] = {0xF0, 0x43, 0x10, 0x5E, 0x60, (uint8_t)op, (uint8_t)al, 0, (uint8_t)v, 0xF7}; apply_param_change_locked(S, m, 10); };
+      const double e0 = energy(); edit(3, 0x16, 99); const double e1 = energy();
+      edit(0, 0x16, 0); edit(0, 0x43, 99); energy(); double fop = 0; for (auto& c : S.ch) if (c.active && c.part == 0) fop = c.op[3].fop;
+      double re = 0, im = 0, all = 0; float l1, r1;
+      for (int n = 0; n < 4800; n++) { S.render(&l1, &r1, 1); for (auto& c : S.ch) if (c.active && c.part == 0) { const double x = c.last, ph = 2 * PI * fop * n / SR; re += x * cos(ph); im += x * sin(ph); all += x * x; } }
+      ck("custom matrix: a level edit sounds a held note from silence", e0 == 0 && e1 > 0);
+      ck("custom matrix: a depth edit modulates a held note", all > 0 && 2 * (re * re + im * im) / 4800 / all < 0.5);
+      S.all_off(); init_perf(S.perf); }
+
     // The formant window follows the operator's own pitch mod sense, not the channel word at pms 7
     { S.perf.part[0].p[1] = 2; S.perf.part[0].p[4] = 0x10; Voice& V = S.perf.part[0].voice;
       V.v[0].form = 7; V.v[0].fixed = 1; V.v[0].pms = 1; V.pmd = 99; V.lfo1delay = 0;
