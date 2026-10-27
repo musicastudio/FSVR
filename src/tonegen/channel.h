@@ -53,7 +53,11 @@ struct Chan {
     bool fseqOp[8] = {}, fseqUOp[8] = {};
     bool filtered = false;     // its note goes through its filter voice, flt channel n
     double phOff[8] = {};      // ours: each voiced operator's initial phase in turns, op byte 0x1C (refresh_regs)
+    double matG[8][8] = {}, mixG[8] = {};   // ours (#92): the custom matrix's gains [dst][src] and each operator's send to the mix (refresh_ctl)
 };
+
+// An operator that reaches the mix: the algorithm's carrier bit, or with the custom matrix any operator above level 0 (#92).
+bool is_carrier(const Voice& V, int o);
 
 // The per-operator frequency and level maths runs every tuning::CTL_DECIMATION samples rather than
 // every sample. Its inputs only move on the 192 Hz register tick and the voice parameters, and doing

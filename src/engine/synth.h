@@ -169,10 +169,10 @@ struct Synth {
     // ponytail: the loudest carrier EG against a fixed floor; the channel's output level if this misreads a patch.
     static constexpr double POLY_AUDIBLE_DB = -60;
     bool audible(const Chan& c) const {
-        const unsigned char* alg = FS1R_ALG[perf.part[c.part].voice.alg];
+        const Voice& V = perf.part[c.part].voice;
         for (int o = 0; o < 8; o++) {
             const OpState& s = c.op[o];
-            if ((alg[2 * o + 1] & 1) && s.eg.cur - s.attS > POLY_AUDIBLE_DB) return true;
+            if (is_carrier(V, o) && s.eg.cur - s.attS > POLY_AUDIBLE_DB) return true;
             if (s.ueg.cur - s.uatt > POLY_AUDIBLE_DB) return true;
         }
         return false;

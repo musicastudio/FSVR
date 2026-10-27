@@ -204,7 +204,9 @@ void Synth::setup_ops(Chan& C, const Part& pt, int vel) {
         // voiced level offset: velocity + level + key scaling (0.375 dB units)
         int ks;
         {
-            int base = LEVTAB[std::min(99, v.level)];
+            // Ours (#92): with the custom matrix the output level is only the send to the mix (refresh_ctl),
+            // so the operator runs as at level 99, keeping its key scaling and velocity.
+            int base = V.custom ? 0 : LEVTAB[std::min(99, v.level)];
             int dist = keygroup(n) - keygroup(v.bp + 21) + 1;
             int att;
             if (dist <= 0) { const unsigned char* t = (v.lc == 1 || v.lc == 2) ? KSEXP : KSLIN; int x = std::min(127, (t[std::min(39, -dist)] * eb86(v.ld)) >> 8); att = (v.lc == 2 || v.lc == 3) ? base - x : base + x; }

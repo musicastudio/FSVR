@@ -168,3 +168,22 @@ and there is nothing to hear in it.
 **The unit.** It plays the 90 preset Fseqs and the six its internal memory can hold, which arrive as bulk dumps; it cannot make one from a sound itself.
 
 **FSVR.** The Fseq page's Import Audio analyses a WAV, AIFF, MP3, Ogg Vorbis or MP4 file into an Fseq of your own, after fseq-flash's method, with the frame bytes on the engine's own scales. The result is an ordinary Fseq: it exports as a bulk dump the unit takes.
+
+## Custom algorithm: a full FM matrix (#92)
+
+**The unit.** The algorithm byte (voice common 0x2C) is 0 to 87, a row of the fixed connection table
+(`fs1r/algorithms.h`, EPROM 0x37C0DC), with one shared feedback path set by common 0x3D.
+
+**FSVR.** 0x2C = 0x7F selects a custom matrix instead; 0 to 87 play exactly as before. Operator bytes 0x40 to
+0x47 (`F0 43 1n 5E 6p mm 40+k vv F7`) are operator m's depth into operator k, so its row reads op1..op8 with its
+own feedback where k = m (op1: fb, op2..op8; op2: op1, fb, op3..op8). A depth into another operator is on the
+output level's curve (0 off, 99 a full-level modulator), so a stock algorithm converts by copying each
+modulator's level. Feedback is 0 off, else the feedback gain at fb = d / 12.5 (0.53 * 2^(d/12.5 - 7); 100 is the
+unit's 7). Operator level (0x16) is then only the operator's send to the mix, and any operator above 0 is
+a carrier; 0x3D does nothing. 0x48 to 0x4F are held for ring modulation and do nothing yet. An operator
+modulated by one at or after it in the order takes that operator's previous sample, as the unit's feedback bus does.
+
+The bytes sit past the unit's 62 per operator, so a voice bulk does not carry them, and a real FS1R ignores
+both their parameter changes and 0x2C = 0x7F's out-of-range value. The off path is the unit: all 256 native
+presets render bit-identically to main. The engine selftest pins that algorithm 2 rebuilt as a matrix plays
+the same channel word. Nothing here can be measured, since the unit has no such mode.

@@ -56,7 +56,7 @@ struct OpState {
     EG ueg; FreqEG ufeg; double nphase = 0; double lp[8] = {}; uint32_t rng = 0x12345678;
     double att = 0, attS = 0, fop = 0, fw = 0, wl7 = 1, uatt = 0, nf = 0, na = 1, na2 = 1, nscale = 0, nres = 0, uprev = 0; int bw = 0, ratio = 0;   // refresh_ctl
     double gain = 0, gto = 0, dg = 0, ugain = 0, ugto = 0, dug = 0;   // the Fast steps' gain ramps, voiced and unvoiced (render_chan)
-    double out = 0;                                                   // this sample's voiced output, for tools/wavetrace
+    double out = 0, out1 = 0;                                                   // this sample's voiced output, for tools/wavetrace
 };
 
 // A grain runs at the carrier frequency it was fired with. The chip resets the carrier phase at every

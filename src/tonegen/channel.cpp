@@ -1,15 +1,26 @@
 // tonegen/channel.cpp - a channel's control-rate refresh and its sample. INFERRED: the constants are in fs1r/cal.h.
 #include "tonegen/channel.h"
 #include "fs1r/algorithms.h"
+#include "fs1r/tables.h"
+
+bool is_carrier(const Voice& V, int o) { return V.custom ? V.v[o].level > 0 : FS1R_ALG[V.alg][2 * o + 1] & 1; }
 
 void refresh_ctl(Chan& C, const Voice& V, bool fs) {
     const unsigned char* alg = FS1R_ALG[V.alg];
     C.f0 = op_hz(op_increment(C.regPitch + 0x1243 + C.regPM));    // channel fundamental incl. LFO pitch mod (pms 7)
     C.fbGain = V.fb ? cal::FEEDBACK * pow(2.0, V.fb - 7) : 0.0;    // INFERRED feedback scale
+    // Ours (#92, docs/Differences.md): the custom matrix. A depth into another operator is on the output level's
+    // curve (0 off), so a stock algorithm converts by copying each modulator's level; the diagonal is the operator's
+    // own feedback, 0 off, else the feedback scale at fb = d / 12.5. Common feedback (0x3D) plays no part.
+    if (V.custom) for (int d = 0; d < 8; d++) {
+        auto lvl = [](int l) { return l ? db2lin(-LEVEL_DB * 2 * LEVTAB[std::min(99, l)]) : 0.0; };
+        C.mixG[d] = lvl(V.v[d].level);
+        for (int s = 0; s < 8; s++) { const int m = V.mat[d][s]; C.matG[d][s] = s != d ? lvl(m) : m ? cal::FEEDBACK * pow(2.0, m / 12.5 - 7) : 0.0; }
+    }
     for (int o = 0; o < 8; o++) {
         OpState& s = C.op[o]; const OpV& v = V.v[o]; const OpU& u = V.u[o];
         s.att = C.regLevel[o] * LEVEL_DB + am_att(C.regAM, v.ams);
-        if ((alg[2 * o + 1] & 1) || (V.corrEdit >> o & 1)) s.att += cal::CARRIER_DB * V.corr[o];   // carrier level correction (the 0x200 word), on a modulator after an edit
+        if (!V.custom && ((alg[2 * o + 1] & 1) || (V.corrEdit >> o & 1))) s.att += cal::CARRIER_DB * V.corr[o];   // carrier level correction (the 0x200 word), on a modulator after an edit
         // Ours, and bit-identical: an operator whose EG is over, with no grain in flight and no level
         // boost that could lift it back over the -100 dB gate before the next refresh, never reads its
         // frequency maths again. The carrier correction can reach -22.5 dB, hence the -20 dB bound on
@@ -131,6 +142,12 @@ double render_chan(Chan& C, const Voice& V, bool fseq, double gateDb, int ctlDec
         OpState& s = C.op[o]; const OpV& v = V.v[o];
         unsigned char t0 = alg[2 * o], t1 = alg[2 * o + 1]; int F = (t0 >> 3) & 7;
         double in = F == 3 ? C.fbBus * C.fbGain : F == 4 ? Cb : F == 5 ? H : F == 6 ? S : 0.0;
+        // Ours (#92): the custom matrix. An operator ahead of this one gives this sample's output, one behind it the
+        // last sample's, and its own feedback the mean of its last two as the feedback bus does.
+        if (V.custom) {
+            in = 0;
+            for (int k = 0; k < 8; k++) if (C.matG[o][k] != 0.0) in += C.matG[o][k] * (k == o ? (s.out + s.out1) * 0.5 : C.op[k].out);
+        }
         double y = 0, gain;
         // The level register glides rather than stepping, so a frame write reaches the output over
         // about a millisecond instead of cutting the waveform. A silenced operator still runs while a
@@ -162,9 +179,11 @@ double render_chan(Chan& C, const Voice& V, bool fseq, double gateDb, int ctlDec
         // before its add. INFERRED from the table, not measured: the bit is set wherever a second sum
         // starts and never over an add no operator has read yet, and so 65 and 80 fan out to every
         // reader as the Algorithm Sheet draws them (docs/ymp706_registers.md, the algorithm word).
-        s.out = y;
+        s.out1 = s.out; s.out = y;
+        if (V.custom) mix += y * C.mixG[o] * partV; else {
         Cb = y; if (t0 & 2) H = y; if (t1 & 2) S = 0; if (t1 & 4) S += y; if (t0 & 4) fbNew = y;
         if (t1 & 1) mix += y * partV;
+        }
         // unvoiced (noise formant) operator
         double ugain;
         if (!decim) { const double uegdb = s.ueg.tick(); ugain = uegdb - s.uatt > uGate ? db2lin_fast(uegdb - s.uatt) : 0.0; }
@@ -199,7 +218,7 @@ double render_chan(Chan& C, const Voice& V, bool fseq, double gateDb, int ctlDec
     // the engine awake (render.cpp). Only a level raised by a controller mid-release could bring one back.
     auto over = [&](const EG& e, double att, double gate) { return e.done() || (e.stage == 4 && !e.rising && e.cur - att <= gate); };
     bool carriersDone = true;
-    for (int o = 0; o < 8; o++) { const OpState& s = C.op[o]; if (((alg[2 * o + 1] & 1) && (!over(s.eg, s.attS, vGate) || s.g[0].on || s.g[1].on)) || !over(s.ueg, s.uatt, uGate)) { carriersDone = false; break; } }
+    for (int o = 0; o < 8; o++) { const OpState& s = C.op[o]; if ((is_carrier(V, o) && (!over(s.eg, s.attS, vGate) || s.g[0].on || s.g[1].on)) || !over(s.ueg, s.uatt, uGate)) { carriersDone = false; break; } }
     if (carriersDone && fabs(mix) < 1e-9 && C.damp == 0.0) { if (++C.quiet >= 64) C.silent = true; } else C.quiet = 0;
     // The channel accumulator saturates before the filter loop, which is where the capture puts it:
     // eight carriers stacked in one channel clip flat, while the filter's own output on ingain-12 rides

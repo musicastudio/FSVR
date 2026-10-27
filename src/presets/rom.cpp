@@ -161,6 +161,7 @@ bool write_param(Synth& S, int ah, int am, int al, int val) {
         S.voice_changed(ah - 0x40); return true;
     }
     if (ah >= 0x60 && ah <= 0x63 && am < 8 && al < 62) { Voice& V = S.perf.part[ah - 0x60].voice; const int edited = V.corrEdit; V.raw[112 + am * 62 + al] = v; decode_voice(V); V.corrEdit = edited; S.voice_changed(ah - 0x60); return true; }
+    if (ah >= 0x60 && ah <= 0x63 && am < 8 && al >= 0x40 && al < 0x50) { Voice& V = S.perf.part[ah - 0x60].voice; V.xop[am][al - 0x40] = v; const int edited = V.corrEdit; decode_voice(V); V.corrEdit = edited; S.voice_changed(ah - 0x60); return true; }   // ours, #92
     if (ah == 0x70 && am == 0 && al < 32) {                       // Fseq header
         uint8_t h[32] = {}; std::vector<uint8_t> cur; S.fseq_bytes(cur);
         if (cur.size() >= 32) memcpy(h, cur.data(), 32);

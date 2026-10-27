@@ -152,6 +152,7 @@ int Synth::read_param(int ah, int am, int al) const {
     if (ah >= 0x30 && ah <= 0x33 && am == 0 && al < 52) return perf.part[ah - 0x30].p[al];
     if (ah >= 0x40 && ah <= 0x43 && am == 0 && al < 112) return perf.part[ah - 0x40].voice.raw[al];
     if (ah >= 0x60 && ah <= 0x63 && am < 8 && al < 62) return perf.part[ah - 0x60].voice.raw[112 + am * 62 + al];
+    if (ah >= 0x60 && ah <= 0x63 && am < 8 && al >= 0x40 && al < 0x50) return perf.part[ah - 0x60].voice.xop[am][al - 0x40];
     return -1;
 }
 
