@@ -17,7 +17,7 @@ void decode_voice(Voice& V) {
     V.pegVel = b[0x27] & 7; V.pegRange = b[0x3B] & 3; V.pegTscale = b[0x3C] & 7;
     V.fseqV = (b[0x28] & 1) << 7 | (b[0x29] & 0x7F); V.fseqU = (b[0x2A] & 1) << 7 | (b[0x2B] & 0x7F);
     V.custom = b[0x2C] == 0x7F; V.alg = V.custom ? 0 : std::min<int>(b[0x2C], 87); for (int i = 0; i < 8; i++) V.corr[i] = b[0x2D + i] & 0xF; V.corrEdit = 0; V.fb = b[0x3D] & 7;
-    for (int o = 0; o < 8; o++) for (int s = 0; s < 8; s++) V.mat[o][s] = std::min<int>(V.xop[s][o], 100);
+    for (int o = 0; o < 8; o++) for (int s = 0; s < 8; s++) V.mat[o][s] = std::min<int>(V.xop[s][o], 99);
     for (int o = 0; o < 8; o++) {
         const uint8_t* p = b + 112 + o * 62; OpV& v = V.v[o];
         v.keysync = p[0] >> 6 & 1; v.transpose = (p[0] & 0x3F) - 24;

@@ -11,11 +11,11 @@ void refresh_ctl(Chan& C, const Voice& V, bool fs) {
     C.fbGain = V.fb ? cal::FEEDBACK * pow(2.0, V.fb - 7) : 0.0;    // INFERRED feedback scale
     // Ours (#92, docs/Differences.md): the custom matrix. A depth into another operator is on the output level's
     // curve (0 off), so a stock algorithm converts by copying each modulator's level; the diagonal is the operator's
-    // own feedback, 0 off, else the feedback scale at fb = d / 12.5. Common feedback (0x3D) plays no part.
+    // own feedback, 0 off, else the feedback scale at fb = 7d / 99 (99 is the unit's 7). Common feedback (0x3D) plays no part.
     if (V.custom) for (int d = 0; d < 8; d++) {
         auto lvl = [](int l) { return l ? db2lin(-LEVEL_DB * 2 * LEVTAB[std::min(99, l)]) : 0.0; };
         C.mixG[d] = lvl(V.v[d].level);
-        for (int s = 0; s < 8; s++) { const int m = V.mat[d][s]; C.matG[d][s] = s != d ? lvl(m) : m ? cal::FEEDBACK * pow(2.0, m / 12.5 - 7) : 0.0; }
+        for (int s = 0; s < 8; s++) { const int m = V.mat[d][s]; C.matG[d][s] = s != d ? lvl(m) : m ? cal::FEEDBACK * pow(2.0, m * 7.0 / 99 - 7) : 0.0; }
     }
     for (int o = 0; o < 8; o++) {
         OpState& s = C.op[o]; const OpV& v = V.v[o]; const OpU& u = V.u[o];

@@ -751,16 +751,16 @@ int selftest(Synth& S) {
       S.all_off(); init_perf(S.perf); }
 
     // Ours (#92): the custom matrix reproduces a stock algorithm. Algorithm 2 is 1 > 2 > 3 > 4 with feedback on 1;
-    // the same chain as matrix depths (each modulator's level moved into its send, feedback 6 as 75) must play the
+    // the same chain as matrix depths (each modulator's level moved into its send, feedback 7 as 99) must play the
     // same channel word, and a matrix that did nothing would leave operator 4 a plain sine.
     { auto run = [&](bool custom) {
           init_perf(S.perf); Part& pt = S.perf.part[0]; Voice& V = pt.voice; pt.p[1] = 2; pt.p[4] = 0x10;
           init_blank_voice(V.raw); uint8_t* op[8]; for (int o = 0; o < 8; o++) { op[o] = V.raw + 112 + o * 62; op[o][0] |= 0x40; }
           const int lvl[4] = {99, 80, 85, 99};   // operator 1 at 99: on the stock path its level scales its own feedback too
-          if (!custom) { V.raw[0x2C] = 1; V.raw[0x3D] = 6; for (int o = 0; o < 4; o++) op[o][22] = (uint8_t)lvl[o]; decode_voice(V); }
+          if (!custom) { V.raw[0x2C] = 1; V.raw[0x3D] = 7; for (int o = 0; o < 4; o++) op[o][22] = (uint8_t)lvl[o]; decode_voice(V); }
           else {
-              V.raw[0x2C] = 0x7F; V.raw[0x3D] = 7; op[3][22] = 99; decode_voice(V);
-              uint8_t m[10] = {0xF0, 0x43, 0x10, 0x5E, 0x60, 0, 0x40, 0, 75, 0xF7}; apply_param_change_locked(S, m, 10);   // op1 feedback
+              V.raw[0x2C] = 0x7F; V.raw[0x3D] = 3;   // 0x3D must not count op[3][22] = 99; decode_voice(V);
+              uint8_t m[10] = {0xF0, 0x43, 0x10, 0x5E, 0x60, 0, 0x40, 0, 99, 0xF7}; apply_param_change_locked(S, m, 10);   // op1 feedback
               for (int o = 0; o < 3; o++) { m[5] = (uint8_t)o; m[6] = (uint8_t)(0x41 + o); m[8] = (uint8_t)lvl[o]; apply_param_change_locked(S, m, 10); }
           }
           S.all_off(); S.midi_in(0x90, 69, 100);
@@ -770,7 +770,7 @@ int selftest(Synth& S) {
       std::vector<double> a = run(false), b = run(true); double e = 0, p = 0;
       for (size_t n = 0; n < a.size() && n < b.size(); n++) { e += (a[n] - b[n]) * (a[n] - b[n]); p += a[n] * a[n]; }
       ck("custom matrix: algorithm 2 as matrix depths plays algorithm 2", a.size() == 9600 && b.size() == 9600 && p > 0 && e < 1e-6 * p);
-      ck("custom matrix: depths read back", S.read_param(0x60, 0, 0x40) == 75 && S.read_param(0x60, 2, 0x43) == 85 && S.read_param(0x60, 1, 0x42) == 80);
+      ck("custom matrix: depths read back", S.read_param(0x60, 0, 0x40) == 99 && S.read_param(0x60, 2, 0x43) == 85 && S.read_param(0x60, 1, 0x42) == 80);
       S.all_off(); init_perf(S.perf); }
 
     // The formant window follows the operator's own pitch mod sense, not the channel word at pms 7

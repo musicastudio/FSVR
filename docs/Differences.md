@@ -178,9 +178,9 @@ and there is nothing to hear in it.
 0x47 (`F0 43 1n 5E 6p mm 40+k vv F7`) are operator m's depth into operator k, so its row reads op1..op8 with its
 own feedback where k = m (op1: fb, op2..op8; op2: op1, fb, op3..op8). A depth into another operator is on the
 output level's curve (0 off, 99 a full-level modulator), so a stock algorithm converts by copying each
-modulator's level. Feedback is 0 off, else the feedback gain at fb = d / 12.5 (0.53 * 2^(d/12.5 - 7); 100 is the
-unit's 7). Operator level (0x16) is then only the operator's send to the mix, and any operator above 0 is
-a carrier; 0x3D does nothing. 0x48 to 0x4F are held for ring modulation and do nothing yet. An operator
+modulator's level. Feedback is 0 off, else the feedback gain at fb = 7d / 99 (0.53 * 2^(7d/99 - 7); 99 is the unit's 7), the same
+0 to 99 as the level. Operator level (0x16) is then only the operator's send to the mix, and any operator above 0 is
+a carrier, which it can be while it also modulates others through its depths; 0x3D does nothing. 0x48 to 0x4F are held for ring modulation and do nothing yet. An operator
 modulated by one at or after it in the order takes that operator's previous sample, as the unit's feedback bus does.
 
 The bytes sit past the unit's 62 per operator, so a voice bulk does not carry them, and a real FS1R ignores
