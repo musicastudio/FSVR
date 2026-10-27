@@ -549,6 +549,36 @@ int main() {
           "the saved preset's row is not the lit one (row %g)", a.get("browse.perf"));
     sameAfterReload("a saved factory performance", edited, editedBytes);
 
+    // A custom algorithm voice (#92) saved into a user bank: part 1's voice bulk with 0x2C = 0x7F and its matrix bulk
+    // at 48 00 00 go in from the host, save, and load back with the matrix, the pair's sound and both bulks the same.
+    {
+        a.set("perf.bank", 0);
+        a.set("perf.program", 12);
+        CHECK(a.until([&] { return a.data("perf.name") == "Dirt Vocoder" && a.is("gui.edited", 0); }), "A013 did not load for the custom voice");
+        std::vector<uint8_t> voice, custom;
+        for (auto& b : engine()) if (b.first == 0x40) voice = b.second;
+        CHECK(voice.size() == 608, "no part 1 voice bulk");
+        voice.resize(608);
+        voice[0x2C] = 0x7F;
+        for (int o = 0; o < 8; ++o) voice[112 + 62 * o + 0x16] = o == 7 ? 99 : 0;   // op 8 alone reaches the mix
+        std::vector<uint8_t> mat(128, 0);
+        mat[0 * 16 + 0] = 60;      // op 1 feedback
+        mat[0 * 16 + 7] = 90;      // op 1 into op 8
+        addBulk(custom, 0x40, 0, voice);
+        const size_t first = custom.size();
+        addBulk(custom, 0x48, 0, mat);
+        a.proc->midi(0, custom.data(), (int)first);   // one sysex message an event, as a host delivers them
+        a.proc->midi(0, custom.data() + first, (int)(custom.size() - first));
+        a.run(8);
+        const auto bytes = engine();
+        bool hasMatrix = false;
+        for (auto& b : bytes) if (b.first == 0x48) hasMatrix = b.second == mat;
+        CHECK(hasMatrix, "the engine's state did not carry part 1's matrix bulk");
+        const double loud = sound();
+        saveAs(rowOf(a, "save.bank.list", "Saved"), "Custom Alg");
+        sameAfterReload("a custom algorithm voice", loud, bytes);
+    }
+
     // A bank shaped like a whole unit's dump: a performance at 11 00 05 whose parts play the bank's own
     // internal voices (Int, 51 00 nn), loaded, edited and saved back over itself.
     {

@@ -254,6 +254,7 @@ struct Synth {
     // ---------------------------------------------------------------- sysex out (dump and parameter replies)
     void push_sysex(std::vector<uint8_t>& m) { if ((int)outQ.size() < tuning::MIDI_OUT_QUEUE) outQ.push_back(m); }
     void push_bulk(int ah, int am, int al, const uint8_t* d, int n);
+    void push_matrix(int part);
     void push_param(int ah, int am, int al, int val);
     int read_param(int ah, int am, int al) const;
     void current_perf_bytes(uint8_t* out) const;

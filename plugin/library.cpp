@@ -119,6 +119,12 @@ Bank parseSyx(const std::vector<uint8_t>& b, const std::string& name) {
                 bank.voices.push_back(it);
                 if (ah <= 0x43 && open >= 0) bank.perfs[(size_t)open].partVoice[ah - 0x40] = (int)bank.voices.size() - 1;
                 else open = -1;
+            } else if (ah >= 0x48 && ah <= 0x4B && dl >= 128 && !bank.voices.empty() && bank.voices.back().address
+                       && bank.voices.back().at + bank.voices.back().len == at) {
+                // Ours (#92): a custom voice's matrix bulk belongs to the voice right before it, and moves with it.
+                Item& v = bank.voices.back();
+                v.syx.insert(v.syx.end(), msg.begin(), msg.end());
+                v.len += len;
             } else if ((ah == 0x60 || ah == 0x61 || ah == 0x70) && dl >= 32) {
                 it.name = text(d, 8);
                 const int total = 128 * ((d[0x1B] & 3) + 1), end = d[0x1E] << 7 | d[0x1F];
@@ -153,13 +159,18 @@ Bank parseSyx(const std::vector<uint8_t>& b, const std::string& name) {
 
 int nameLength(const Item& it) { return it.address >= 0x60 ? 8 : it.address >= 0x40 || !it.address ? 10 : 12; }
 
-// The checksum of the last message in syx: a native bulk's over its byte count, address and data, a DX
-// VCED's over its 155 data bytes.
+// The checksum of the message the name and category live in: a native bulk's, the first (a custom voice's
+// matrix bulk follows it), over its byte count, address and data; a DX VCED's, the last, over its 155 data bytes.
 static void resum(std::vector<uint8_t>& syx) {
     size_t f = syx.size();
     while (f > 0 && syx[f - 1] != 0xF0) --f;   // just past the last F0: a DX voice's VCED follows its ACED
+    if (syx.size() > 3 && syx[3] == 0x5E) f = 1;
     if (f == 0 || syx.size() < f + 5) return;
-    const size_t start = f - 1 + (syx[f + 2] == 0x5E ? 4 : 6), cs = syx.size() - 2;
+    size_t cs = f;
+    while (cs < syx.size() && syx[cs] != 0xF7) ++cs;
+    if (cs >= syx.size()) return;
+    --cs;
+    const size_t start = f - 1 + (syx[f + 2] == 0x5E ? 4 : 6);
     int sum = 0;
     for (size_t i = start; i < cs; ++i) sum += syx[i];
     syx[cs] = (uint8_t)(-sum & 0x7F);

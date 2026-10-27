@@ -24,7 +24,7 @@ struct Voice {
     // depth into operator o, op byte 0x40 + source (the source's own row is its feedback); ring 0x48-0x4F reserved.
     // mat[dst][src] is the depth from operator src into operator dst, op byte 0x40 + dst of operator src: the
     // diagonal is the operator's own feedback. xop holds op bytes 0x40-0x4F, 0x48-0x4F reserved for ring mod.
-    // ponytail: xop lives outside raw[608], so a voice bulk neither carries nor clears it; a matrix bulk when the editor needs one.
+    // xop lives outside raw[608]: it travels as its own bulk, 48+p 00 00, after a custom voice's (presets/rom.cpp).
     bool custom; uint8_t mat[8][8], xop[8][16] = {};
     // Operators whose correction came in as a parameter change since the last voice load or algorithm change:
     // FUN_00032624 writes the nibble without the carrier test FUN_0003251C applies, so a modulator plays it too.

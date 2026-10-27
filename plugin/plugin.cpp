@@ -1054,8 +1054,15 @@ private:
     // ---- loading -----------------------------------------------------------------------------------
 
     void loadVoiceItem(const Item& it, int p) {
-        const std::vector<uint8_t> m = it.address ? readdress(it.syx, 0x40 + p, 0, 0) : it.syx;   // a DX voice takes the part it is given
+        if (!it.address) { dev.loadSyx(it.syx.data(), it.syx.size(), 0, p); return; }   // a DX voice takes the part it is given
+        // A custom voice's matrix bulk follows its voice (#92): each message goes to part p's own address.
+        const size_t v = it.syx.size() > 9 ? 11 + (size_t)(it.syx[4] << 7 | it.syx[5]) : it.syx.size();
+        const std::vector<uint8_t> m = readdress(std::vector<uint8_t>(it.syx.begin(), it.syx.begin() + (long)std::min(v, it.syx.size())), 0x40 + p, 0, 0);
         dev.loadSyx(m.data(), m.size(), 0, p);
+        if (v + 11 < it.syx.size()) {
+            const std::vector<uint8_t> x = readdress(std::vector<uint8_t>(it.syx.begin() + (long)v, it.syx.end()), 0x48 + p, 0, 0);
+            dev.loadSyx(x.data(), x.size(), 0, p);
+        }
     }
 
     void loadFactoryPerf(int index) {

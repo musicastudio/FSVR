@@ -14,6 +14,7 @@ void rom_voice(const Rom& R, int idx, Voice& V) {
     idx = clampi(idx, 0, 1407);
     if (idx < 256) memcpy(V.raw, R.d.data() + 0x5C280 + (size_t)idx * 608, 608);
     else convert_dx7(R.d.data() + 0x30000 + (size_t)(idx - 256) * 155, V.raw);   // 155-byte VCED, name last, as tools/extract_presets.py reads it
+    memset(V.xop, 0, sizeof V.xop);   // ours (#92): no ROM voice has a custom matrix
     decode_voice(V);
 }
 
@@ -85,7 +86,16 @@ bool load_sysex(Synth& S, const Rom* R, const uint8_t* d, size_t len, int pick, 
             if (bc == 608 && ((ah >= 0x40 && ah <= 0x43) || ah == 0x51)) {
                 if (found++ != pick) continue;
                 int pi = ah <= 0x43 ? ah - 0x40 : part;
-                memcpy(S.perf.part[pi].voice.raw, p, 608); decode_voice(S.perf.part[pi].voice); return true;
+                Voice& V = S.perf.part[pi].voice; memcpy(V.raw, p, 608);
+                // Ours (#92): a stock voice clears the custom matrix. A custom one keeps it, so the matrix bulk that
+                // follows a custom voice can land either side of it and a re-sent voice does not lose its matrix.
+                if (V.raw[0x2C] != 0x7F) memset(V.xop, 0, sizeof V.xop);
+                decode_voice(V); return true;
+            }
+            // Ours (#92): a part's custom matrix bulk, 48+p 00 00, op1..op8 bytes 0x40-0x4F (docs/Differences.md).
+            if (bc == 128 && ah >= 0x48 && ah <= 0x4B) {
+                Voice& V = S.perf.part[ah - 0x48].voice; const int edited = V.corrEdit;
+                memcpy(V.xop, p, 128); decode_voice(V); V.corrEdit = edited; S.voice_changed(ah - 0x48); return true;
             }
             if (bc == 400 && (ah == 0x10 || ah == 0x11)) {
                 if (found++ != pick) continue;
@@ -108,7 +118,7 @@ bool load_sysex(Synth& S, const Rom* R, const uint8_t* d, size_t len, int pick, 
         } else if (d[i + 3] == 0x00 && d[i + 4] == 0x01 && d[i + 5] == 0x1B) {
             if (i + 6 + 155 + 2 > len) break;
             if (found++ != pick) continue;
-            convert_dx7(d + i + 6, S.perf.part[part].voice.raw); decode_voice(S.perf.part[part].voice); return true;
+            convert_dx7(d + i + 6, S.perf.part[part].voice.raw); memset(S.perf.part[part].voice.xop, 0, sizeof S.perf.part[part].voice.xop); decode_voice(S.perf.part[part].voice); return true;
         }
     }
     return false;

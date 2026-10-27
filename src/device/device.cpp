@@ -126,7 +126,7 @@ void Device::getState(std::vector<uint8_t>& sysex) const {
     S.push_bulk(0x00, 0, 0, S.sys, 76);
     uint8_t perfBytes[400]; S.current_perf_bytes(perfBytes);
     S.push_bulk(0x10, 0, 0, perfBytes, 400);
-    for (int i = 0; i < 4; i++) S.push_bulk(0x40 + i, 0, 0, S.perf.part[i].voice.raw, 608);
+    for (int i = 0; i < 4; i++) { S.push_bulk(0x40 + i, 0, 0, S.perf.part[i].voice.raw, 608); S.push_matrix(i); }
     if (S.fseq.valid) { std::vector<uint8_t> f; S.fseq_bytes(f); S.push_bulk(0x60, 0, 0, f.data(), (int)f.size()); }   // the current Fseq, Data List 3.2.1
     sysex.clear();
     for (auto& m : S.outQ) sysex.insert(sysex.end(), m.begin(), m.end());

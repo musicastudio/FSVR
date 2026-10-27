@@ -183,7 +183,11 @@ modulator's level. Feedback is 0 off, else the feedback gain at fb = 7d / 99 (0.
 a carrier, which it can be while it also modulates others through its depths; 0x3D does nothing. 0x48 to 0x4F are held for ring modulation and do nothing yet. An operator
 modulated by one at or after it in the order takes that operator's previous sample, as the unit's feedback bus does.
 
-The bytes sit past the unit's 62 per operator, so a voice bulk does not carry them, and a real FS1R ignores
-both their parameter changes and 0x2C = 0x7F's out-of-range value. The off path is the unit: all 256 native
+The bytes sit past the unit's 62 per operator, so the 608-byte voice bulk does not carry them. A custom voice is
+saved as two bulks: its voice bulk, then a matrix bulk at `48+p 00 00` (part p, 128 bytes: op1's 0x40-0x4F, then
+op2's, to op8's), which a dump request for the voice, `Device::getState` (sessions, Export SysEx, Save to Bank)
+and the library all carry with it. Either order loads. A stock voice dumps the unit's one bulk, and loading one
+clears the matrix. A real FS1R ignores the matrix bulk's unknown address, the parameter changes and 0x2C = 0x7F's
+out-of-range value; what the unit plays for that algorithm byte has not been tried. The off path is the unit: all 256 native
 presets render bit-identically to main. The engine selftest pins that algorithm 2 rebuilt as a matrix plays
 the same channel word. Nothing here can be measured, since the unit has no such mode.

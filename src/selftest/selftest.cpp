@@ -788,6 +788,27 @@ int selftest(Synth& S) {
       ck("custom matrix: a depth edit modulates a held note", all > 0 && 2 * (re * re + im * im) / 4800 / all < 0.5);
       S.all_off(); init_perf(S.perf); }
 
+    // Ours (#92): a custom voice saves. Its dump is the voice bulk and then its matrix bulk (48+p), the pair loads back
+    // the matrix whichever comes first, and a stock voice's dump is the unit's one bulk and its load clears the matrix.
+    { init_perf(S.perf); Voice& V = S.perf.part[1].voice; init_blank_voice(V.raw); V.raw[0x2C] = 0x7F;
+      for (int o = 0; o < 8; o++) for (int k = 0; k < 16; k++) V.xop[o][k] = (uint8_t)((o * 16 + k) % 100);
+      decode_voice(V); uint8_t want[8][16]; memcpy(want, V.xop, sizeof want);
+      uint8_t rq[8] = {0xF0, 0x43, 0x20, 0x5E, 0x41, 0, 0, 0xF7};
+      S.outQ.clear(); apply_param_change_locked(S, rq, 8); std::vector<std::vector<uint8_t>> d = S.outQ;
+      ck("custom voice dumps its matrix after it", d.size() == 2 && d[1][6] == 0x49 && (d[1][4] << 7 | d[1][5]) == 128);
+      bool ok = d.size() == 2;
+      for (int order = 0; ok && order < 2; order++) {
+          memset(V.xop, 0, sizeof V.xop); init_blank_voice(V.raw); decode_voice(V);
+          for (int k = 0; k < 2; k++) { const auto& m = d[order ? 1 - k : k]; load_sysex(S, nullptr, m.data(), m.size(), 0, 0); }
+          ok = V.custom && memcmp(V.xop, want, sizeof want) == 0 && V.mat[1][0] == want[0][1];
+      }
+      ck("custom voice and matrix load back, in either order", ok);
+      init_blank_voice(V.raw); decode_voice(V); S.outQ.clear(); apply_param_change_locked(S, rq, 8);
+      ck("a stock voice dumps one bulk", S.outQ.size() == 1);
+      const auto stock = S.outQ[0]; memcpy(V.xop, want, sizeof want); load_sysex(S, nullptr, stock.data(), stock.size(), 0, 0);
+      ck("a stock voice load clears the matrix", V.xop[0][1] == 0 && V.xop[7][15] == 0);
+      S.outQ.clear(); init_perf(S.perf); }
+
     // The formant window follows the operator's own pitch mod sense, not the channel word at pms 7
     { S.perf.part[0].p[1] = 2; S.perf.part[0].p[4] = 0x10; Voice& V = S.perf.part[0].voice;
       V.v[0].form = 7; V.v[0].fixed = 1; V.v[0].pms = 1; V.pmd = 99; V.lfo1delay = 0;

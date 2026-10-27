@@ -128,6 +128,9 @@ void Synth::data_entry(int p, int v) {
     }
 }
 
+// Ours (#92): a custom voice's matrix follows its voice bulk, 48+p 00 00. A stock voice sends none, so its dump is the unit's.
+void Synth::push_matrix(int part) { const Voice& V = perf.part[part].voice; if (V.custom) push_bulk(0x48 + part, 0, 0, &V.xop[0][0], 128); }
+
 void Synth::push_bulk(int ah, int am, int al, const uint8_t* d, int n) {
     std::vector<uint8_t> m{0xF0, 0x43, (uint8_t)(devNumber() & 0x0F), 0x5E,
                            (uint8_t)(n >> 7 & 0x7F), (uint8_t)(n & 0x7F),
@@ -164,7 +167,8 @@ void Synth::current_perf_bytes(uint8_t* out) const {
 void Synth::dump_request(int ah, int am, int al) {
     if (ah == 0x00) { push_bulk(0x00, 0, 0, sys, 76); return; }
     if (ah == 0x10 || ah == 0x11) { uint8_t d[400]; current_perf_bytes(d); push_bulk(ah, am, al, d, 400); return; }
-    if (ah >= 0x40 && ah <= 0x43) { push_bulk(ah, 0, 0, perf.part[ah - 0x40].voice.raw, 608); return; }
+    if (ah >= 0x40 && ah <= 0x43) { push_bulk(ah, 0, 0, perf.part[ah - 0x40].voice.raw, 608); push_matrix(ah - 0x40); return; }
+    if (ah >= 0x48 && ah <= 0x4B) { push_bulk(ah, 0, 0, &perf.part[ah - 0x48].voice.xop[0][0], 128); return; }   // ours (#92)
     if (ah == 0x51) { push_bulk(0x51, am, al, perf.part[0].voice.raw, 608); return; }
     if ((ah & 0xF0) == 0x60 && (ah & 0x0F) <= 1 && fseq.valid) {   // 6b 00 nn, b = bank
         std::vector<uint8_t> d; fseq_bytes(d);
