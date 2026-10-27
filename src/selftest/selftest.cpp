@@ -759,7 +759,7 @@ int selftest(Synth& S) {
           const int lvl[4] = {99, 80, 85, 99};   // operator 1 at 99: on the stock path its level scales its own feedback too
           if (!custom) { V.raw[0x2C] = 1; V.raw[0x3D] = 7; for (int o = 0; o < 4; o++) op[o][22] = (uint8_t)lvl[o]; decode_voice(V); }
           else {
-              V.raw[0x2C] = 0x7F; V.raw[0x3D] = 3;   // 0x3D must not count op[3][22] = 99; decode_voice(V);
+              V.raw[0x2C] = 0x7F; V.raw[0x3D] = 3; op[3][22] = 99; decode_voice(V);   // 0x3D must not count
               uint8_t m[10] = {0xF0, 0x43, 0x10, 0x5E, 0x60, 0, 0x40, 0, 99, 0xF7}; apply_param_change_locked(S, m, 10);   // op1 feedback
               for (int o = 0; o < 3; o++) { m[5] = (uint8_t)o; m[6] = (uint8_t)(0x41 + o); m[8] = (uint8_t)lvl[o]; apply_param_change_locked(S, m, 10); }
           }
