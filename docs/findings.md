@@ -8,6 +8,22 @@ Entries that have a dedicated working document (`aeg.md`, `skirt.md`, `noise.md`
 
 ---
 
+## 2026-10-28, the 12 kHz notch was the dry pair leaving the DACs two samples apart (FSVR#97)
+
+gentleclockdivider reported a deep notch at about 12 kHz on a feedback sine and on unvoiced noise that his other FM synths (Swayed, OPs-7) do not have, and EvilDragon checked that his FS1R does not have it either. The notch is in the reporter's `gap.wav` (-39 dB at 12 kHz in L+R, flat in L and in R alone), and FSVR renders it at the same depth on a single sine operator with feedback 7 and on one unvoiced operator.
+
+**It is a comb, not a filter.** Each channel is flat; the notch appears only in a mono sum (the analyser in the screenshots sums the pair). The engine's left output was the right output delayed by two samples, and L + R with a two-sample delay cancels at 48000 / 4 = 12 kHz. It needs a signal that is the same on both sides and has energy up there, which is why a bright sound shows it and a pure low tone does not.
+
+**The unit's pair is one sample apart, left late.** GCC-PHAT over 3 kHz and up, 4096-sample windows, on every one of the 40 hardware takes in `captures/hardware/`: every take reads a lag of 1, which in a mono sum notches at 24 kHz, at Nyquist, where nothing is heard. FSVR on main reads 2 on every render of the same files. It is also what VOP3.unlock measured on the chip itself (`docs/vop3_isa.md`, session 28: "R leaves the chip in the pass the input changes, L one pass later").
+
+**Why it was two.** The bus words land partway through the chip's pass, between steps 0x108 and 0x110 (VOP3.unlock `docs/vop3_isa.md`, sessions 24-27: r0e tapped at 0x010 and at 0x110+ differs by one sample). `Effects::run` wrote all of them before the base program ran, so the base program (0x000-0x0e7), which reads the right bus, saw this sample's words where the chip sees the last sample's, while the left bus, which goes through the reverb delay window at 0x110+, was already correct. Right came out a sample early. Now base and aux run on the words already there and the windows from 0x110 on read the new ones: an impulse on the dry bus leaves R at pass 3 and L at pass 4.
+
+**What moved.** The mono-sum notch on the hardware set's own files, main then fixed, against the unit: `13_unvoiced3` -32.0 / 0.0 against 0.0 dB, `05_unvoiced_1` -32.6 / 0.0 against 0.1, `19_drums` -34.6 / -0.3 against 0.5. `tools/bench_captures.py` before and after: every file within 0.05 dB but `09_effects_1` envelope 4.52 -> 4.64, `09_effects_3` envelope 8.13 -> 7.91, `12_fseqlevel` level 2.07 -> 2.17 and `08_panlevel_1` shape 1.53 -> 1.57. The effect takes now read lag 1 like the unit's, where main read 2. `dsp_check`'s effects hash moved (`0x916322d1492c9fce`) and `regress.py`'s reference was regenerated: its `stereo` metric is the rms of L - R, which a two-sample skew inflates on any bright signal, so it falls on most cases (Init 0.0112 to 0.00585); four cases' centroids rise by 2 to 5 % (`perf-spacypad`, `perf-towarp`, `perf-manhattan`, `ctrl-freqbias`), the comb no longer taking out their top octave in the metric's mono sum, and peak and rms move by under 1.2 %. The selftest pins the one-sample lag and fails on main.
+
+Reported by gentleclockdivider, confirmed on hardware by EvilDragon.
+
+---
+
 ## 2026-10-26, the open items before v0.8.4, measured: OP Att on a modulator, free-running phase, formant grains, the frequency and pitch EGs, the filter loss
 
 jameshansen asked for every take v0.8.4's notes would otherwise list as unmeasured. Twenty-five plain-MIDI takes on rgwan's unit, all from one self-playing file per take (`tools/make_capture_open.py --takeN`, FS1R.unlock `captures/2026-10-26-open`), each read the same way off the unit's S/PDIF tap and off `render_capture`'s render of the same file. Seven engine changes came out of them. One earlier finding is overturned (`FLT_LOSS`).

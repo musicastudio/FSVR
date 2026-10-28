@@ -1179,6 +1179,14 @@ int selftest(Synth& S) {
         drive(*e, 0, sine, l, r);
         double in = 0, out = 0; for (size_t i = n / 2; i < n; i++) { in += sine[i] * sine[i]; out += l[i] * l[i]; }
         ck("effect chip: the dry path at volume 127 is OUT_GAIN to 0.05 dB", fabs(10 * log10(out / in) - 20 * log10(cal::OUT_GAIN)) < 0.05); }
+      // 1b. the dry pair leaves the DACs one sample apart, left late, as on every hardware take (FSVR#97). An
+      // impulse on both halves of the dry bus: the sample each side first moves on.
+      { auto e = fresh({});
+        std::vector<double> x(16, 0.0); x[0] = 0.1;
+        drive(*e, 0, x, l, r);
+        int il = -1, ir = -1;
+        for (int i = 15; i >= 0; i--) { if (fabs(l[i]) > 1e-3) il = i; if (fabs(r[i]) > 1e-3) ir = i; }
+        ck("effect chip: the dry left leaves one sample after the right, not two (FSVR#97)", ir >= 0 && il == ir + 1); }
       // 2. Hall 1 on the reverb send rings on after a burst; with the reverb off nothing comes back from that bus
       double hallTail;
       { auto h = fresh({{169, 64}, {170, 100}}), o = fresh({});   // reverb pan centre, return 100

@@ -2,10 +2,11 @@
 // kill and a retake; every effect type of each block with every parameter randomised halfway. The hashes were what
 // the firmware's own DSP programs computed on the chip interpreter for the same drive, bit for bit, before those
 // programs moved to the VOP3 project. The filter's moved once since, when the sine LFO and the EG's k were rounded
-// through float, which makes them the C library's no longer. The effects' moved twice, when a window stopped
+// through float, which makes them the C library's no longer. The effects' moved three times, when a window stopped
 // inheriting the last program's state and when its delay block was then taken from the ring pointer rather than
 // from word 0: this drive walks all 87 types in a row, so every one of those type changes is in the hash
-// (docs/Differences.md, "A performance change starts the effect section over"). Both hashes are the
+// (docs/Differences.md, "A performance change starts the effect section over"); and when the base program
+// began reading the previous sample's bus words, as the chip's land mid-pass (FSVR#97). Both hashes are the
 // same on Linux, macOS and Windows, 64- and 32-bit: a change here is a change in sound.
 #include <cstdio>
 #include <cstring>
@@ -60,7 +61,7 @@ int main() {
         double lr[2]; e->run(bus, lr[0], lr[1]); eat(lr, sizeof lr);
       } } }
   const uint64_t effects = h;
-  const bool ok = filter == 0x5bbe9c1beb596632ull && effects == 0xc382b50e6a7adbc9ull;
+  const bool ok = filter == 0x5bbe9c1beb596632ull && effects == 0x916322d1492c9fceull;
   std::printf("filter %016llx, effects %016llx: %s\n", (unsigned long long)filter, (unsigned long long)effects, ok ? "ok" : "CHANGED");
   return ok ? 0 : 1;
 }
