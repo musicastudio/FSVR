@@ -161,16 +161,25 @@ void Effects::control(int dest, int offset) {
 
 // One sample. Serial channels k and k + 4 are the two halves of a frame and the left DAC plays channel 0, so a
 // bus's left goes to channel k + 4.
+//
+// The bus words land partway through the chip's pass, between steps 0x108 and 0x110 (VOP3.unlock
+// docs/vop3_isa.md, sessions 24-27: r0e tapped at 0x010 and at 0x110+ differs by one sample). So the base
+// program (0x000-0x0e7) and aux (0x0e8-0x10f) read the previous sample's words and the windows from 0x110 on
+// read this sample's. Writing them all before the base program put the right bus, which the base program
+// reads, one sample early against the left, which goes through the reverb delay window: the dry pair left
+// the DACs two samples apart. The unit's are one apart, left late, on every one of the 40 hardware takes, so
+// a mono sum notched at 12 kHz instead of at 24 kHz (FSVR#97).
 void Effects::run(const double bus[8], double& l, double& r) {
     effects::State& s = state;
+    mod.step();
+    std::copy(mod.egOut, mod.egOut + 16, s.in[3]);
+    std::copy(mod.lfoOut, mod.lfoOut + 16, s.lfo);
+    for (int i = 0; i < 2; i++) if (stage[i]) stage[i](s);   // base and aux, on the words already there
     for (int b = 0; b < 4; b++) {
         s.in[0][2 * (4 + b)] = s.in[0][2 * (4 + b) + 1] = bus[2 * b] * BUS;
         s.in[0][2 * b] = s.in[0][2 * b + 1] = bus[2 * b + 1] * BUS;
     }
-    mod.step();
-    std::copy(mod.egOut, mod.egOut + 16, s.in[3]);
-    std::copy(mod.lfoOut, mod.lfoOut + 16, s.lfo);
-    for (effects::Program p : stage) if (p) p(s);
+    for (int i = 2; i < 5; i++) if (stage[i]) stage[i](s);
     s.ptr = (s.ptr - 1) & (effects::State::RAM_WORDS - 1);
     // The chip's words are fixed point and these are doubles, so a filter or a reverb that has decayed to nothing
     // on the unit is a residue here, 1e-10 after a note, which the DAC's floor turned into -1 step for good. On the
