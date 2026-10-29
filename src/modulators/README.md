@@ -4,7 +4,7 @@ Sixteen EG generators and sixteen LFOs, as the filter and effect hosts' register
 
 | File | What |
 |---|---|
-| `modulators.h` | `Modulators`: `write` (a host register write), `step` (one sample), `egOut`/`lfoOut` read by the filters and effects |
+| `modulators.h` | `Modulators`: `write` (a host register write), `step` (one sample), `egOut`/`lfoOut` read by the filters and effects; `flat`, ours, says whether a step would change no EG, for a filter bank at rest |
 | `modulators.cpp` | the EG and LFO stepping, the LFO wave shapes and ranges |
 
 ## Rules

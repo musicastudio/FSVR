@@ -33,7 +33,16 @@
 #include "filters/filter.h"
 
 struct Synth {
-    Perf perf; Chan ch[NCHAN]; uint32_t clock = 0; double gain = 1.0;   // the analogue volume pot, after the tap
+    // Ours (docs/Differences.md, more than 32 voices): the engine holds MAX_CHAN channels and allocates nchan of
+    // them, the unit's NCHAN by default. Device::setPolyphony asks for poly and the next render latches it
+    // (filter_latch), which stops every note. Whatever walks the channels walks chans(), the nchan in use.
+    static constexpr int MAX_CHAN = 128;
+    static_assert(MAX_CHAN % FILTER_CHANNELS == 0 && Filter::VOICES >= MAX_CHAN, "a filter voice for every channel");
+    Perf perf; Chan ch[MAX_CHAN]; int poly = NCHAN, nchan = NCHAN;
+    template <class C> struct Span { C* b; C* e; C* begin() const { return b; } C* end() const { return e; } };
+    Span<Chan> chans() { return {ch, ch + nchan}; }
+    Span<const Chan> chans() const { return {ch, ch + nchan}; }
+    uint32_t clock = 0; double gain = 1.0;     // the analogue volume pot, after the tap
     long long now = 0;   // samples rendered: when a channel last ran (Chan::ran, note_on)
     // Ours: the random note phase, part pan 0 and the sample-and-hold LFO draw from this, not from rand(). rand() is
     // one generator shared by every instance in the process and a different sequence on each C library, so two
@@ -48,8 +57,8 @@ struct Synth {
     int nextChan[3] = {0, 0, FILTER_CHANNELS}, partChan[4] = {0, 0, 0, 0};
     Effects fx;
     // The voice filters. fltSw is the parts' filter switches as last latched, a bit a part.
-    // Ours (docs/Differences.md): filter32 gives channels 16 to 31 filter voices too, so a part with its
-    // filter on plays all 32 voices instead of the unit's 16. fltWide is it as last latched.
+    // Ours (docs/Differences.md): filter32 gives the channels past the sixteenth filter voices too, a bank per
+    // sixteen, so a part with its filter on plays every voice instead of the unit's 16. fltWide is it as last latched.
     Filter flt; int fltSw = 0; bool filter32 = true, fltWide = false;
     bool bend14 = true;                        // ours: keep the pitch bend LSB the unit drops (bend_word)
     // Ours (docs/Differences.md): the unit writes a new cutoff word straight into the filter's coefficient memory
@@ -59,7 +68,7 @@ struct Synth {
     static constexpr double CUTOFF_GLIDE_MS = 10.0;
     static inline const double CUTOFF_GLIDE_K = 1.0 - std::exp(-1.0 / (CUTOFF_GLIDE_MS * 0.001 * SR));
     int noteChn = 0;                           // the MIDI channel of the note on midi_in is handing note_on
-    int flt_banks() const { return fltSw ? (fltWide ? 2 : 1) : 0; }   // banks of sixteen filter voices in use
+    int flt_banks() const { return fltSw ? (fltWide ? nchan / FILTER_CHANNELS : 1) : 0; }   // banks of sixteen filter voices in use
     void filter_latch();                       // FUN_0002087e: a switch that changed stops every channel
     void filter_sync(int part);                // the part's voice, record and controllers, into the filter host
     // FUN_0002c36c: LFO1 into a slot's cutoff. The fade takes twice the controller's offset, destination 42.
@@ -86,12 +95,12 @@ struct Synth {
     // that alone.
     static const int SEG_MAX = 256;            // a segment is at most a tick's 249.6 samples
     bool serialOnly = false;
-    double chanOut[NCHAN][SEG_MAX];
+    double chanOut[MAX_CHAN][SEG_MAX];
     struct Sends { double dry[4], var[4], rev[4]; bool ins[4]; };   // the parts onto the buses, once a call
     fsvr::tonegen::Group group;                // the lane kernel's working set (render_segment)
     void render_serial(float* outL, float* outR, int frames, const Sends& s);
     void render_segment(float* outL, float* outR, int n, const Sends& s);
-    void mix_sample(float* outL, float* outR, int i, double v[NCHAN], double pl[4], double pr[4], bool any, const Sends& s);
+    void mix_sample(float* outL, float* outR, int i, double v[MAX_CHAN], double pl[4], double pr[4], bool any, const Sends& s);
     // Ours: the engine sleeps while nothing sounds (render.cpp). The output's last sample, and how long it has held.
     float lastL = 0, lastR = 0; int quiet = 0; bool asleep = false;
 
@@ -144,7 +153,7 @@ struct Synth {
     void note_on(int part, int note, int vel);
     // The Fseq retrigger test is the part's own held-note count, not the machine's: FUN_0001228c
     // increments DAT_010288dc[part] and calls the trigger only when that count reaches 1.
-    bool anyOther(const Chan& C) const { for (auto& x : ch) if (&x != &C && x.active && x.held && x.part == C.part) return true; return false; }
+    bool anyOther(const Chan& C) const { for (auto& x : chans()) if (&x != &C && x.active && x.held && x.part == C.part) return true; return false; }
     // The frame writer (FUN_000197b4) runs whenever the mode byte is 1 or 2 and the part matches; it is
     // not gated on the sequence still advancing, so a sequence that has played out holds its last frame
     // on the registers. The start delay is the one thing that does gate it: FUN_000125f8 clears the
@@ -173,7 +182,7 @@ struct Synth {
     void release(Chan& C);
     void silence_part(int part);                     // FUN_00010384(0) on one part
     void part_written(int part, int al, int was);    // the firmware's handler after a part byte is written
-    void set_sustain(int part, bool on) { Part& pt = perf.part[part]; pt.sustain = on; if (!on) for (auto& c : ch) if (c.active && c.part == part && c.sustained) { c.sustained = false; release(c); } }
+    void set_sustain(int part, bool on) { Part& pt = perf.part[part]; pt.sustain = on; if (!on) for (auto& c : chans()) if (c.active && c.part == part && c.sustained) { c.sustained = false; release(c); } }
     // What the allocator counts as taken: a key down, or one the sustain pedal holds. FUN_00011E40, the poly
     // note off, clears a channel's in-use word (0x010287DE) and its part (0x010289BC) the moment its key comes
     // up with no sustain, so a channel whose release is still sounding is free to the next note, which damps
@@ -194,14 +203,14 @@ struct Synth {
         }
         return false;
     }
-    int active_chans() const { int n = 0; for (auto& c : ch) n += c.active && (c.held || c.sustained || audible(c)); return n; }
+    int active_chans() const { int n = 0; for (auto& c : chans()) n += c.active && (c.held || c.sustained || audible(c)); return n; }
     void all_off() {
-        for (auto& c : ch) c.active = false;
+        for (auto& c : ch) c.active = false;   // every channel held, not just those in use: a polyphony change shrinks nchan next
         for (auto& p : perf.part) { p.nheld = 0; }
         fseqRun = false; fseqHeld = false;
         for (int n = 0; n < flt_banks() * FILTER_CHANNELS; n++) flt.host(n).kill(n & 15);   // FUN_00010384
     }
-    void all_release() { for (auto& c : ch) if (c.active && (c.held || c.sustained)) { c.held = c.sustained = false; release(c); } for (auto& p : perf.part) p.nheld = 0; }
+    void all_release() { for (auto& c : chans()) if (c.active && (c.held || c.sustained)) { c.held = c.sustained = false; release(c); } for (auto& p : perf.part) p.nheld = 0; }
 
     // ---------------------------------------------------------------- Fseq (FUN_0000fffa / FUN_0001a59e)
     // The loop points are the performance's own bytes and nothing else. FUN_0000fffa reads 0x1C-0x1F

@@ -253,7 +253,9 @@ inline vmi ige(vi a, vi b) { return {vcge_s32(a.v, b.v)}; }
 inline vmi ieq(vi a, vi b) { return {vceq_s32(a.v, b.v)}; }
 inline vmi ilt(vi a, vi b) { return {vclt_s32(a.v, b.v)}; }
 inline vi iselect(vmi m, vi a, vi b) { return {vbsl_s32(m.v, a.v, b.v)}; }
-inline vm widen(vmi m) { return {vmovl_u32(m.v)}; }   // a set lane is all ones, which widens to all ones
+// By sign: a set lane is -1 and widens to all ones. The unsigned widening put zeros in the high half, half a mask,
+// which a select then spliced into a double and movemask read as clear (the macOS leg's segments check).
+inline vm widen(vmi m) { return {vreinterpretq_u64_s64(vmovl_s32(vreinterpret_s32_u32(m.v)))}; }
 inline vmi narrow(vm m) { return {vmovn_u64(m.v)}; }
 inline vf gather_f(const float* t, vi i) { int32_t k[2]; istore(k, i); const float r[2] = {t[k[0]], t[k[1]]}; return {vld1_f32(r)}; }
 inline vf gather_f(const float* const* t, vi i) { int32_t k[2]; istore(k, i); const float r[2] = {t[0][k[0]], t[1][k[1]]}; return {vld1_f32(r)}; }

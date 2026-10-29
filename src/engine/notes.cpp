@@ -11,13 +11,14 @@ void Synth::init_system() {
 }
 
 // FUN_0002087e: the four filter switches are latched, and a change stops every channel. From then on the
-// parts with a filter play on the sixteen channels the filter chip is wired to.
+// parts with a filter play on the sixteen channels the filter chip is wired to. Ours: the wide filter and the
+// polyphony (docs/Differences.md) latch here too, so a change of either stops every note the same way.
 void Synth::filter_latch() {
     int sw = 0;
     for (int p = 0; p < 4; p++) sw |= (perf.part[p].p[7] & 1) << p;
-    if (sw == fltSw && filter32 == fltWide) return;
+    if (sw == fltSw && filter32 == fltWide && poly == nchan) return;
     all_off();
-    fltSw = sw; fltWide = filter32;
+    fltSw = sw; fltWide = filter32; nchan = poly;
     flt.reset();
     nextChan[0] = nextChan[1] = 0; nextChan[2] = FILTER_CHANNELS;
     for (int p = 0; p < 4; p++) partChan[p] = sw && !fltWide && !(sw >> p & 1) ? FILTER_CHANNELS : 0;
@@ -48,7 +49,7 @@ void Synth::note_on(int part, int note, int vel) {
         if (prio == 1) { target = -1; for (int i = 0; i < pt.nheld; i++) target = std::max(target, pt.held[i]); }
         else if (prio == 2) { target = 128; for (int i = 0; i < pt.nheld; i++) target = std::min(target, pt.held[i]); }
         else if (prio == 3) target = pt.held[0];
-        Chan* cur = nullptr; for (auto& c : ch) if (c.active && c.part == part && c.held) cur = &c;
+        Chan* cur = nullptr; for (auto& c : chans()) if (c.active && c.part == part && c.held) cur = &c;
         if (cur && pt.nheld > 1) {          // legato: retune the sounding channel (FUN_000119d0), no retrigger
             if (target != cur->note) retune(*cur, target);
             return;
@@ -71,8 +72,10 @@ void Synth::note_on(int part, int note, int vel) {
     // a filter (FUN_0000fa5c), 16 to 31 for one without (FUN_0000fcfa), each with a cursor of its own.
     // OPEN: the two halves' walks are taken to follow the whole walk's three rules; only that one was measured.
     // With fltWide (ours) every channel has a filter slot, so there are no halves: the whole walk, as with no filter.
+    // Ours too: the walk is over the nchan channels in use rather than the unit's 32 (docs/Differences.md), the
+    // halves being the chip's sixteen and the rest.
     const bool filtered = fltSw >> part & 1, split = fltSw && !fltWide;
-    const int first = split && !filtered ? FILTER_CHANNELS : 0, count = !split ? NCHAN : filtered ? FILTER_CHANNELS : NCHAN - FILTER_CHANNELS;
+    const int first = split && !filtered ? FILTER_CHANNELS : 0, count = !split ? nchan : filtered ? FILTER_CHANNELS : nchan - FILTER_CHANNELS;
     int& cursor = nextChan[!split ? 0 : filtered ? 1 : 2];
     auto at = [&](int from, int k) { return first + ((from - first + k) % count + count) % count; };
     Chan* c = nullptr;
@@ -88,8 +91,10 @@ void Synth::note_on(int part, int note, int vel) {
             int p = (part + k) & 3, others = 0, n = 0;
             if (split && (fltSw >> p & 1) != (int)filtered) continue;   // its notes are in the other half
             for (int q = 0; q < 4; q++) if (q != p) others += perf.part[q].p[0x00];
-            int res = clampi(perf.part[p].p[0x00], 0, std::max(0, NCHAN - others));
-            for (auto& x : ch) if (owned(x) && x.part == p) n++;
+            // Ours: past the unit's 32 a reserve is the part's share of those 32, scaled to the channels in use,
+            // so a performance's reserves mean the same at every polyphony (docs/Differences.md).
+            int res = clampi(perf.part[p].p[0x00], 0, std::max(0, NCHAN - others)) * nchan / NCHAN;
+            for (auto& x : chans()) if (owned(x) && x.part == p) n++;
             if (n > res && n - res > excess) { excess = n - res; best = p; }
         }
         int thr = note, fb = -1;
@@ -275,7 +280,7 @@ void Synth::note_off(int part, int note) {
     Part& pt = perf.part[part];
     if (pt.p[5] == 0) {                       // mono
         for (int i = 0; i < pt.nheld; i++) if (pt.held[i] == note) { memmove(pt.held + i, pt.held + i + 1, (pt.nheld - i - 1) * sizeof(int)); pt.nheld--; break; }
-        Chan* cur = nullptr; for (auto& c : ch) if (c.active && c.part == part && c.held) cur = &c;
+        Chan* cur = nullptr; for (auto& c : chans()) if (c.active && c.part == part && c.held) cur = &c;
         if (!cur) return;
         if (pt.nheld > 0) {                   // another key still down: go back to it (legato)
             int prio = pt.p[6] & 3, target = pt.held[pt.nheld - 1];
@@ -288,7 +293,7 @@ void Synth::note_off(int part, int note) {
         cur->held = false; if (pt.sustain && (pt.p[0x2D] & 1)) { cur->sustained = true; return; }
         release(*cur); return;
     }
-    for (auto& c : ch) if (c.active && c.part == part && c.note == note && c.held) {
+    for (auto& c : chans()) if (c.active && c.part == part && c.note == note && c.held) {
         c.held = false;
         if (pt.sustain && (pt.p[0x2D] & 1)) { c.sustained = true; continue; }
         release(c);
@@ -306,7 +311,7 @@ void Synth::release(Chan& C) {
 // FUN_00010384(0): every channel the part holds is freed and damped (FUN_00023000), its filter slot killed,
 // and the part's held keys forgotten, so no key up is owed to a part that may no longer hear it.
 void Synth::silence_part(int part) {
-    for (auto& C : ch) {
+    for (auto& C : chans()) {
         if (!owned(C) || C.part != part) continue;
         const int slot = int(&C - ch);
         if (C.filtered) flt.host(slot).kill(slot & 15);
@@ -462,7 +467,7 @@ void Synth::tick() {
     ctlSerial++;
     double dt = 1.0 / TICK_HZ;
     fseq_tick(dt);
-    for (int n = 0; n < NCHAN; n++) {
+    for (int n = 0; n < nchan; n++) {
         Chan& C = ch[n];
         if (!C.active) continue;
         const Part& pt = perf.part[C.part];

@@ -1,7 +1,7 @@
 {
  "size": [
   740,
-  196
+  268
  ],
  "widgets": [
   {
@@ -11,7 +11,7 @@
     0,
     20,
     740,
-    176
+    248
    ],
    "layer": 0,
    "fill": {
@@ -405,7 +405,7 @@
     "image": "buttons/toggle_row"
    },
    "text": {
-    "text": "32 Filtered Voices (two filter chips)",
+    "text": "Filter on Every Voice (a filter chip per sixteen)",
     "font": "caption_grey_12",
     "valign": "middle"
    },
@@ -421,7 +421,201 @@
     2
    ],
    "param": "opt.filter32",
-   "tip": "A part with its filter on plays all 32 voices; off, the unit's 16. A change stops every note"
+   "tip": "A part with its filter on plays every voice; off, the unit's 16. A change stops every note"
+  },
+  {
+   "type": "plate",
+   "name": "poly_label",
+   "rect": [
+    16,
+    209,
+    220,
+    18
+   ],
+   "fill": {
+    "image": "panels/label_plate"
+   },
+   "text": {
+    "text": "Polyphony",
+    "font": "caption_grey_12",
+    "align": "left"
+   },
+   "pad": [
+    8,
+    2,
+    2,
+    2
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "poly_unit",
+   "rect": [
+    246,
+    208,
+    80,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "text": "Unit",
+    "font": "caption_grey_12",
+    "align": "right",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "poly_track",
+   "rect": [
+    330,
+    207,
+    240,
+    20
+   ],
+   "fill": {
+    "image": "faders/track_h"
+   }
+  },
+  {
+   "type": "dial",
+   "name": "poly",
+   "rect": [
+    323,
+    196,
+    255,
+    42
+   ],
+   "image": "faders/pot_cap",
+   "slider": true,
+   "vertical": false,
+   "sensitivity": 1.5,
+   "fine": 0.2,
+   "wheel": 0.34,
+   "reset": "default",
+   "param": "opt.poly",
+   "tip": "Voices the allocator shares out: the unit's 32, or more. The parts' note reserves scale with it. A change stops every note"
+  },
+  {
+   "type": "plate",
+   "name": "poly_more",
+   "rect": [
+    578,
+    208,
+    80,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "text": "Voices",
+    "font": "caption_grey_12",
+    "align": "left",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "poly_0",
+   "rect": [
+    314,
+    238,
+    60,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "text": "32",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "poly_1",
+   "rect": [
+    385,
+    238,
+    60,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "text": "64",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "poly_2",
+   "rect": [
+    455,
+    238,
+    60,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "text": "96",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
+  },
+  {
+   "type": "plate",
+   "name": "poly_3",
+   "rect": [
+    526,
+    238,
+    60,
+    18
+   ],
+   "layer": 1,
+   "text": {
+    "text": "128",
+    "font": "caption_grey_12",
+    "align": "center",
+    "valign": "middle"
+   },
+   "pad": [
+    2,
+    0,
+    2,
+    0
+   ]
   }
  ]
 }

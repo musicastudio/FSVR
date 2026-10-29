@@ -47,6 +47,7 @@ int selftest(Synth& S) {
     ck("fastmath backend within its error budget of libm", fm::selfcheck() == 0);
     printf("  lane kernels: %s, %d a register\n", fsvr::kernels().name, fsvr::kernels().lanes);
     ck("the lane kernels' build keeps a multiply and an add apart", !fsvr::kernels().fma_contracted());
+    ck("the lane kernels' masks widen, narrow and select whole lanes, and a tie takes the second operand", fsvr::kernels().lanes_ok());
     // 1. a parameter change reaches the engine at every address class
     struct { int ah, am, al, v; const char* name; } pc[] = {
         {0x00, 0, 0x0E, 3, "system velocity curve"},
@@ -628,6 +629,78 @@ int selftest(Synth& S) {
           for (auto& c : E->ch) busy += c.active && c.filtered;
           if (wide) ck("engine: 32 filtered voices, the second sixteen on bank 1", busy == 32 && onChip1 == 16 && energy(l) > 0);
           else ck("engine: 16 filtered voices, the unit's", busy == 16 && onChip1 == 0);
+      }
+      // Ours (docs/Differences.md, more than 32 voices): a polyphony of 64 or 128 fills as the unit's 32 does, channels
+      // 1..n-1 then 0 with every one sounding; the next note steals what the unit's rule picks, channel 2 and the
+      // second note played; a change of polyphony stops every note and the next lands on channel 1 again.
+      auto sine = [](Synth& T) {
+          Voice& V = T.perf.part[0].voice;
+          V.v[0].form = 0; V.v[0].level = 99; V.v[0].fixed = 0; V.v[0].coarse = 1; V.v[0].keysync = 1;
+          for (int i = 0; i < 4; i++) { V.v[0].L[i] = i == 3 ? 0 : 99; V.v[0].T[i] = i == 3 ? 60 : 0; } };
+      for (int poly : {64, 128}) {
+          auto E = std::make_unique<Synth>(); sine(*E); E->perf.part[0].p[0] = 32;   // the whole machine reserved for part 1
+          float l[8], r[8];
+          E->poly = poly; E->render(l, r, 4);
+          const int base = 128 - poly; bool rr = E->nchan == poly;
+          for (int k = 0; k < poly; k++) {
+              E->midi_in(0x90, base + k, 100); E->render(l, r, 4);
+              int got = -1; for (int i = 0; i < poly; i++) if (E->ch[i].active && E->ch[i].note == base + k) got = i;
+              rr = rr && got == (k + 1) % poly;
+          }
+          ck("engine: a polyphony of 64 or 128 fills channels 1..n-1 then 0", rr);
+          ck("engine: every channel of the polyphony sounds", E->active_chans() == poly);
+          const double was = fabs(E->ch[2].last);
+          E->midi_in(0x90, 127, 100); E->render(l, r, 4);
+          ck("engine: the note past the polyphony steals channel 2, which held the second note, and damps it",
+             E->ch[2].note == 127 && E->ch[2].held && was > 1e-4 && fabs(E->ch[2].damp) > 0);
+          E->poly = 32; E->render(l, r, 4);
+          ck("engine: a change of polyphony stops every note", E->nchan == 32 && E->active_chans() == 0);
+          E->midi_in(0x90, 60, 100); E->render(l, r, 4);
+          ck("engine: and the next note lands on channel 1 again", E->ch[1].active && E->ch[1].note == 60);
+      }
+      // With filter on every voice, channel n has slot n & 15 of bank n >> 4, eight banks at 128; without, the
+      // unit's split: a filtered part on the chip's sixteen, an unfiltered one on the other 112.
+      {
+          auto F = std::make_unique<Synth>(); open(*F); F->perf.part[0].p[7] = 1; F->perf.part[0].p[0] = 32; F->poly = 128;
+          float l[8], r[8]; F->render(l, r, 4);
+          for (int k = 0; k < 128; k++) F->note_on(0, k, 100);
+          std::vector<float> lf(4800), rf(4800); F->render(lf.data(), rf.data(), (int)lf.size());
+          int busy = 0, onBank7 = 0; for (int s = 0; s < 16; s++) onBank7 += F->flt.bank[7].host.slotPart[s] == 0;
+          for (auto& c : F->chans()) busy += c.active && c.filtered;
+          ck("engine: 128 filtered voices on eight banks", F->flt_banks() == 8 && busy == 128 && onBank7 == 16 && energy(lf) > 0);
+          auto G = std::make_unique<Synth>(); open(*G); G->perf.part[0].p[7] = 1; G->perf.part[0].p[0] = 32; G->filter32 = false; G->poly = 128;
+          G->render(l, r, 4);
+          for (int k = 0; k < 20; k++) G->note_on(0, k, 100);
+          for (int k = 0; k < 112; k++) G->note_on(1, k, 100);
+          int lo = 0, hi = 0, p0 = 0, p1 = 0;
+          for (int i = 0; i < 128; i++) { const Chan& c = G->ch[i]; if (!Synth::owned(c)) continue; (c.part ? p1 : p0)++; (i < 16 ? lo : hi)++; }
+          ck("engine: the unit's split at 128: sixteen filtered channels, the other 112 unfiltered", p0 == 16 && lo == 16 && p1 == 112 && hi == 112 && G->flt_banks() == 1);
+      }
+      // The reserves scale: at 128 a reserve of 8 is 32 and 24 is 96. Part 1 holding 34 is over its 32, part 2 holding
+      // 94 is under its 96, so part 2's next note takes a channel from part 1; by the bytes alone part 2 would be the
+      // one 70 over and would steal from itself.
+      {
+          auto R = std::make_unique<Synth>(); sine(*R); R->perf.part[1].voice = R->perf.part[0].voice;
+          R->perf.part[0].p[0] = 8; R->perf.part[1].p[0] = 24; R->perf.part[2].p[0] = 0; R->perf.part[3].p[0] = 0;
+          float l[8], r[8]; R->poly = 128; R->render(l, r, 4);
+          for (int k = 0; k < 34; k++) R->note_on(0, k, 100);
+          for (int k = 0; k < 94; k++) R->note_on(1, k, 100);
+          R->note_on(1, 127, 100);
+          int p0 = 0, p1 = 0; for (auto& c : R->chans()) if (Synth::owned(c)) (c.part ? p1 : p0)++;
+          ck("engine: note reserves scale with the polyphony: the part over its share is the one stolen from", p0 == 33 && p1 == 95);
+      }
+      // A phrase under 32 notes renders the same bits at every polyphony: the channels it lands on are the same.
+      {
+          auto A = std::make_unique<Synth>(), B = std::make_unique<Synth>(); sine(*A); sine(*B); B->poly = 128;
+          std::vector<float> la(9600), ra(9600), lb(9600), rb(9600);
+          auto phrase = [](Synth& T, std::vector<float>& l, std::vector<float>& r) {
+              T.render(l.data(), r.data(), 64);
+              for (int k = 0; k < 16; k++) T.midi_in(0x90, 48 + k, 100);
+              T.render(l.data(), r.data(), 4800);
+              for (int k = 0; k < 16; k++) T.midi_in(0x80, 48 + k, 0);
+              T.render(l.data() + 4800, r.data() + 4800, 4800); };
+          phrase(*A, la, ra); phrase(*B, lb, rb);
+          ck("engine: sixteen notes render the same bits at 32 and at 128 voices", la == lb && ra == rb && energy(la) > 0);
       }
       // Ours (FSVR#56): a controller on cutoff glides rather than stepping. The unit writes the new word
       // straight into the filter (FUN_0000C36C). Cutoff 40 to 100 mid-note: 1 ms after the jump the glide

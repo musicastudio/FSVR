@@ -850,6 +850,21 @@ int main() {
             s.until([] { return false; }, 400);
             CHECK(s.data("perf.name") == "Nightmare", "Load Last Patch on, the standalone reopened on \"%s\"", s.data("perf.name").c_str());
         }
+        // Polyphony (Options > Special) reaches the instance from Settings.json, and the engine then plays past the
+        // unit's 32 channels: A020 Vox Morph layers two parts, so forty keys are eighty channels at 128 voices.
+        settings = "{\"poly\": 3}\n";
+        writeBytes(tmp / "Settings.json", std::vector<uint8_t>(settings.begin(), settings.end()));
+        {
+            Rig s;
+            CHECK(s.is("opt.poly", 3), "Settings.json's Polyphony did not reach the instance");
+            s.set("perf.program", 19);
+            CHECK(s.until([&] { return s.data("perf.name") == "Vox Morph"; }), "A020 did not load for the polyphony check");
+            for (int k = 0; k < 40; ++k) s.midi({0x90, (uint8_t)(36 + k), 100});
+            s.run(4);
+            CHECK(s.st->voices() == 80, "at 128 voices, forty keys of a two-part performance left %d channels playing, not 80", s.st->voices());
+        }
+        settings = "{\"loadLast\": 1}\n";
+        writeBytes(tmp / "Settings.json", std::vector<uint8_t>(settings.begin(), settings.end()));
         {
             Rig s;   // a host's session is the session
             s.st->load(closed);

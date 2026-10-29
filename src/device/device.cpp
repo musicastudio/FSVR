@@ -80,6 +80,8 @@ void Device::setSpeed(int s) {
     p->s.gateDb = k.gateDb, p->s.ctlDecimation = k.ctl, p->s.egDecimation = k.eg;
 }
 void Device::setFilterPoly32(bool on) { p->s.filter32 = on; }   // render latches it
+void Device::setPolyphony(int voices) { p->s.poly = std::clamp(voices / FILTER_CHANNELS * FILTER_CHANNELS, (int)NCHAN, Synth::MAX_CHAN); }   // a bank of filter voices a sixteen; render latches it
+int Device::polyphony() const { return p->s.poly; }
 void Device::setBend14(bool on) { p->s.bend14 = on; }
 void Device::setCutoffGlide(bool on) { p->s.cutoffGlide = on; }
 void Device::forceChannel(int channel) { p->s.forceChannel = channel; }

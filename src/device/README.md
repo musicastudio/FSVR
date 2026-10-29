@@ -4,4 +4,4 @@
 
 | File | What |
 |---|---|
-| `device.cpp` | `fsvr::Device`: host-rate resampling (a 64-tap windowed sinc), state as bulk dumps, MIDI in and sysex out, the Quality/Speed option, display helpers (`op_wave`, frequencies) |
+| `device.cpp` | `fsvr::Device`: host-rate resampling (a 64-tap windowed sinc), state as bulk dumps, MIDI in and sysex out, the Options page's engine settings (Quality/Speed, Filter on Every Voice, Polyphony: `setSpeed`, `setFilterPoly32`, `setPolyphony`), display helpers (`op_wave`, frequencies) |

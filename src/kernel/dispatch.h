@@ -23,6 +23,7 @@ struct Kernels {
     // EG levels and LFO2s as the host hands them this sample, and the slots' outputs (filters/filter.cpp).
     void (*filter_bank)(filters::Lanes& L, const filters::Shared& g, const double* in, const double* eg, const double* lfo, double* out);
     bool (*fma_contracted)();                  // the build fused a multiply into an add: the self check fails on it
+    bool (*lanes_ok)();                        // the masks, selects, ties, floor and conversions do what simd.h says (isa/table.cpp)
 };
 
 const Kernels& kernels();

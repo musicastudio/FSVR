@@ -919,9 +919,9 @@
    "type": "textbox",
    "name": "lcd_poly",
    "rect": [
-    194,
+    182,
     79,
-    24,
+    36,
     16
    ],
    "text": {
@@ -938,7 +938,7 @@
    ],
    "surface": false,
    "source": "voices",
-   "format": "%2d",
+   "format": "%3d",
    "tip": "Notes playing"
   },
   {

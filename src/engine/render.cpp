@@ -39,12 +39,12 @@ void Synth::render(float* outL, float* outR, int frames) {
 void Synth::render_segment(float* outL, float* outR, int n, const Sends& s) {
     const int nf = flt_banks() * FILTER_CHANNELS;
     bool busy[SEG_MAX] = {};
-    int until[NCHAN] = {};                     // the sample a channel rendered up to; 0 for one that was not active
-    bool done[NCHAN] = {};
+    int until[MAX_CHAN] = {};                  // the sample a channel rendered up to; 0 for one that was not active
+    bool done[MAX_CHAN] = {};
     const fsvr::TgKernels& K = fsvr::tg_kernels();
     if (egDecimation == 1) {
-        int order[NCHAN], count = 0;
-        for (int p = 0; p < 4; p++) for (int c = 0; c < NCHAN; c++) if (ch[c].active && !ch[c].silent && ch[c].part == p) order[count++] = c;
+        int order[MAX_CHAN], count = 0;
+        for (int p = 0; p < 4; p++) for (int c = 0; c < nchan; c++) if (ch[c].active && !ch[c].silent && ch[c].part == p) order[count++] = c;
         for (int i = 0; i + 1 < count; i += K.lanes) {   // a group of one is the scalar loop's
             fsvr::tonegen::Group& G = group;
             G.lanes = std::min(K.lanes, count - i);
@@ -56,16 +56,22 @@ void Synth::render_segment(float* outL, float* outR, int n, const Sends& s) {
             K.render_group(G, n);
             for (int l = 0; l < G.lanes; l++) if (G.flipAt[l] < 0) { until[order[i + l]] = n; done[order[i + l]] = true; }
         }
-        for (int c = 0; c < NCHAN; c++) if (done[c]) { for (int t = 0; t < n; t++) busy[t] = true; break; }   // a lane the kernel kept sounded throughout
+        for (int c = 0; c < nchan; c++) if (done[c]) { for (int t = 0; t < n; t++) busy[t] = true; break; }   // a lane the kernel kept sounded throughout
     }
-    for (int c = 0; c < NCHAN; c++) {
+    for (int c = 0; c < nchan; c++) {
         if (done[c]) continue;
         Chan& C = ch[c];
         until[c] = C.active ? render_chan_block(C, perf.part[C.part].voice, fseq_on(C.part), gateDb, ctlDecimation, egDecimation, ctlSerial, now, chanOut[c], busy, n) : 0;
     }
+    // The channels that rendered, in channel order, so the sums below are the serial loop's to the bit and a sample
+    // does not walk the channels that did not.
+    int live[MAX_CHAN], nlive = 0;
+    for (int c = 0; c < nchan; c++) if (until[c] > 0) live[nlive++] = c;
     for (int t = 0; t < n; t++) {
-        double pl[4] = {}, pr[4] = {}, v[NCHAN] = {};
-        for (int c = 0; c < NCHAN; c++) {
+        double pl[4] = {}, pr[4] = {}, v[MAX_CHAN];
+        std::fill(v, v + nf, 0.0);             // the filter banks' slots; nothing reads past them
+        for (int k = 0; k < nlive; k++) {
+            const int c = live[k];
             if (t >= until[c]) continue;
             const Chan& C = ch[c];
             const double m = chanOut[c][t];
@@ -90,7 +96,7 @@ void Synth::render_serial(float* outL, float* outR, int frames, const Sends& s) 
         if (asleep && i > 0) {
             // The rest of the block repeats the held sample, from wherever in it the engine fell asleep. A silent
             // channel's last envelopes still count down over those samples to the one the allocator frees it on.
-            if (!skipping) { skipping = true; for (auto& c : ch) if (c.active && c.silent && (c.freezeLeft -= frames - i) <= 0) c.active = false; }
+            if (!skipping) { skipping = true; for (auto& c : chans()) if (c.active && c.silent && (c.freezeLeft -= frames - i) <= 0) c.active = false; }
             outL[i] = lastL; outR[i] = lastR; continue;
         }
         bool any = false;
@@ -99,8 +105,9 @@ void Synth::render_serial(float* outL, float* outR, int frames, const Sends& s) 
         // pass through the filter chip first, sounding or not, so that a filter rings out after its note.
         // With fltWide the other sixteen have filter voices too, and a channel of an unfiltered part goes straight on.
         const int nf = flt_banks() * FILTER_CHANNELS;
-        double pl[4] = {}, pr[4] = {}, v[NCHAN] = {};
-        for (int n = 0; n < NCHAN; n++) {
+        double pl[4] = {}, pr[4] = {}, v[MAX_CHAN];
+        std::fill(v, v + nf, 0.0);
+        for (int n = 0; n < nchan; n++) {
             Chan& c = ch[n];
             if (!c.active) continue;
             if (!c.silent || c.freezeLeft < 0) any = true;   // a silent channel counting down plays nothing more
@@ -115,7 +122,7 @@ void Synth::render_serial(float* outL, float* outR, int frames, const Sends& s) 
 
 // One sample from the channels on: the filter chip over v, the filtered channels panned, the four buses, the
 // effects, the output, and whether the engine may sleep.
-void Synth::mix_sample(float* outL, float* outR, int i, double v[NCHAN], double pl[4], double pr[4], bool any, const Sends& s) {
+void Synth::mix_sample(float* outL, float* outR, int i, double v[MAX_CHAN], double pl[4], double pr[4], bool any, const Sends& s) {
     const int nf = flt_banks() * FILTER_CHANNELS;
     flt.run(flt_banks(), v);
     for (int n = 0; n < nf; n++) { pl[ch[n].part] += v[n] * ch[n].panL; pr[ch[n].part] += v[n] * ch[n].panR; }

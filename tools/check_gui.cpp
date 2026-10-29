@@ -455,6 +455,10 @@ int main() {
             u.click("pages/list/special/filter32");
             CHECK(u.until([&] { return u.get("opt.filter32") == 0 && has("\"filter32\": 0"); }), "Settings.json did not follow 32 Filtered Voices");
             u.click("pages/list/special/filter32");
+            // Polyphony's slider reaches Settings.json; check_plugin plays the notes past 32
+            u.set("opt.poly", 3);
+            CHECK(u.until([&] { return has("\"poly\": 3"); }), "Settings.json did not follow Polyphony");
+            u.set("opt.poly", 0);
             u.shot("options");
         }
 

@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
     double gain = 1.0, tail = 1.0, secs = 3.0;
     bool fsvr = false;    // FSVR's own additions (32 filtered voices, 14-bit bend, cutoff glide); off, the unit, which a capture is compared against
     bool factory = false; fs1r_factory::Blobs blobs;   // -factory: the factory banks from plugin/generated, no EPROM
-    int perfIdx = -1, pick = -1, fseqIdx = -1, note = 60, note2 = -1, monoTime = -1, channel = -1;
+    int perfIdx = -1, pick = -1, fseqIdx = -1, note = 60, note2 = -1, monoTime = -1, channel = -1, poly = 0;   // poly: -poly voices, 0 the unit's 32
     std::vector<std::pair<int, int>> cc;
     fs1r_smf::WavFormat fmt = fs1r_smf::WAV_S16;
     for (int i = 1; i < argc; i++) {
@@ -41,6 +41,7 @@ int main(int argc, char** argv) {
         else if (a == "-c" && i + 1 < argc) channel = atoi(argv[++i]) - 1;
         else if (a == "-n" && i + 1 < argc) note = atoi(argv[++i]);
         else if (a == "-fsvr") fsvr = true;
+        else if (a == "-poly" && i + 1 < argc) poly = atoi(argv[++i]);
         else if (a == "-factory") factory = true;
         else if (a == "-n2" && i + 1 < argc) note2 = atoi(argv[++i]);
         else if (a == "-mono" && i + 1 < argc) monoTime = atoi(argv[++i]);
@@ -56,7 +57,7 @@ int main(int argc, char** argv) {
     if (!wav) {
         printf("usage: render_capture [-r eprom.bin | -factory] [-g gain] [-d tail secs] [-f] out.wav file.mid\n"
                "       render_capture [-r eprom.bin | -factory] [-P perf] [-p voice] [-fseq n] [-v file.syx] [-c ch]\n"
-               "                      [-n note] [-n2 note] [-cc num=val] [-mono time] [-d secs] [-fsvr] -w out.wav\n");
+               "                      [-n note] [-n2 note] [-cc num=val] [-mono time] [-d secs] [-fsvr] [-poly voices] -w out.wav\n");
         return 1;
     }
     fsvr::Device dev;
@@ -65,6 +66,7 @@ int main(int argc, char** argv) {
     dev.setSampleRate(fsvr::ENGINE_RATE);
     dev.setGain(gain);
     dev.setFilterPoly32(fsvr); dev.setBend14(fsvr); dev.setCutoffGlide(fsvr);
+    if (poly) dev.setPolyphony(poly);
     if (perfIdx >= 0 && !(factory ? fs1r_factory::performance(dev, blobs, perfIdx) : dev.loadRomPerformance(perfIdx))) { printf("-P needs -r or -factory\n"); return 1; }
     if (syx) {
         FILE* f = fopen(syx, "rb"); if (!f) { printf("cannot open %s\n", syx); return 1; }

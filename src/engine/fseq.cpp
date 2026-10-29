@@ -8,7 +8,7 @@ bool Synth::fseq_on(int part) const {
 
 void Synth::fseq_keys() {
     if (fseqPart < 0) { fseqHeld = false; return; }
-    for (auto& c : ch) if (c.active && c.part == fseqPart && (c.held || c.sustained)) { fseqHeld = true; return; }
+    for (auto& c : chans()) if (c.active && c.part == fseqPart && (c.held || c.sustained)) { fseqHeld = true; return; }
     fseqHeld = false;
 }
 

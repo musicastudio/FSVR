@@ -60,7 +60,8 @@ struct Scenario { const char* name; int perf; Drive drive; int notes; double sec
                   int release = 0;    // EG time 4 written to every operator before the phrase, 0 for the performance's own
                   int voice = -1;     // a factory voice (0..1407) loaded into every part, -1 for the performance's own
                   int filter = -1;    // every part's filter switch written 0 or 1, -1 for the performance's own
-                  int poly = -1; };   // every part's Mono/Poly byte written 0 or 1, -1 for the performance's own
+                  int poly = -1;      // every part's Mono/Poly byte written 0 or 1, -1 for the performance's own
+                  int chans = -1; };  // the polyphony (Device::setPolyphony: 32, 64, 96 or 128), -1 for the unit's 32
 
 // Performances by their EPROM index: A001 Zap! 0, A014 Homy 13, A020 Vox Morph 19, A088 Fat Line 87,
 // B014 Full Tines 141, B053 Teck Hook 180. A chord is the first `notes` of CHORD; more than eight notes run up from 36.
@@ -70,7 +71,10 @@ struct Scenario { const char* name; int perf; Drive drive; int notes; double sec
 // parts' filters off the release is the amplitude EG's (a filter EG closes at key-off), and a struck chord's releases
 // ring under the next one, which steals every channel. superpad4f keeps Teck Hook's filters, on in every part: 32
 // channels and 32 filter slots.
-// steals every channel. superpad4f keeps Teck Hook's filters, on in every part: 32 channels and 32 filter slots.
+// The -pN rows set the polyphony (Options > Polyphony, docs/Differences.md) and hold enough keys to fill it: 64 keys of
+// Vox Morph's two layered parts are 128 channels, 32 keys of the four-part pad likewise, with or without its 128
+// filter slots; held1-zap-p128 is one filtered note with eight filter banks to run, what the setting costs before a
+// chord is played. More than eight notes run up from 36, so 64 keys end at 99.
 // For a song, secs is the tail after its last event. A scenario's definition never changes: one that
 // must gets a new name, so a number stays comparable over the record.
 const int SCHEMA = 1;
@@ -90,6 +94,11 @@ const Scenario SCENARIOS[] = {
     {"held8-superpad4",   180, HELD,   8,  10, nullptr,                         STANDARD, 0, 108, 0, 1},
     {"struck8-superpad4", 180, STRUCK, 8,  10, nullptr,                         STANDARD, 0, 108, 0, 1},
     {"held8-superpad4f",  180, HELD,   8,  10, nullptr,                         STANDARD, 0, 108, -1, 1},
+    {"held1-zap-p128",    0,   HELD,   1,  10, nullptr,                         STANDARD, 0, -1,  -1, -1, 128},
+    {"held32-voxmorph-p64",    19,  HELD, 32, 10, nullptr,                      FULL,     0, -1,  -1, -1, 64},
+    {"held64-voxmorph-p128",   19,  HELD, 64, 10, nullptr,                      STANDARD, 0, -1,  -1, -1, 128},
+    {"held32-superpad4-p128",  180, HELD, 32, 10, nullptr,                      FULL,     0, 108, 0,  1,  128},
+    {"held32-superpad4f-p128", 180, HELD, 32, 10, nullptr,                      STANDARD, 0, 108, -1, 1,  128},
     {"demo-fatline",      -1,  SMF,    0,  2,  "captures/demo/04_Fat Line.mid", STANDARD},
     {"demo-all",          -1,  SMF,    0,  2,  "captures/demo/all.mid",         FULL},
 };
@@ -197,6 +206,7 @@ Run render(const Scenario& s, const std::vector<Event>& ev, double secs, const f
         if (rom && !dev.loadRom(rom)) { printf("cannot read %s\n", rom); exit(1); }
     dev.setSampleRate(rate);
     dev.setSpeed(speed);
+    if (s.chans > 0) dev.setPolyphony(s.chans);
     if (s.drive != SMF) dev.forceChannel(0);     // every part with a receive channel plays the chord
     if (s.perf >= 0 && !(rom ? dev.loadRomPerformance(s.perf) : fs1r_factory::performance(dev, b, s.perf))) {
         printf("cannot load performance %d\n", s.perf); exit(1);

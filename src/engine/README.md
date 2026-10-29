@@ -4,9 +4,9 @@
 
 | File | What |
 |---|---|
-| `synth.h` | `struct Synth`: the performance, the 32 channels, the filter and effect sections, and every engine method's declaration; `ctlSerial`, ours, counts the ticks and render calls so the control refresh skips what cannot have moved |
+| `synth.h` | `struct Synth`: the performance, the channels, the filter and effect sections, and every engine method's declaration; ours: `MAX_CHAN` 128 channels held and `nchan` of them allocated, the unit's 32 by default (`poly`, latched by `filter_latch`; whatever walks the channels walks `chans()`), and `ctlSerial`, which counts the ticks and render calls so the control refresh skips what cannot have moved |
 | `scales.h` | the firmware's byte-to-register scales: velocity, key tracking, pan, the 0..99 to 0..127 conversions |
-| `notes.cpp` | note on and off, channel allocation, operator setup, pitch, portamento, the pitch EG, LFO1, the 192.3 Hz tick, the filter latch, and what a part byte written does to the notes (`part_written`, `silence_part`) |
+| `notes.cpp` | note on and off, channel allocation (over `nchan` channels, the note reserves scaled to them: ours, `docs/Differences.md`), operator setup, pitch, portamento, the pitch EG, LFO1, the 192.3 Hz tick, the filter and polyphony latch, and what a part byte written does to the notes (`part_written`, `silence_part`) |
 | `controllers.cpp` | the eight controller sets, the three scalers and the 48 destinations |
 | `fseq.cpp` | formant sequence playback and MIDI clock |
 | `midi.cpp` | MIDI in, controllers, RPN/NRPN, sysex replies and dumps |
