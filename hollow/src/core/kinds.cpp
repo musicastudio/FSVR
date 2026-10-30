@@ -694,7 +694,8 @@ static void wiresTick(Gui& g, const Hit& h, Rect r) {
 // Tile (selected ? 1 : 0) + (off ? 2 : 0): selected while var op names this box (never "in"). With a text
 // font the box's letter is drawn over it, centred on its ink in the face above the art's 2 px foot.
 // With "tint" the box is the art times that colour (the operator's) and keeps it when selected: a ring in
-// "ring" (default #e8f3efff) around its art says so instead of the selected tile.
+// "ring" (default #e8f3efff) around its art says so instead of the selected tile. With "key", the text data's
+// level 0..1 lights the art from the bottom up, drawn again in "lit" (default the tint half as bright again).
 static void boxDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
     const Widget& w = g.wid(h);
     if (w.image < 0) return;
@@ -704,12 +705,28 @@ static void boxDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
     const Image& img = g.skin().images[w.image];
     Rect t = img.tile(0);
     const uint32_t tint = colourField(g, h, "tint", 0);
-    drawImage(c, img, (selected && !tint ? 1 : 0) + (off ? 2 : 0), {r.x, r.y, t.w, t.h}, false, nullptr, tint);
-    if (tint && selected) {   // the art's opaque bounds, a line width out
-        int x0 = t.w, y0 = t.h, x1 = -1, y1 = -1;
-        for (int y = 0; y < t.h; ++y)
-            for (int x = 0; x < t.w; ++x)
-                if (img.px[(size_t)(t.y + y) * img.w + (size_t)(t.x + x)] >> 24 >= 128) x0 = std::min(x0, x), x1 = std::max(x1, x), y0 = std::min(y0, y), y1 = std::max(y1, y);
+    const int tile = (selected && !tint ? 1 : 0) + (off ? 2 : 0);
+    drawImage(c, img, tile, {r.x, r.y, t.w, t.h}, false, nullptr, tint);
+    double level = 0;
+    if (const std::string& key = g.inst(h).key; !key.empty()) {   // read here, so a render with no tick draws it too
+        const std::string d = g.state().data(key);
+        const char *p = d.c_str(), *end = p + d.size();
+        if (!parseNumber(p, end, level)) level = 0;
+    }
+    int x0 = t.w, y0 = t.h, x1 = -1, y1 = -1;   // the art's opaque bounds, when something is drawn by them
+    for (int y = 0; (level > 0 || (tint && selected)) && y < t.h; ++y)
+        for (int x = 0; x < t.w; ++x)
+            if (img.px[(size_t)(t.y + y) * img.w + (size_t)(t.x + x)] >> 24 >= 128) x0 = std::min(x0, x), x1 = std::max(x1, x), y0 = std::min(y0, y), y1 = std::max(y1, y);
+    if (level > 0 && y1 >= y0) {
+        const int lit = (int)std::lround(std::min(level, 1.0) * (y1 - y0 + 1));
+        const Rect keep = c.clip;
+        c.clip = c.clip & Rect{r.x, r.y + y1 + 1 - lit, t.w, lit};
+        uint32_t bright = tint ? tint & 0xff000000u : 0xffe8f3ef;
+        for (int s = 0; tint && s < 24; s += 8) bright |= (uint32_t)std::min(255, (int)(tint >> s & 255) * 3 / 2) << s;
+        drawImage(c, img, tile, {r.x, r.y, t.w, t.h}, false, nullptr, colourField(g, h, "lit", bright));
+        c.clip = keep;
+    }
+    if (tint && selected) {   // a line width out of the art
         const int k = g.skin().lw();
         const uint32_t ring = colourField(g, h, "ring", 0xffe8f3ef);
         Rect o = Rect{r.x + x0 - k, r.y + y0 - k, x1 - x0 + 1 + 2 * k, y1 - y0 + 1 + 2 * k} & r;   // inside the widget, which clips

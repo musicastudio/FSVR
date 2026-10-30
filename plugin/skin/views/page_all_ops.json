@@ -496,6 +496,20 @@
    "hoverTiles": true
   },
   {
+   "type": "meter",
+   "name": "level_meter_1",
+   "rect": [
+    50,
+    72,
+    4,
+    40
+   ],
+   "key": "live.oplevel.{layer}.{part}.1",
+   "colour": "@op1_line",
+   "surface": false,
+   "tip": "Operator 1's level on the part's last note"
+  },
+  {
    "type": "plate",
    "name": "coarse_1_frame",
    "rect": [
@@ -1423,6 +1437,20 @@
     2
    ],
    "hoverTiles": true
+  },
+  {
+   "type": "meter",
+   "name": "level_meter_2",
+   "rect": [
+    50,
+    131,
+    4,
+    40
+   ],
+   "key": "live.oplevel.{layer}.{part}.2",
+   "colour": "@op2_line",
+   "surface": false,
+   "tip": "Operator 2's level on the part's last note"
   },
   {
    "type": "plate",
@@ -2354,6 +2382,20 @@
    "hoverTiles": true
   },
   {
+   "type": "meter",
+   "name": "level_meter_3",
+   "rect": [
+    50,
+    189,
+    4,
+    40
+   ],
+   "key": "live.oplevel.{layer}.{part}.3",
+   "colour": "@op3_line",
+   "surface": false,
+   "tip": "Operator 3's level on the part's last note"
+  },
+  {
    "type": "plate",
    "name": "coarse_3_frame",
    "rect": [
@@ -3281,6 +3323,20 @@
     2
    ],
    "hoverTiles": true
+  },
+  {
+   "type": "meter",
+   "name": "level_meter_4",
+   "rect": [
+    50,
+    248,
+    4,
+    40
+   ],
+   "key": "live.oplevel.{layer}.{part}.4",
+   "colour": "@op4_line",
+   "surface": false,
+   "tip": "Operator 4's level on the part's last note"
   },
   {
    "type": "plate",
@@ -4212,6 +4268,20 @@
    "hoverTiles": true
   },
   {
+   "type": "meter",
+   "name": "level_meter_5",
+   "rect": [
+    50,
+    306,
+    4,
+    40
+   ],
+   "key": "live.oplevel.{layer}.{part}.5",
+   "colour": "@op5_line",
+   "surface": false,
+   "tip": "Operator 5's level on the part's last note"
+  },
+  {
    "type": "plate",
    "name": "coarse_5_frame",
    "rect": [
@@ -5139,6 +5209,20 @@
     2
    ],
    "hoverTiles": true
+  },
+  {
+   "type": "meter",
+   "name": "level_meter_6",
+   "rect": [
+    50,
+    365,
+    4,
+    40
+   ],
+   "key": "live.oplevel.{layer}.{part}.6",
+   "colour": "@op6_line",
+   "surface": false,
+   "tip": "Operator 6's level on the part's last note"
   },
   {
    "type": "plate",
@@ -6070,6 +6154,20 @@
    "hoverTiles": true
   },
   {
+   "type": "meter",
+   "name": "level_meter_7",
+   "rect": [
+    50,
+    424,
+    4,
+    40
+   ],
+   "key": "live.oplevel.{layer}.{part}.7",
+   "colour": "@op7_line",
+   "surface": false,
+   "tip": "Operator 7's level on the part's last note"
+  },
+  {
    "type": "plate",
    "name": "coarse_7_frame",
    "rect": [
@@ -6997,6 +7095,20 @@
     2
    ],
    "hoverTiles": true
+  },
+  {
+   "type": "meter",
+   "name": "level_meter_8",
+   "rect": [
+    50,
+    483,
+    4,
+    40
+   ],
+   "key": "live.oplevel.{layer}.{part}.8",
+   "colour": "@op8_line",
+   "surface": false,
+   "tip": "Operator 8's level on the part's last note"
   },
   {
    "type": "plate",

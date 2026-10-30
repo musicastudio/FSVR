@@ -79,6 +79,9 @@ public:
     void operatorWave(int part, int op, float* out, int n) const;
     int fseqPart() const;                      // -1 when no part is assigned
     int activeVoices() const;                  // keys down or sustained and releases still above -60 dB, for a polyphony readout
+    // Live levels for a meter, display only, from any thread: each part's operators on its last note in dB, voiced
+    // [p][0] and unvoiced [p][1] (-200 once the note is over), and each part's peak since the last call, 1.0 a full carrier.
+    void levels(float op[4][2][8], float part[4]);
     int renderingChannels() const;             // channels the engine still computes every sample: taken and not yet silent, what a block costs
     // How long one Fseq frame lasts at 100 % speed for a header speed adjust of 0..127 (fseq_start).
     static double fseqFrameSeconds(int speedAdjust);

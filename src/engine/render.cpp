@@ -119,6 +119,7 @@ void Synth::mix_sample(float* outL, float* outR, int i, double v[NCHAN], double 
     const int nf = flt_banks() * FILTER_CHANNELS;
     flt.run(flt_banks(), v);
     for (int n = 0; n < nf; n++) { pl[ch[n].part] += v[n] * ch[n].panL; pr[ch[n].part] += v[n] * ch[n].panR; }
+    for (int p = 0; p < 4; p++) partPeak[p] = std::max(partPeak[p], (float)std::max(std::fabs(pl[p]), std::fabs(pr[p])));
     // Four stereo buses into the effects: dry, insertion, variation send, reverb send.
     double bus[8] = {}, l, r;
     for (int p = 0; p < 4; p++) {

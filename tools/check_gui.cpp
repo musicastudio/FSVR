@@ -471,6 +471,44 @@ int main() {
                 CHECK(p == 0xe8f3ef, "the selected matrix box's ring has no right side (%06x)", p);
             }
         }
+        {   // levels: a matrix box lights from the bottom of its art up, under its ring; a part's button shows the part's
+            // output; an All Ops row its operator's level on the layer shown. Silenced first, so the processor's own
+            // levels stay at 0 and publish nothing over the ones set here.
+            u.set("gui.panic", 1);
+            u.settle();
+            u.set("gui.panic", 0);
+            u.settle();
+            auto px = [&](int x, int y) { return u.gui.pixels()[(size_t)y * u.gui.width() + x] & 0xffffff; };
+            auto put = [&](const char* key, const char* v) { u.st->setData(key, v); u.run(); };
+            Rect r;
+            if (u.rect("pages/fm_matrix/op_6", r)) {
+                const int x = r.x + 6, low = r.y + r.h * 3 / 4, high = r.y + r.h / 4;   // clear of the letter
+                put("live.oplevel.v.p1.6", "0");
+                const uint32_t low0 = px(x, low), high0 = px(x, high);
+                put("live.oplevel.v.p1.6", "0.3");
+                CHECK(px(x, low) != low0 && px(x, high) == high0, "a level of 0.3 did not light the bottom of op 6's box alone");
+                put("live.oplevel.v.p1.6", "1");
+                CHECK(px(x, high) != high0, "a full level did not light op 6's box to the top");
+                CHECK(px(r.x + r.w - 1, r.y + r.h / 2) == 0xe8f3ef, "the lit box lost its ring");
+                put("live.oplevel.v.p1.6", "0");
+                CHECK(px(x, low) == low0, "op 6's box stayed lit at level 0");
+            }
+            put("live.partlevel.p1", "1");
+            if (u.rect("topbar/part_1_level", r)) CHECK(px(r.x + 1, r.y) == 0x85d1a3 && px(r.x + 1, r.y + r.h - 1) == 0x85d1a3, "part 1's button shows no level");
+            put("live.partlevel.p1", "0");
+            if (u.rect("topbar/part_1_level", r)) CHECK(px(r.x + 1, r.y + r.h - 1) != 0x85d1a3, "part 1's button stayed lit at level 0");
+            u.click("pages/subtabs/tab_all_ops");
+            u.click("pages/unvoiced");
+            put("live.oplevel.v.p1.1", "1");
+            if (u.rect("pages/level_meter_1", r)) CHECK(px(r.x + 1, r.y) != 0x6e9eee, "All Ops row 1 shows the voiced level on the N layer");
+            put("live.oplevel.v.p1.1", "0");
+            put("live.oplevel.u.p1.1", "0.5");
+            if (u.rect("pages/level_meter_1", r))
+                CHECK(px(r.x + 1, r.y + r.h - 1) == 0x6e9eee && px(r.x + 1, r.y) != 0x6e9eee, "All Ops row 1 does not show half the unvoiced level on the N layer");
+            put("live.oplevel.u.p1.1", "0");
+            u.click("pages/voiced");
+            u.click("pages/subtabs/tab_operator");
+        }
         {   // FSVR#72: a double-click on an amount in the matrix sets it to 0, Op1's (default 99) too
             const double alg = u.get("voice.alg.p1"), lvl = u.get("op.1.v.level.p1");
             u.set("voice.alg.p1", 1);

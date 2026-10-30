@@ -4,4 +4,4 @@
 
 | File | What |
 |---|---|
-| `device.cpp` | `fsvr::Device`: host-rate resampling (a 64-tap windowed sinc), state as bulk dumps, MIDI in and sysex out, the Quality/Speed option, display helpers (`op_wave`, frequencies) |
+| `device.cpp` | `fsvr::Device`: host-rate resampling (a 64-tap windowed sinc), state as bulk dumps, MIDI in and sysex out, the Quality/Speed option, display helpers (`op_wave`, frequencies, `levels` for the operator and part meters) |

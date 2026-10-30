@@ -2900,6 +2900,21 @@
    ]
   },
   {
+   "type": "meter",
+   "name": "part_1_level",
+   "rect": [
+    609,
+    79,
+    3,
+    11
+   ],
+   "layer": 4,
+   "key": "live.partlevel.p1",
+   "colour": "@level",
+   "vertical": true,
+   "surface": false
+  },
+  {
    "type": "button",
    "name": "part_2",
    "rect": [
@@ -2964,6 +2979,21 @@
      }
     }
    ]
+  },
+  {
+   "type": "meter",
+   "name": "part_2_level",
+   "rect": [
+    669,
+    79,
+    3,
+    11
+   ],
+   "layer": 4,
+   "key": "live.partlevel.p2",
+   "colour": "@level",
+   "vertical": true,
+   "surface": false
   },
   {
    "type": "button",
@@ -3032,6 +3062,21 @@
    ]
   },
   {
+   "type": "meter",
+   "name": "part_3_level",
+   "rect": [
+    729,
+    79,
+    3,
+    11
+   ],
+   "layer": 4,
+   "key": "live.partlevel.p3",
+   "colour": "@level",
+   "vertical": true,
+   "surface": false
+  },
+  {
    "type": "button",
    "name": "part_4",
    "rect": [
@@ -3096,6 +3141,21 @@
      }
     }
    ]
+  },
+  {
+   "type": "meter",
+   "name": "part_4_level",
+   "rect": [
+    789,
+    79,
+    3,
+    11
+   ],
+   "layer": 4,
+   "key": "live.partlevel.p4",
+   "colour": "@level",
+   "vertical": true,
+   "surface": false
   },
   {
    "type": "button",

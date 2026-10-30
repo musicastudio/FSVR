@@ -395,6 +395,7 @@ private:
     bool waveDrawn[4] = {};
     float scopeShown[32] = {};         // the harmonics the monitor last published
     bool scopeDrawn = false;
+    int levelShown[4][17] = {};        // each part's levels as last published, in hundredths: 16 operators, then the part
     std::atomic<int> userPerfs{0};     // lib.perfs.size() for the audio thread, which never touches the library itself
 
     // ---- setup -----------------------------------------------------------------------------------
@@ -707,6 +708,7 @@ private:
             if (n % 10 == 0) watchOptions();
             if (n % 2 == 0) harmonics();
             if (n % 3 == 1) waves();
+            levels();
             if (messageTicks && --messageTicks == 0) st.setData("live.message", "");
             if (notify && n % 8 == 0) {   // at most four times a second: a rescan of 3,000 params is not free for a host
                 notify = false;
@@ -1997,6 +1999,26 @@ private:
                 st.setData("live.wave." + at, wave);
                 st.setData("live.harmonics." + at, harm);
             }
+        }
+    }
+
+    // Every part's operators on its last note and its output since the last look, for the meters on the matrix,
+    // the all-ops rows and the part buttons: text data live.oplevel.v|u.p<part>.<op> and live.partlevel.p<part>,
+    // -48..0 dB as 0..1 in hundredths. Published when they change, so a silent instance repaints nothing.
+    void levels() {
+        float op[4][2][8], peak[4];
+        dev.levels(op, peak);
+        auto put = [&](int& shown, double db, const auto& key) {
+            const int k = (int)std::lround(std::clamp((db + 48) / 48, 0.0, 1.0) * 100);
+            if (k == shown) return;
+            shown = k;
+            st.setData(key(), k == 100 ? "1" : "0." + std::string(k < 10 ? "0" : "") + std::to_string(k));
+        };
+        for (int p = 0; p < 4; ++p) {
+            const std::string at = "p" + std::to_string(p + 1);
+            for (int o = 0; o < 16; ++o)
+                put(levelShown[p][o], op[p][o / 8][o % 8], [&] { return std::string("live.oplevel.") + "vu"[o / 8] + "." + at + "." + std::to_string(o % 8 + 1); });
+            put(levelShown[p][16], peak[p] > 1e-10f ? 20 * std::log10(peak[p]) : -200.0, [&] { return "live.partlevel." + at; });
         }
     }
 

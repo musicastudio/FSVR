@@ -214,9 +214,23 @@ int main() {
     CHECK(a.st->voices() >= 1, "no voice is playing");
     CHECK(a.until([&] { float v[64]; int n = a.st->scope(v, 64); return n == 32 && *std::max_element(v, v + n) > 0; }),
           "the monitor's harmonics never showed");
+    // Part 1's operators and output light while it plays, and every level goes back to 0 once it is silenced.
+    auto levels = [&] {
+        std::vector<double> v;
+        for (int p = 1; p <= 4; ++p) {
+            const std::string at = "p" + std::to_string(p);
+            for (const char* layer : {"v", "u"})
+                for (int o = 1; o <= 8; ++o) v.push_back(std::atof(a.data(("live.oplevel." + std::string(layer) + "." + at + "." + std::to_string(o)).c_str()).c_str()));
+            v.push_back(std::atof(a.data(("live.partlevel." + at).c_str()).c_str()));
+        }
+        return v;   // 17 a part: voiced, unvoiced, the part
+    };
+    CHECK(a.until([&] { auto v = levels(); return *std::max_element(v.begin(), v.begin() + 8) > 0 && v[16] > 0; }), "part 1's levels never showed");
     a.set("gui.panic", 1);
     CHECK(a.until([&] { return a.st->voices() == 0; }), "panic left %d notes", a.st->voices());
     a.set("gui.panic", 0);
+    CHECK(a.until([&] { auto v = levels(); return *std::max_element(v.begin(), v.end()) == 0; }), "a level stayed lit after panic");
+    CHECK(a.st->save().find("live.oplevel") == std::string::npos, "the levels were saved");
 
     // Another factory performance: A002 "Shaman" plays B095 on part 1, a Vocal.
     a.set("perf.program", 1);

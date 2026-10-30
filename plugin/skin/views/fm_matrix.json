@@ -43,7 +43,8 @@
     "text": "",
     "font": "value_dark_12"
    },
-   "tint": "@op1"
+   "tint": "@op1",
+   "key": "live.oplevel.v.{part}.1"
   },
   {
    "type": "custom",
@@ -70,7 +71,8 @@
     "text": "",
     "font": "value_dark_12"
    },
-   "tint": "@op2"
+   "tint": "@op2",
+   "key": "live.oplevel.v.{part}.2"
   },
   {
    "type": "custom",
@@ -97,7 +99,8 @@
     "text": "",
     "font": "value_dark_12"
    },
-   "tint": "@op3"
+   "tint": "@op3",
+   "key": "live.oplevel.v.{part}.3"
   },
   {
    "type": "custom",
@@ -124,7 +127,8 @@
     "text": "",
     "font": "value_dark_12"
    },
-   "tint": "@op4"
+   "tint": "@op4",
+   "key": "live.oplevel.v.{part}.4"
   },
   {
    "type": "custom",
@@ -151,7 +155,8 @@
     "text": "",
     "font": "value_dark_12"
    },
-   "tint": "@op5"
+   "tint": "@op5",
+   "key": "live.oplevel.v.{part}.5"
   },
   {
    "type": "custom",
@@ -178,7 +183,8 @@
     "text": "",
     "font": "value_dark_12"
    },
-   "tint": "@op6"
+   "tint": "@op6",
+   "key": "live.oplevel.v.{part}.6"
   },
   {
    "type": "custom",
@@ -205,7 +211,8 @@
     "text": "",
     "font": "value_dark_12"
    },
-   "tint": "@op7"
+   "tint": "@op7",
+   "key": "live.oplevel.v.{part}.7"
   },
   {
    "type": "custom",
@@ -232,7 +239,8 @@
     "text": "",
     "font": "value_dark_12"
    },
-   "tint": "@op8"
+   "tint": "@op8",
+   "key": "live.oplevel.v.{part}.8"
   },
   {
    "type": "custom",

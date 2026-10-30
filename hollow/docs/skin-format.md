@@ -131,7 +131,7 @@ A widget with no `param` keeps a local value (starting at `value`, default 0), s
 | `dial` | `fill`, then tile `round(norm * (tiles-1))` of `image` | drag, double-click resets, wheel | `image`, `fill`, `drag`, `vertical`, `sensitivity`, `fine`, `margin`, `range`, `steps`, `default` |
 | `number` | `fill`, then the formatted value as `text` | vertical drag, double-click resets | `fill`, `text` (font and alignment; its `text` is ignored), `pad`, `format`, `range`, `sensitivity` |
 | `textbox` | `fill`, then `text` (multi-line if `multiline`), then the cross if `clear` | when `editable` with a `key`: typing | `fill`, `text`, `pad`, `multiline`, `key`, `editable`, `editOn`, `commit`, `clear` |
-| `meter` | tile `round(norm * (tiles-1))` of `image` | none | `image`, `range` |
+| `meter` | tile `round(norm * (tiles-1))` of `image`; with no `image`, its `fill` and a bar in `colour`, up from the bottom (`"vertical": false`: from the left) | none | `image`, `range`, `key`, `colour` |
 | `plot` | `fill`, then a trace in `line` colour (a flat line when idle) | none | `fill`, `line`, `line2`, `source` |
 | `veil` | `fill` | swallows clicks | `fill` |
 | `list` | `fill`, `header` text, empty rows | none in version 1 | `fill`, `header`, `rowHeight`, `row` (text style) |
@@ -292,9 +292,10 @@ Further `menu` fields:
 
 - `"source"` on a `textbox`, `plate` or `button` shows a value the runtime knows: `"cpu"` (the audio thread's load in percent, as a number through the widget's `format`, e.g. `"%3d%%"`), `"midi_in"` (tile 1 for 200 ms after any incoming MIDI), `"modified"` (tile 1 while the state differs from the last load or save), `"voices"` (the processor's voice count, if it reports one), `"scale"` (the window scale as text, `1x` to `4x`).
 - `"source"` on a `meter`: `"level_l"` or `"level_r"`, the output's peak level on that channel as the format layer measures every block, shown -60 to 0 dB over the meter's range and falling about 54 dB a second.
+- `"key"` on a `meter`: its level is that text data's number, 0..1, drawn as it is (a processor publishes `live.` data, so it is never saved). A meter with no `image` draws it as a bar in `"colour"`, a palette name with `{vars}` allowed (`"@op{op}"`).
 - A `list` with `dataRows` redraws whenever the text data its rows come from changes, so a processor can fill a list after it is shown.
 - Text data under a key that starts `live.` is a processor's display data (a plot's points): it is never saved with the instance, and setting it never marks the instance modified.
-- A `matrix_op` box with a `text.font` draws its `letter` over its art, centred on its ink, so the art needs no number in it. With `"tint"` (a colour, as a fill's) the box is its art in that colour, and the selected one keeps it rather than taking the selected tile: a ring in `"ring"` (default `#e8f3efff`), a line width outside the art's opaque bounds, marks it.
+- A `matrix_op` box with a `text.font` draws its `letter` over its art, centred on its ink, so the art needs no number in it. With `"tint"` (a colour, as a fill's) the box is its art in that colour, and the selected one keeps it rather than taking the selected tile: a ring in `"ring"` (default `#e8f3efff`), a line width outside the art's opaque bounds, marks it. With `"key"` the text data's number, 0..1, lights the box from the bottom of its art up: the art again, in `"lit"` (default the tint half as bright again), under the ring and the letter.
 - `list` field `"source": "midi_map"`: rows are the MIDI learn assignments (below).
 
 ### Modals

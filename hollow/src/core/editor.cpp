@@ -995,23 +995,36 @@ void Gui::paintWidget(Canvas& c, Node& n, int i, Rect r) {
         break;
     }
     case Kind::Dial:
-    case Kind::Meter:
+    case Kind::Meter: {
         if (w.kind == Kind::Dial) drawFill(c, fill, r, 0);
+        double v = norm(n, i);
+        if (w.kind == Kind::Meter && !s.key.empty()) {   // "key": the level is the text data's number, 0..1
+            s.stored = state_.hasData(s.key);
+            s.data = state_.data(s.key);
+            const char *p = s.data.c_str(), *end = p + s.data.size();
+            v = parseNumber(p, end, v) ? std::clamp(v, 0.0, 1.0) : 0.0;
+        }
         if (w.image >= 0 && w.slider && w.kind == Kind::Dial) {   // slider: tile 0 moved along the axis
             const Image& img = skin_->images[w.image];
             Rect t = img.tile(0);
-            double v = norm(n, i);
             int x = w.vertical ? r.x : r.x + (int)(v * (r.w - t.w - 1));
             int y = w.vertical ? r.y + (r.h - t.h) - (int)(v * (r.h - t.h - 1)) : r.y;
             drawImage(c, img, 0, {x, y, t.w, t.h}, false, surf());
         } else if (w.image >= 0) {
             const Image& img = skin_->images[w.image];
             // "frames": "floor": frame floor(level * frames / range), the last frame at full scale
-            int tile = w.floorFrames ? std::min((int)std::floor(norm(n, i) * img.tiles), img.tiles - 1)
-                                     : (int)std::lround(norm(n, i) * (img.tiles - 1));
+            int tile = w.floorFrames ? std::min((int)std::floor(v * img.tiles), img.tiles - 1)
+                                     : (int)std::lround(v * (img.tiles - 1));
             drawImage(c, img, tile, r, false, surf());
+        } else if (w.kind == Kind::Meter) {   // no image: its fill, then a bar in "colour", up from the bottom or ("vertical": false) from the left
+            drawFill(c, fill, r, 0);
+            const uint32_t ink = colour(n, w.json["colour"].str(), 0xffffffff);
+            const int h = (int)std::lround(v * r.h), len = (int)std::lround(v * r.w);
+            if (w.vertical) fillRect(c, {r.x, r.y + r.h - h, r.w, h}, ink);
+            else fillRect(c, {r.x, r.y, len, r.h}, ink);
         }
         break;
+    }
     case Kind::Number: {
         drawFill(c, fill, r, 0);
         int pad[4] = {w.pad[0], w.pad[1], w.pad[2], w.pad[3]};

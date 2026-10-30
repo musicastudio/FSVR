@@ -94,6 +94,7 @@ struct Synth {
     void mix_sample(float* outL, float* outR, int i, double v[NCHAN], double pl[4], double pr[4], bool any, const Sends& s);
     // Ours: the engine sleeps while nothing sounds (render.cpp). The output's last sample, and how long it has held.
     float lastL = 0, lastR = 0; int quiet = 0; bool asleep = false;
+    float partPeak[4] = {};   // ours, for a meter: each part's bus peak since Device::levels took it; the render never reads it
 
     Synth() { init_perf(perf); init_system(); fx.load((uint8_t*)&perf); if (const char* r = getenv("FSVR_RENDER")) serialOnly = !strcmp(r, "serial"); }
     void init_system();
@@ -195,6 +196,17 @@ struct Synth {
         return false;
     }
     int active_chans() const { int n = 0; for (auto& c : ch) n += c.active && (c.held || c.sustained || audible(c)); return n; }
+    // Ours, for a meter: a part's operators on its last note, voiced and unvoiced, in dB as they play (the EG less
+    // the operator's level), -200 once that note is over. Its last note is the channel it took last (note_on's age).
+    void op_levels(int part, float v[8], float u[8]) const {
+        const Chan* c = nullptr;
+        for (auto& x : ch) if (x.part == part && x.age && (!c || x.age > c->age)) c = &x;
+        if (c && (!c->active || c->silent)) c = nullptr;   // a silent channel's EGs are not stepped
+        for (int o = 0; o < 8; o++) {
+            v[o] = c ? (float)(c->op[o].eg.cur - (c->op[o].attS < -1e8 ? c->op[o].att : c->op[o].attS)) : -200.0f;
+            u[o] = c ? (float)(c->op[o].ueg.cur - c->op[o].uatt) : -200.0f;
+        }
+    }
     void all_off() {
         for (auto& c : ch) c.active = false;
         for (auto& p : perf.part) { p.nheld = 0; }

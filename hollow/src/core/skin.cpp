@@ -933,7 +933,7 @@ struct Loader {
                 }
             for (const char* f : {"image", "image2", "track", "thumb"}) image(j[f].str());
         }
-        if (w.kind == Kind::List || w.kind == Kind::Plot) w.json = j;   // a chooser list's "values", "first" and "set"; a plot's width, glow and colours
+        if (w.kind == Kind::List || w.kind == Kind::Plot || w.kind == Kind::Meter) w.json = j;   // a chooser list's "values", "first" and "set"; a plot's width, glow and colours; a meter's bar colour
         return w;
     }
 

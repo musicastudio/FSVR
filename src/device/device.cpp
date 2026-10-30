@@ -208,6 +208,14 @@ int Device::activeVoices() const {
     std::lock_guard<std::mutex> lk(p->s.mtx);
     return p->s.active_chans();
 }
+void Device::levels(float op[4][2][8], float part[4]) {
+    std::lock_guard<std::mutex> lk(p->s.mtx);
+    for (int k = 0; k < 4; k++) {
+        p->s.op_levels(k, op[k][0], op[k][1]);
+        part[k] = p->s.partPeak[k];
+        p->s.partPeak[k] = 0;
+    }
+}
 int Device::renderingChannels() const {
     std::lock_guard<std::mutex> lk(p->s.mtx);
     int n = 0; for (auto& c : p->s.ch) n += c.active && !c.silent;
@@ -231,6 +239,25 @@ int Device::selfTest() {
     a.getState(state);
     b.setState(state.data(), state.size());
     if (a.fseqPart() != -1 || b.fseqPart() != -1) { printf("  FAIL state restore enables the Fseq (part %d)\n", b.fseqPart()); fails++; }
+    // Reading the levels moves no sample: two devices play one note and one of them is read between every block.
+    Device x, y;
+    const uint8_t on[3] = {0x90, 60, 100};
+    x.sendMidi(on, 3), y.sendMidi(on, 3);
+    float xl[256], xr[256], yl[256], yr[256], op[4][2][8], pk[4], peak = 0, loud = -200;
+    bool same = true;
+    for (int k = 0; k < 40; k++) {
+        x.process(xl, xr, 256), y.process(yl, yr, 256);
+        y.levels(op, pk);
+        peak = std::max(peak, pk[0]);
+        same = same && !memcmp(xl, yl, sizeof xl) && !memcmp(xr, yr, sizeof xr);
+    }
+    for (float d : op[0][0]) loud = std::max(loud, d);
+    y.levels(op, pk);
+    if (!same) { printf("  FAIL reading the levels changed the render\n"); fails++; }
+    if (loud < -48 || peak <= 0 || pk[0] != 0 || op[1][0][0] != -200) {
+        printf("  FAIL levels: loudest operator %.1f dB, part peak %g then %g, part 2 %.1f dB\n", loud, peak, pk[0], op[1][0][0]);
+        fails++;
+    }
     return fails;
 }
 
