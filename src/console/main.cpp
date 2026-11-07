@@ -112,11 +112,12 @@ int main(int argc, char** argv) {
         else if (a == "-d" && i + 1 < argc) testSecs = atof(argv[++i]);
         else if (a == "-smf" && i + 1 < argc) smf = argv[++i];
         else if (a == "-flt16") dev.setFilterPoly32(false);   // the unit's 16 filtered voices
+        else if (a == "-poly" && i + 1 < argc) dev.setPolyphony(atoi(argv[++i]));   // 32 (the unit's), 64, 96 or 128 voices
         else if (a == "-factory") factory = true;
         else { printf("usage: fsvr_console [-l] [-selftest] [-m midiport] [-o midiout] [-c channel] [-v file.syx [-p index]]\n"
                       "                [-r eprom.bin | -factory] [-p voice] [-P performance] [-f fseq] [-g gain]\n"
                       "                [-w test.wav [-n note] [-n2 note] [-cc num=val] [-d seconds]] [-mono portatime]\n"
-                      "                [-smf file.mid -w out.wav [-d tail seconds]] [-flt16]\n"); return 1; }
+                      "                [-smf file.mid -w out.wav [-d tail seconds]] [-flt16] [-poly voices]\n"); return 1; }
     }
     if (romPath && !dev.loadRom(romPath)) { printf("cannot read 2 MB EPROM image %s\n", romPath); return 1; }
     if (factory && !blobs.load(argv[0])) { printf("cannot find plugin/generated: run from the repository, or set FSVR_ROOT\n"); return 1; }

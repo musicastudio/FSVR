@@ -37590,5 +37590,20 @@
   "max": 127,
   "default": 0,
   "steps": 127
+ },
+ {
+  "id": "opt.poly",
+  "name": "Polyphony",
+  "min": 0,
+  "max": 3,
+  "steps": 3,
+  "labels": [
+   "32",
+   "64",
+   "96",
+   "128"
+  ],
+  "default": 0,
+  "host": false
  }
 ]

@@ -33,6 +33,7 @@ constexpr Late LATE[16] = {
 void Filter::Bank::write(uint32_t reg, uint32_t value) {
     using namespace vop3;
     const uint16_t v = (uint16_t)value;
+    rest = 0; asleep = false;                  // ours: a write is something to do (resting)
     reg &= 0xff;
     if (reg == SELECT) { select = v; return; }
     const int step = select & 511;
@@ -113,4 +114,20 @@ void Filter::Bank::run(double v[SLOTS]) {
         outPrev[s] = out[s];
     }
     if (mod.read(vop3::EG_STATUS)) host.egInterrupt();
+}
+
+// Ours: a bank past the unit's (Filter::run) rests once its sixteen slots have had nothing to do for a second, as
+// the engine does while nothing sounds: no input, no output, every filter's state at zero and every EG holding. An
+// input or a register write wakes it. What stops meanwhile is its LFO2s, which come back at another phase, as the
+// effect LFOs do after the engine sleeps (docs/Differences.md, more than 32 voices).
+bool Filter::Bank::resting(const double* in) {
+    for (int s = 0; s < SLOTS; s++) if (in[s] != 0.0) { rest = 0; asleep = false; return false; }
+    if (asleep) return true;
+    if (++rest < SR) return false;
+    rest = SR / 2;                             // not still yet: look again in half a second
+    for (int s = 0; s < SLOTS; s++)
+        if (outPrev[s] != 0.0 || lanes.x1[s] != 0.0 || lanes.s2[s] != 0.0 || lanes.s3[s] != 0.0 || lanes.s4[s] != 0.0 || lanes.s5[s] != 0.0) return false;
+    if (!mod.flat()) return false;
+    asleep = true;
+    return true;
 }

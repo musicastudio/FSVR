@@ -22,4 +22,12 @@ struct Modulators {
     void egWrite(int n, uint32_t reg, uint16_t v);
     float lfo(int n) const;                 // an LFO's value, -1..1 times its depth
     void step();                            // one sample of every EG and LFO into egOut and lfoOut
+    // Ours: whether a step would leave every EG as it is: each holding (rate 0 or 255), or at its aim with no flat
+    // wait running, and no segment's end waiting to be read. The LFOs always move; a caller that rests on this
+    // accepts their phase stopping (filters/filter.cpp, a bank at rest).
+    bool flat() const {
+        if (done & enable) return false;
+        for (const Eg& g : eg) if (g.rate && g.rate != 255 && (g.flat || g.level != g.aim)) return false;
+        return true;
+    }
 };

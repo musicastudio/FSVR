@@ -36,6 +36,11 @@ public:
     // Ours: a part with its filter on plays 32 voices, on two filter chips (the default), or the unit's 16 (off).
     // A change stops every note, as a filter switch does. Call it from the audio thread, between process calls.
     void setFilterPoly32(bool on);
+    // Ours: the channels the allocator shares out, the unit's 32 (the default) or 64, 96 or 128, each with a filter
+    // voice; the parts' note reserves scale with it. A change stops every note, as a filter switch does. Call it
+    // from the audio thread, between process calls.
+    void setPolyphony(int voices);
+    int polyphony() const;
     // Ours: pitch bend at its full 14 bits (the default), or the MSB alone as on the unit.
     void setBend14(bool on);
     // Ours: a new filter cutoff glides over 10 ms (the default), or steps a semitone a byte as on the unit (off).

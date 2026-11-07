@@ -18,10 +18,11 @@ share 16 voices between them, and a 17th filtered note steals one even when the 
 unfiltered parts are capped at 16 the same way.
 
 **FSVR.** FSVR does not emulate the filter chip: it runs what the chip's program computes, one resonant ladder
-per voice (`fsvr::filters::VoiceFilter`, bit for bit, pinned by `dsp_check`). A voice is as cheap to add as a struct, so every one of the 32 channels has one.
-The firmware's filter host drives sixteen slots, so the 32 voices are two banks of sixteen, each with its own
-host, EGs and LFO2s (`Filter::Bank`); channel n is slot `n & 15` of bank `n >> 4`. Both banks run the same
-host and calibration; nothing about the second needed a new constant.
+per voice (`fsvr::filters::VoiceFilter`, bit for bit, pinned by `dsp_check`). A voice is as cheap to add as a struct, so every channel has one.
+The firmware's filter host drives sixteen slots, so the voices are banks of sixteen, two for the unit's 32 channels
+and one more for each sixteen above them (More than 32 voices, below), each with its own host, EGs and LFO2s
+(`Filter::Bank`); channel n is slot `n & 15` of bank `n >> 4`. Every bank runs the same host and calibration;
+nothing about the second needed a new constant.
 
 - **Allocation.** With both chips there is nothing to split: the allocator walks all 32 channels with the one
   cursor and the stealing rules it uses when no filter is on.
@@ -36,11 +37,47 @@ host and calibration; nothing about the second needed a new constant.
 - **A type byte past BEF.** On the unit it points a slot's output step at a register the byte happens to
   name, which is another voice's state rather than a filter; FSVR plays silence there. No voice holds one.
 
-It is the default. Options > Special > 32 Filtered Voices switches it off (`Device::setFilterPoly32(false)`,
-`-flt16` on the console); the setting is kept in `Settings.json` for every instance. Off is the unit's 16 and
-renders bit-identically to the single-chip engine: all fifteen demo songs were checked. Changing the setting
-stops every note, as a filter switch does. Nothing about the second bank can be measured, since the unit has
-no second chip.
+It is the default. Options > Special > Filter on Every Voice switches it off (`opt.filter32`,
+`Device::setFilterPoly32(false)`, `-flt16` on the console); the setting is kept in `Settings.json` for every
+instance. Off is the unit's 16 and renders bit-identically to the single-chip engine: all fifteen demo songs were
+checked. Changing the setting stops every note, as a filter switch does. Nothing about the second bank can be
+measured, since the unit has no second chip.
+
+## More than 32 voices
+
+**The unit.** Two YMP706 tone generators of sixteen channels each, 32 in all, and the allocator (`FUN_0000f7dc`)
+walks them: round robin from the last channel taken and, with every channel owned, the part furthest over its
+note reserve gives one up, the reserves being bytes 0..32 that cannot add up to more than the 32 channels
+(`docs/findings.md`, 2026-09-25). The one filter chip serves the first sixteen.
+
+**FSVR.** Options > Special > Polyphony sets 32, the unit's and the default, or 64, 96 or 128 (`opt.poly`,
+`Device::setPolyphony`, `-poly` on the console and `render_capture`); the setting is kept in `Settings.json` for
+every instance, as Quality / Speed is. The engine holds 128 channels (`Synth::MAX_CHAN`) and allocates the number
+set (`Synth::nchan`); a channel is the firmware's `Chan` whatever its number, and the allocator is the firmware's
+over them:
+
+- **Allocation.** The one walk over every channel in use, round robin from the last taken, with the same steal:
+  filling an empty machine lands on channels 1..n-1 then 0, and the next note takes the channel the unit's rule
+  picks (channel 2, holding the second note played, in the self check).
+- **Note reserves scale.** A part's reserve byte stays 0..32 and the sum rule stays the unit's; the allocator takes
+  it as the part's share of the unit's 32 applied to the channels in use, so a reserve of 8 is 32 of 128. A
+  performance's bytes mean the same at every polyphony, a dump round-trips unchanged, and the editor's Rsv
+  controls keep their range.
+- **A filter voice for every channel.** Channel n is slot `n & 15` of filter bank `n >> 4` (32 filtered voices,
+  above): eight banks at 128. With Filter on Every Voice off, the unit's split: a filtered part walks the chip's
+  sixteen channels, an unfiltered one the other `n - 16`.
+- **A bank at rest.** A filter bank past the second runs only while it has something to do: once its sixteen
+  slots have had no input, no output, no state and every EG holding for a second, it rests, as the engine does
+  while nothing sounds, until a register write or an input wakes it (`Filter::Bank::resting`). Its LFO2s stop with
+  it and come back at another phase, as the effect LFOs do after the engine sleeps. Banks 0 and 1 always run, so
+  the 32-voice engine renders as it always did.
+- **The latch.** The polyphony latches with the filter switches (`filter_latch`, `FUN_0002087e`): a change stops
+  every note, as a filter switch does.
+- **The POLY readout** counts channels as before, now up to the polyphony set.
+
+At 32 every render is bit-identical to the engine before the setting (`tools/abcheck.py`, Tier A), and a phrase of
+fewer than 32 notes renders the same bits at every polyphony, since it lands on the same channels. Nothing above
+32 can be measured against the unit; what it costs is in `docs/performance.md`.
 
 ## A performance change starts the effect section over
 
