@@ -46,8 +46,8 @@ struct Group {
         // the unvoiced operator
         int32_t uegStage[WMAX]; double uegCur[WMAX], uegTarget[WMAX], uegRate[WMAX], uegHold[WMAX]; uint64_t uegRising[WMAX];
         int32_t ufegStage[WMAX], ufegHold[WMAX]; double ufegCur[WMAX], ufegTarget[WMAX], ufegKatt[WMAX], ufegKdec[WMAX];
-        double uatt[WMAX], nf[WMAX], na[WMAX], na2[WMAX], nscale[WMAX], nres[WMAX];
-        int32_t rng[WMAX]; double lp0[WMAX], lp1[WMAX], nphase[WMAX], uprev[WMAX];
+        double uatt[WMAX], ninc[WMAX], ucoef[WMAX], udrift[WMAX], uwidth[WMAX];
+        int32_t rng[WMAX]; double lp0[WMAX], lp1[WMAX], walk[WMAX], nphase[WMAX];
         // the algorithm's buses, as masks: where the input comes from, and what the output feeds
         uint64_t inFb[WMAX], inCb[WMAX], inH[WMAX], inS[WMAX], toH[WMAX], sClr[WMAX], sAdd[WMAX], toFb[WMAX], carrier[WMAX];
         double out[WMAX];                      // the last sample's output, for OpState::out

@@ -43,6 +43,8 @@ Eleven of the twenty-four frozen files agree with the unit to a quarter of a dec
 
 > **Closed.** `13_unvoiced3` came back and settled the rest: the corner clamps at register 77, the skirt multiplies it by 1.35 a step, the level is a table and the resonance is a threshold. The engine carries all of it. Level error 7.40 to **0.67**, 2.86 to **0.94**, 7.13 to **0.55** and 6.15 to **0.61** over the four unvoiced files. `docs/noise.md`.
 
+> **2026-11-02.** The band this item measured is now made by the patents' clamped random walk instead of two one-poles, which gets the noise's amplitude statistics right as well as its spectrum: against WouterVanNifterick's takes the product's kurtosis is within 0.03 at the median where the two poles were 1.85 out, the level within 0.17 dB at the 90th percentile where they were 0.63, and the band shape where it was (`noise.md` 2026-11-02). The numbers in this file against rgwan's captures are still the two-pole engine's: `tools/bench_captures.py` has not been run on the walk, as the captures are not on the machine that made the change.
+
 Eighty-one segments over three files, 7.1 to 7.4 dB of level error and 3.8 to 6.4 dB of shape error, and the model behind them is a reading of the patent with no measurement anywhere in it: a cascade of `1 + skirt` one-poles whose cutoff spans nine octaves from 20 Hz, ring modulated up to the centre, with a level term that holds the RMS constant.
 
 Reading the two bandwidth sweeps together settles five things, and none of them needs another recording.

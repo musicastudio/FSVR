@@ -122,7 +122,12 @@ void Synth::note_on(int part, int note, int vel) {
     // A channel no note has used yet starts at a drawn phase: what it ran since power-on is not known.
     uint32_t run[8];
     for (int o = 0; o < 8; o++) run[o] = C.age ? C.op[o].phase + op_inc32(C.op[o].inc) * (uint32_t)(now - C.ran) : V.v[o].keysync ? 0u : draw();
-    C = Chan(); C.active = true; C.part = part; C.owner = part; C.note = note; C.vel = vel; C.held = true; C.age = ++clock; C.chn = noteChn;
+    // The unvoiced carriers and their walks are the channel's, not the note's: they run on through every note and
+    // every gap between, never reset (keep_unvoiced). MEASURED 2026-11-01 on WouterVanNifterick's unit, not read
+    // from the firmware: 32 mono notes over 100 s land on one 3.4389 Hz carrier that never stopped (docs/noise.md).
+    const Chan was = C;
+    C = Chan(); keep_unvoiced(C, was, now);
+    C.active = true; C.part = part; C.owner = part; C.note = note; C.vel = vel; C.held = true; C.age = ++clock; C.chn = noteChn;
     C.damp = damp; C.filtered = filtered;
     C.lfoPhase = sync ? 0 : keepPhase;
     C.panBase = pt.p[0x0E] ? pt.p[0x0E] : (int)(draw() % 128);       // part pan 0 = random per note; the rest is the table index
@@ -156,7 +161,6 @@ void Synth::note_on(int part, int note, int vel) {
         s.phase = v.keysync ? 0u : run[o];   // 2^32 to a cycle
         s.ueg.start(C.uegL[o], C.uegR[o], C.uegHold[o], eg_ratescale(u.tscale, C.regC0));
         s.ufeg.start(u.fegInit, u.fegAtt, u.fegAttT, u.fegDecT);
-        s.rng = 0x9E3779B9u * (o + 1) ^ clock; if (!s.rng) s.rng = 1;
         s.attS = s.uattS = -1e9;          // the level glides start at the new note's own levels
     }
 }
@@ -311,7 +315,8 @@ void Synth::silence_part(int part) {
         const int slot = int(&C - ch);
         if (C.filtered) flt.host(slot).kill(slot & 15);
         const double damp = C.last + C.damp;
-        C = Chan(); C.part = part; C.damp = damp; C.active = damp != 0.0;
+        const Chan was = C;
+        C = Chan(); keep_unvoiced(C, was, now); C.part = part; C.damp = damp; C.active = damp != 0.0;
     }
     Part& pt = perf.part[part];
     pt.nheld = 0; pt.lastPitch = 0x53AA;

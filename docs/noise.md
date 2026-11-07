@@ -127,3 +127,77 @@ Reproducing this: `python tools/fit_noise_band.py` prints the table above off `c
 Read again against the current engine, octave bands of hardware minus engine with each side's level divided out, over eleven wideband segments across `05_unvoiced_1`, `13_unvoiced3` and `05_unvoiced_2`: -0.5 to +0.5 dB in every octave from 125 Hz to 16 kHz, the 4 to 8 kHz and 8 to 16 kHz bands included. The two-pole reading above had already closed it. The 3.1 to 3.7 dB that `tools/analyze_capture.py --compare` still prints as shape for the 1 kHz files is its sixth-octave bands under 100 Hz, one or two FFT bins each at the recording's floor on one side and the render's on the other; the same files over 100 Hz read 1.9 to 2.2, and over the bands within 40 dB of the peak 1.2 to 1.6. A gate on those bands was tried in the analyzer and taken out, because it also empties the files whose spectra are three lines. The number is the metric's, not the engine's, and it is left as it is so the ledger stays comparable.
 
 What is left in the unvoiced chain is the resonance carrier's level against the register, which the two takes still put 2 to 3 dB apart in opposite directions at settings 6 and 7. Not a shape, and not above 4 kHz.
+
+## 2026-11-02, the noise is a clamped random walk, and it runs free
+
+The two one-poles above have the band right and the noise wrong. WouterVanNifterick recorded the unvoiced operator on their own unit, off its analogue out, at a 1 kHz and an 8 kHz centre over every bandwidth, skirt and resonance (2026-11-01 and 2026-11-02), and read what the spectrum cannot see: the noise's amplitude, demodulated from the centre. Below bandwidth 44 it is sine valued and bimodal, the product's kurtosis near -1.3. At 52 to 56 it comes in bursts, super-Gaussian. Above 60 it is Gaussian. White noise through any linear filter is Gaussian at every setting, and FSVR's was.
+
+**The generator is the patents' correlative noise.** US5610354 (FIG. 14) draws the unvoiced operator as white noise through a low-pass set by the skirt, an adder for the resonance, a "correlative noise" circuit set by the bandwidth, and a multiplier by the centre's waveform. US5744741 and JPH04346502A spell the correlative circuit out: each sample is drawn at random within a step of the last. Yamaha's S-YXG100 soft synth computes the same walk in floating point. In words: white noise on [-1, 1) through a one-pole whose coefficient is the skirt's is the drive. The drive two samples back, lifted by the resonance's drift and capped at 1, places the walk's next value between the walk less the width and the walk plus it, both bounds clamped to the rails at -1 and 1. The walk times the centre's sine is the operator. (The two-sample mean of 2026-09-22 stood after it here until 2026-11-07, when the unit's digital tap showed it is not there; see the section of that date.) A narrow width walks a slow path that rides the sine, which is the bimodal noise; a width past the rails lets the walk be the drive itself, which is the Gaussian one. Bandwidth register 0 is width 0: the walk stands still and the operator is the bare carrier at whatever level the walk stood. That replaces the 2026-09-21 reading that register 0 silences the noise and leaves a resonance carrier: there is no separate carrier, the resonance is the drift, and it no longer depends on the register.
+
+**The tables** are `cal::WALK_WIDTH` (by bandwidth register, log-linear between the fitted settings, 2 from register 82, setting 64, where the walk is past its rails), `WALK_COEF` (the drive's one-pole by skirt, 1/16 at skirt 0), `WALK_DRIFT` (by resonance) and one gain, `WALK_GAIN`. They are fitted on those takes, two centres on one unit, by level, band shape and kurtosis, with `tools/fs1r/hw` in WouterVanNifterick's FS1x repository as the method, and copied from its commit 0ae343b2 without change so the two projects stay comparable. The drift is the S-YXG100's own table, 0 and then 2^-8 to 2^-2; fitted free, resonances 4 to 6 land on it and resonance 7 reads 0.35 against its 0.25. Under the 2026-09-19 rule they are fitted rather than measured until a second unit agrees.
+
+**Nothing resets.** In the `sync` take (20261101-2033) 32 mono notes over 100 s land on one 3.4389 Hz carrier that never stopped, and at bandwidth 0 the frozen level repeats exactly over 24 mono notes and with period 32 in poly, one level a channel. So the carrier and the walk belong to the channel: a note never resets them, a carrier steps on while its operator is under the gate, and a channel that renders nothing has its carriers run on at the centres they last played, worked out when a note next takes it (`keep_unvoiced`). Each channel's carriers and generators start once, from seeds of their own, and its walks at 0 (`seed_unvoiced`; the walk's start at 0 is rgwan's unit, 2026-11-07). The walk holds while nobody can hear it, which no recording can tell from running. The mono rule this needs was already the firmware's (2026-10-26): `FUN_000112C0` takes back the first channel whose owner word, `DAT_010289FC`, is the part, and the poly allocator writes the same word, so a mono part keeps the channel its last note played.
+
+**Against the takes.** Every segment of `spectrum` (20261101-2039), `window-3hz` (20261101-2027) and `sync` rendered on `render_capture` with the voice and performance bulks the unit was sent, read by FS1x's `tools/fs1r/hw/analyze.py` at its commit 9de1dfc4, each engine render through the unvoiced band's analogue path, and summarised as FS1x's EXP-0177 summarises its own: bandwidth 0 rows aside (106 and 40 segments), the median and the 90th percentile of each difference, band shape as the rms of the sixth-octave differences with the segment's level taken off, within 30 dB of the peak.
+
+| | kurtosis difference | crest | envelope spread | band shape, under 16 kHz | under 7 kHz | level, median / abs p90 |
+|---|---|---|---|---|---|---|
+| `spectrum`, two one-poles | 1.85 / 2.39 | 2.16 | 0.207 | 0.43 / 0.68 | 0.42 | -0.35 / 0.63 |
+| `spectrum`, the walk | **0.03 / 0.09** | **0.09** | **0.005** | 0.41 / 0.59 | 0.42 | +0.07 / **0.18** |
+| `spectrum`, FS1x's engine, the same tables | 0.03 / 0.10 | 0.07 | 0.006 | 0.39 / 0.57 | 0.38 | -0.04 / 0.25 |
+| `window-3hz`, two one-poles | 0.60 / 1.35 | 0.81 | 0.060 | 0.41 / 0.67 | 0.43 | -0.24 / 0.48 |
+| `window-3hz`, the walk | **0.07 / 0.10** | **0.18** | **0.008** | 0.46 / 0.56 | 0.47 | +0.10 / **0.23** |
+| `window-3hz`, FS1x's engine, the same tables | 0.04 / 0.10 | 0.16 | 0.008 | 0.44 / 0.61 | 0.44 | +0.04 / 0.25 |
+
+The walk lands on FS1x's engine: the waveform's statistics go from wrong to right, the level holds tighter with one gain for every setting than the two-pole fit's level table did, and the band shape is where it was, a little better at the 90th percentile and 0.05 dB worse at the median on `window-3hz`. The half-power width reads 1.00 of the unit's where the two poles read 1.05.
+
+| `sync`, mono | R0 | Rf | Rg |
+|---|---|---|---|
+| the unit | 0.140 | 0.997 | 0.994 |
+| two one-poles, reset at every note | 0.988 | 0.341 | 0.095 |
+| the walk, free running | **0.150** | **0.997** | **0.994** |
+
+R0 is how far the carrier's phase at each note agrees with a restart, Rf with one oscillator left running; poly reads as the unit does (R0 0.083 and Rf 0.329 against 0.172 and 0.384, every note on a channel of its own).
+
+These rows read FSVR's left channel alone. FSVR's right channel lagged its left by two samples in its output path when they were read (since made one sample, as the unit's, docs/findings.md 2026-10-28, FSVR#97), and `analyze.py` sums the channels, so as rendered a comb takes 6 dB off at 8 kHz and 21 dB at 12 kHz on both engines alike (band shape 4.9 and 5.1 dB). That is the output path, not this generator, and whether the unit's analogue out does the same is not claimed here either way. Nor is FS1x's out-path take (its F-0453), which reads the unit's voiced output as carrying a two-sample mean of its own off the analogue out, where the 2026-09-22 reading above found none on rgwan's digital tap.
+
+**What is open.** The tables against a second unit: `tools/bench_captures.py` on rgwan's `05_unvoiced_1`, `05_unvoiced_2`, `13_unvoiced3` and `22_ures`, which the two one-poles were fitted on, has not been run on the walk (the captures are not on the machine that made the change). The drift at resonance 7. Kalimba (demo song 6), whose two bandwidth-0 operators settled the old carrier, has not been read again. The walk's bit widths and its period: US5744741 reads as a 12-bit drive and a 16-bit walk, and nothing here measures either. `tools/fit_noise_band.py` still runs and reproduces the 2026-09-22 table off rgwan's captures; it describes the two-pole model and stays as its history.
+
+## 2026-11-03, the width is the register over 64
+
+The walk's width above was a table: the widths fitted setting by setting, interpolated log-linearly between them, with 2 standing in past the rails. It carried every fit's scatter, plateaus at registers 10 to 12 and 18 to 20 and jitter at the bottom, and it jumped from 1.28 to 2 at register 82. The fitted widths themselves say what the law is:
+
+| settings (registers) | fitted width over register / 64 |
+|---|---|
+| 24 to 57 (30 to 73), the best-determined fits | 0.998 to 1.028, most 1.000 to 1.010 |
+| 2 to 22 (2 to 28), fitted from level | 0.84 to 1.08 |
+| 58 to 63 (74 to 81), fitted from kurtosis | 1.007 to 1.030 |
+| 64 to 99 (82 to 127) | 2, a stand-in for "past the rails", not a fit |
+
+**So the width is the register over 64** (`cal::WALK_STEP`). Register 0 freezes the walk, 64 is one rail, and the 7-bit register tops out at 1.98. Past about register 90 the walk is the drive whatever its width: the unit's kurtosis is flat from setting 66 up, and the law renders those settings as the table's 2 did, to two decimals, without the jump. Read as fixed point it is the register with six fraction bits; in a 16-bit walk with its rails at ±2^15, which is how US5744741 reads, the register shifted nine places up into the patent's multiply. 1/64 is also the S-YXG100's own smallest step. That is a reading, not a measurement: the bit widths are open.
+
+Against the takes, read as in the section above (FS1x's `analyze.py` at 9de1dfc4, FSVR's left channel, bandwidth 0 aside), the table against the law, median / 90th percentile:
+
+| | kurtosis difference | band shape, under 16 kHz | level, median / abs p90 |
+|---|---|---|---|
+| `spectrum`, 106 segments, table | 0.03 / 0.09 | 0.41 / 0.59 | +0.07 / 0.18 |
+| `spectrum`, register / 64 | 0.03 / 0.08 | **0.38 / 0.56** | -0.02 / **0.17** |
+| `window-3hz`, 40 segments, table | 0.07 / 0.10 | 0.46 / 0.56 | +0.10 / 0.23 |
+| `window-3hz`, register / 64 | 0.07 / 0.11 | **0.43 / 0.51** | +0.04 / **0.18** |
+| `gen-fine`, 91 segments, table | 0.06 / 0.13 | 0.46 / 0.58 | +0.06 / 0.22 |
+| `gen-fine`, register / 64 | 0.06 / 0.13 | **0.44 / 0.55** | +0.03 / **0.20** |
+
+`gen-fine` (take 20261101-2238) steps the bandwidth from 2 to 98, mostly at a 3.4 Hz centre where the walk's own shape is what the analysis reads; FS1x's engine with its table reads 0.05 / 0.14, 0.46 / 0.60 and -0.02 / 0.40 there. Setting by setting at skirt 0, the mean absolute residual in kurtosis and level goes 0.134 and 0.209 dB to 0.139 and 0.155 over settings 2 to 22, 0.064 and 0.071 to 0.059 and 0.056 over 24 to 57, 0.077 and 0.125 to 0.050 and 0.063 over 58 to 63, and stays where it was over 64 to 98, the take's disturbed patches at 80 to 84 included. The `sync` take does not move. So the law reads as well as the table or better on three sets and has one number in it where the table had 128. FS1x keeps its table; the same law would serve it.
+
+## 2026-11-07, on rgwan's unit: no two-sample mean, and a channel's walk starts at 0
+
+James asked for PR #110 to be checked on rgwan's rig, the analogue lowpasses in particular. The rig records the unit's digital tap only (S/PDIF, Scarlett inputs 5 and 6; inputs 1 to 4 read the -101 dB floor with a note playing), so no analogue stage is in these takes. Six short takes, all in `FS1R.unlock/captures/2026-11-07-pr110` with their `.mid`, manifest, builder and reader; FSVR renders the same `.mid` files through `render_capture`.
+
+**There is no two-sample mean on the tap.** The unit's left channel alone carries the walk's band to 20 kHz: at bandwidth 96 it reads -47.4 dB at 1, 8, 12 and 16 kHz centres alike. With the mean, PR #110 read 1.5, 3.1 and 5.9 dB low at 8, 12 and 16 kHz, and its band shape was 5 to 6 dB rms off on every wideband segment, 1 kHz included. Without it: level within 0.16 dB and shape within 0.42 dB on every segment. The cos^2 is real in the L+R sum: the right channel is one sample behind the left on the unit, voiced and unvoiced alike, as `docs/findings.md` 2026-10-28 has it, and a voiced sine reads the same sum loss (1.2, 3.0, 6.0 and 11.8 dB at 8, 12, 16 and 20 kHz) on the unit and in FSVR. So the mean was the channel pair's, not the generator's. The takes the PR was scored on were off WouterVanNifterick's analogue out, where FS1x's F-0453 reads the same cos^2 on the voiced output too. That fits an output-stage lowpass, not one in the unvoiced path. Nothing on this rig can measure the analogue out, so FSVR models the tap.
+
+**The part filter on the walk matches.** LPF24 and LPF12 at cutoffs 64 and 96 on a 1 kHz, bandwidth 96 walk: level within 0.21 dB, shape within 0.24 dB, with or without the change. The filter was not touched.
+
+**Bandwidth 0.** A walk that has moved and is then frozen by a parameter change (6p 01 27 = 0) is a sine at a steady level over the following mono notes (-46 dB on the unit, resonance 7 and 0 alike), as PR #110 has it. A channel whose walk has never moved is digital zero at bandwidth 0, on the first notes after power-on and in poly, where a note can take a fresh channel. PR #110 seeded each walk at a random point, so it sounded at about -28 dB there; the walk now starts at 0. Reached by voice bulk instead, the unit's level at bandwidth 0 changed from bulk to bulk (-61 dB, then zero, then -39 dB, over seven bulks, mono). FSVR holds the level across a bulk. What a bulk does to the walk is open.
+
+`tools/bench_captures.py` on rgwan's unvoiced captures, level median against PR #110 as pushed: `05_unvoiced_1` 0.16 to **0.06** dB, `05_unvoiced_2` 0.13 to 0.06, `05b_unvoiced2` 0.16 to 0.15, `13_unvoiced3` 1.31 to **0.09**, `22_ures` 1.19 to **0.08**, `15_filter` 0.44 to 0.15 (main read 0.23, 0.24, 0.40, 1.06, 1.08 and 0.40). Shape moves 0.0 to 0.2 dB, down in every file. So the walk's tables hold on a second unit once the mean is out. The 2026-09-22 reading of the mean was made before the dry pair's one-sample offset was known, and its working is not re-traced here.
+

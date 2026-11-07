@@ -184,7 +184,7 @@ void decode_op(Group& G, int l, int o) {
 void load_ctl(Group& G, int l, int o) {
     Op& P = G.op[o]; const OpState& s = G.chan[l]->op[o];
     P.inc[l] = (int32_t)s.inc; P.word[l] = s.word; P.fop[l] = s.fop; P.fw[l] = s.fw; P.wl7[l] = s.wl7; P.ratio[l] = s.ratio;
-    P.att[l] = s.att; P.uatt[l] = s.uatt; P.nf[l] = s.nf; P.na[l] = s.na; P.na2[l] = s.na2; P.nscale[l] = s.nscale; P.nres[l] = s.nres;
+    P.att[l] = s.att; P.uatt[l] = s.uatt; P.ninc[l] = s.ninc; P.ucoef[l] = s.ucoef; P.udrift[l] = s.udrift; P.uwidth[l] = s.uwidth;
     P.formB[l] = (G.voice[l]->v[o].form == 5 || G.voice[l]->v[o].form == 6) ? (double)(s.ratio + 1) : 1.0;
 }
 
@@ -211,7 +211,7 @@ void gather(Group& G) {
             P.nextGen[l] = s.nextGen; P.fphase[l] = s.fphase;
             P.uegStage[l] = s.ueg.stage; P.uegCur[l] = s.ueg.cur; P.uegTarget[l] = s.ueg.target; P.uegRate[l] = s.ueg.rate; P.uegHold[l] = s.ueg.holdLeft; setmask(P.uegRising, l, s.ueg.rising);
             P.ufegStage[l] = s.ufeg.stage; P.ufegHold[l] = s.ufeg.hold; P.ufegCur[l] = s.ufeg.cur; P.ufegTarget[l] = s.ufeg.target; P.ufegKatt[l] = s.ufeg.katt; P.ufegKdec[l] = s.ufeg.kdec;
-            P.rng[l] = (int32_t)s.rng; P.lp0[l] = s.lp[0]; P.lp1[l] = s.lp[1]; P.nphase[l] = s.nphase; P.uprev[l] = s.uprev;
+            P.rng[l] = (int32_t)s.rng; P.lp0[l] = s.lp[0]; P.lp1[l] = s.lp[1]; P.walk[l] = s.walk; P.nphase[l] = s.nphase;
             P.out[l] = s.out;
         }
     }
@@ -230,7 +230,7 @@ void gather(Group& G) {
             P.sine[l] = ~0ull; P.all[l] = P.odd[l] = P.res[l] = P.frmt[l] = 0; P.winAt[l] = 0; P.skirt[l] = 0; P.dc[l] = 0.f; P.formA[l] = P.formB[l] = 1;
             P.uegStage[l] = 5; P.uegCur[l] = P.uegTarget[l] = -200; P.uegRate[l] = P.uegHold[l] = 0; P.uegRising[l] = 0;
             P.ufegStage[l] = 2; P.ufegHold[l] = 0; P.ufegCur[l] = P.ufegTarget[l] = P.ufegKatt[l] = P.ufegKdec[l] = 0;
-            P.uatt[l] = P.nf[l] = P.nscale[l] = P.nres[l] = 0; P.na[l] = P.na2[l] = 1; P.rng[l] = 1; P.lp0[l] = P.lp1[l] = P.nphase[l] = P.uprev[l] = 0;
+            P.uatt[l] = P.ninc[l] = P.ucoef[l] = P.udrift[l] = P.uwidth[l] = 0; P.rng[l] = 1; P.lp0[l] = P.lp1[l] = P.walk[l] = P.nphase[l] = 0;
             P.inFb[l] = P.inCb[l] = P.inH[l] = P.inS[l] = P.toH[l] = P.sClr[l] = P.sAdd[l] = P.toFb[l] = P.carrier[l] = 0;
             P.out[l] = 0;
         }
@@ -272,7 +272,7 @@ void scatter(Group& G, int l, int n) {
         s.nextGen = P.nextGen[l]; s.fphase = P.fphase[l];
         s.ueg.stage = P.uegStage[l]; s.ueg.cur = P.uegCur[l]; s.ueg.target = P.uegTarget[l]; s.ueg.rate = P.uegRate[l]; s.ueg.holdLeft = P.uegHold[l]; s.ueg.rising = P.uegRising[l] != 0;
         s.ufeg.stage = P.ufegStage[l]; s.ufeg.hold = P.ufegHold[l]; s.ufeg.cur = P.ufegCur[l];
-        s.rng = (uint32_t)P.rng[l]; s.lp[0] = P.lp0[l]; s.lp[1] = P.lp1[l]; s.nphase = P.nphase[l]; s.uprev = P.uprev[l];
+        s.rng = (uint32_t)P.rng[l]; s.lp[0] = P.lp0[l]; s.lp[1] = P.lp1[l]; s.walk = P.walk[l]; s.nphase = P.nphase[l];
         s.out = P.out[l];
     }
 }
@@ -303,7 +303,7 @@ void render_group(Group& G, int n) {
     const double vGate = G.gateDb > -cal::OP_CUT_DB ? G.gateDb : -cal::OP_CUT_DB, uGate = G.gateDb > -cal::NOISE_CUT_DB ? G.gateDb : -cal::NOISE_CUT_DB;
     const vd vGateV = set1(vGate), uGateV = set1(uGate);
     const vd slewK = set1(LEVEL_SLEW_K), dampK = set1(DAMP_K), clip = set1(cal::CHAN_CLIP), nclip = set1(-cal::CHAN_CLIP);
-    const vd formLevel = set1(cal::FORM_LEVEL), nzScale = set1(1.7320508 / 2147483648.0), srV = set1((double)SR);
+    const vd formLevel = set1(cal::FORM_LEVEL), one = set1(1.0), mone = set1(-1.0), wScale = set1(1.0 / 2147483648.0), walkGain = set1(cal::WALK_GAIN);
     const EG* egs[Group::OPS][W]; const EG* uegs[Group::OPS][W];
     for (int o = 0; o < Group::OPS; o++) for (int l = 0; l < W; l++) { const Chan& C = *G.chan[l < G.lanes ? l : 0]; egs[o][l] = &C.op[o].eg; uegs[o][l] = &C.op[o].ueg; }
     vm liveBefore = loadmask(G.active), silentBefore = loadmask(G.silent);
@@ -390,11 +390,11 @@ void render_group(Group& G, int n) {
             const vd ugain = any(upass) ? select(upass, db2lin_fast(ud), zero) : zero;
             const vm um = ne(ugain, zero);
             if (any(um)) {
-                vd nf = load(P.nf);
+                vd ninc = load(P.ninc);
                 if (P.ufegOn) {
                     const int m = movemask(um) & P.ufegOn;
                     for (int l = 0; l < W; l++) if (m >> l & 1) {
-                        nf = setlane(nf, l, P.nf[l] * fm::exp2(feg_tick(P.ufegStage, P.ufegHold, P.ufegCur, P.ufegTarget, P.ufegKatt, P.ufegKdec, l) / 12.0));
+                        ninc = setlane(ninc, l, P.ninc[l] * fm::exp2(feg_tick(P.ufegStage, P.ufegHold, P.ufegCur, P.ufegTarget, P.ufegKatt, P.ufegKdec, l) / 12.0));
                         if (P.ufegStage[l] >= 2) P.ufegOn &= ~(1 << l);
                     }
                 }
@@ -403,22 +403,25 @@ void render_group(Group& G, int n) {
                 vi r = ixor(rng, ishl(rng, 13)); r = ixor(r, ushr(r, 17)); r = ixor(r, ishl(r, 5));
                 rng = iselect(umi, r, rng);
                 istore(P.rng, rng);
-                const vd nz = mul(cvt_i2d(rng), nzScale);
-                vd lp0 = load(P.lp0), lp1 = load(P.lp1);
-                const vd lp0n = add(lp0, mul(sub(nz, lp0), load(P.na)));
-                const vd lp1n = add(lp1, mul(sub(lp0n, lp1), load(P.na2)));
-                lp0 = select(um, lp0n, lp0); lp1 = select(um, lp1n, lp1);
-                store(P.lp0, lp0); store(P.lp1, lp1);
-                const vd nz2 = add(mul(lp1n, load(P.nscale)), load(P.nres));
-                vd nphase = load(P.nphase);
-                vd np = add(nphase, div(nf, srV));
-                np = select(ge(np, set1(1.0)), sub(np, set1(1.0)), np);
-                nphase = select(um, np, nphase);
-                store(P.nphase, nphase);
-                const vd u1 = mul(nz2, sin_turns(np));
-                const vd uprev = load(P.uprev);
-                mix = select(um, add(mix, mul(mul(mul(half, add(u1, uprev)), ugain), partU)), mix);
-                store(P.uprev, select(um, u1, uprev));
+                // the walk, as render_chan steps it
+                const vd white = mul(cvt_i2d(rng), wScale);
+                const vd y1 = load(P.lp0), y2 = load(P.lp1);
+                store(P.lp0, select(um, add(y1, mul(load(P.ucoef), sub(white, y1))), y1));
+                store(P.lp1, select(um, y1, y2));
+                const vd t = min(add(y2, load(P.udrift)), one);
+                const vd walk = load(P.walk), width = load(P.uwidth);
+                const vd lo = max(sub(walk, width), mone), hi = min(add(walk, width), one);
+                const vd walkN = add(lo, mul(mul(sub(hi, lo), add(t, one)), half));
+                store(P.walk, select(um, walkN, walk));
+                // the carrier on every lane, heard or not: an unheard lane steps by its own increment
+                vd np = add(load(P.nphase), ninc);
+                np = select(ge(np, one), sub(np, one), np);
+                store(P.nphase, np);
+                const vd u1 = mul(mul(walkN, walkGain), sin_turns(np));
+                mix = select(um, add(mix, mul(mul(u1, ugain), partU)), mix);
+            } else {
+                vd np = add(load(P.nphase), load(P.ninc));
+                store(P.nphase, select(ge(np, one), sub(np, one), np));
             }
             // what the channel's tail asks of this operator: a running envelope, a carrier still heard
             const vm egDone = eg_done(er), uegDone = eg_done(ur);

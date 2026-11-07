@@ -78,23 +78,11 @@ void refresh_op(Chan& C, const Voice& V, bool fs, int o, uint64_t serial) {
         // link-fo, not as itself. uv-linkff-sine's image reads mode 1 where the sysex asked for 2.
         else if (u.mode) nf = C.f0;
         else nf = op_hz(op_increment(C.ufreqWord[o] + C.ufbW[o] + (C.regFM * u.fms) / 7 + C.vcFreq[o][1]));
-        s.nf = nf * fm::exp2(u.transpose / 12.0);
-        // MEASURED noise formant, docs/noise.md and cal.h: two unequal digital one-poles on white noise,
-        // their coefficients and the band's peak gain read off the tables against the register and the
-        // skirt. The gain is the band's PEAK, not its RMS, which is what the fit measured; the RMS follows
-        // from the coefficients and is what the resonance carrier is set against.
-        int ureg = clampi(C.ubwReg[o] + C.vcBw[o][1], 0, 127);
-        NoiseBand nb = noise_band(ureg, u.skirt);
-        s.na = nb.a1; s.na2 = nb.a2;
-        double resDc, resNoise; ures(ureg, u.res, resDc, resNoise);
-        s.nscale = db2lin(nb.gdb + cal::NOISE_LEVEL_DB) * resNoise;
-        // Bandwidth register 0 silences the noise and leaves the resonance carrier alone. The capture set
-        // cannot see the split, since every segment it has at bandwidth 0 is at resonance 0 too, and the
-        // demo settles it: Kalimba runs two unvoiced operators at bandwidth 0 with resonance 5 and 7, and
-        // taking the carrier down with the noise costs it 3.9 dB of band tilt where leaving it alone costs
-        // nothing anywhere else. So the carrier is set against the band the register would give at 5.
-        NoiseBand nc = ureg == 0 ? noise_band(5, u.skirt) : nb;
-        s.nres = db2lin(nc.gdb + cal::NOISE_LEVEL_DB) * sqrt(noise_band_var(nc.a1, nc.a2)) * resDc;
+        s.ninc = nf * fm::exp2(u.transpose / 12.0) / SR;   // the carrier's step, in turns a sample
+        // The walk (cal.h): its width the bandwidth register over 64, 0 freezing it; the drive's one-pole by the
+        // skirt; the drift by the resonance, whatever the register.
+        const int ureg = clampi(C.ubwReg[o] + C.vcBw[o][1], 0, 127);
+        s.uwidth = ureg * cal::WALK_STEP; s.ucoef = cal::WALK_COEF[u.skirt & 7]; s.udrift = cal::WALK_DRIFT[u.res & 7];
     }
 }
 
@@ -196,20 +184,22 @@ double render_chan(Chan& C, const Voice& V, bool fseq, double gateDb, int ctlDec
             ugain = s.dug == 0.0 ? s.ugain : (s.ugain += s.dug);
         }
         if (ugain != 0.0) {
-            double nf = s.nf;
-            if (s.ufeg.stage < 2) nf *= fm::exp2(s.ufeg.tick() / 12.0);
+            double ninc = s.ninc;
+            if (s.ufeg.stage < 2) ninc *= fm::exp2(s.ufeg.tick() / 12.0);
             s.rng ^= s.rng << 13; s.rng ^= s.rng >> 17; s.rng ^= s.rng << 5;
-            // Uniform in [-1, 1) scaled to unit variance, so the tables in cal.h read in the band's own RMS.
-            double nz = ((int32_t)s.rng) * (1.7320508 / 2147483648.0);
-            s.lp[0] += (nz - s.lp[0]) * s.na; s.lp[1] += (s.lp[0] - s.lp[1]) * s.na2;
-            nz = s.lp[1] * s.nscale + s.nres;
-            s.nphase += nf / SR; if (s.nphase >= 1) s.nphase -= 1;
-            // The unvoiced output is the mean of this sample and the last, see cal.h: the unit's noise
-            // falls off above 8 kHz on a cos^2 that no voiced operator shows, whichever centre it is at.
-            double u1 = nz * fsin(s.nphase);
-            mix += 0.5 * (u1 + s.uprev) * ugain * partU;
-            s.uprev = u1;
-        }
+            // The walk (cal.h): white noise on [-1, 1) through the skirt's one-pole, read two samples back and
+            // lifted by the resonance's drift, places the walk's next value between the walk less its width and
+            // the walk plus it, inside the rails. The clamps are the lane kernel's min and max, operands in order.
+            const double white = ((int32_t)s.rng) * (1.0 / 2147483648.0);
+            const double y1 = s.lp[0], y2 = s.lp[1];
+            s.lp[1] = y1; s.lp[0] = y1 + s.ucoef * (white - y1);
+            const double d = y2 + s.udrift, t = d < 1.0 ? d : 1.0;
+            const double a = s.walk - s.uwidth, b = s.walk + s.uwidth;
+            const double lo = a > -1.0 ? a : -1.0, hi = b < 1.0 ? b : 1.0;
+            s.walk = lo + (hi - lo) * (t + 1.0) * 0.5;
+            s.nphase += ninc; if (s.nphase >= 1) s.nphase -= 1;
+            mix += s.walk * cal::WALK_GAIN * fsin(s.nphase) * ugain * partU;
+        } else { s.nphase += s.ninc; if (s.nphase >= 1) s.nphase -= 1; }   // an unheard carrier runs on (keep_unvoiced)
     }
     C.fbBus = (fbNew + C.fbPrev) * 0.5; C.fbPrev = fbNew;
     bool alive = false;
@@ -250,4 +240,24 @@ int render_chan_block(Chan& C, const Voice& V, bool fseq, double gateDb, int ctl
         if (steps) C.ran = now + t + 1;
     }
     return n;
+}
+
+void seed_unvoiced(Chan& C, int c) {
+    for (int o = 0; o < 8; o++) {
+        const uint32_t k = (uint32_t)(c * 8 + o + 1) * 0x9E3779B9u;
+        OpState& s = C.op[o];
+        s.nphase = ((k >> 9) & 0x7FFFFF) / 8388608.0;
+        s.rng    = k | 1u;
+        s.walk   = 0;   // MEASURED 2026-11-07: a channel's first notes at bandwidth 0 are digital zero (docs/noise.md)
+    }
+}
+
+void keep_unvoiced(Chan& C, const Chan& was, long long now) {
+    for (int o = 0; o < 8; o++) {
+        const OpState& w = was.op[o]; OpState& s = C.op[o];
+        const double ph = w.nphase + w.ninc * (double)(now - was.ran);
+        s.nphase = ph - floor(ph); s.ninc = w.ninc;
+        s.rng = w.rng; s.lp[0] = w.lp[0]; s.lp[1] = w.lp[1]; s.walk = w.walk;
+    }
+    C.ran = now;
 }

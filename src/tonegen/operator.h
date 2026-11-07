@@ -54,8 +54,8 @@ struct OpState {
     WinGen g[2]; int nextGen = 0; double fphase = 0;   // the formant's grains
     double word = 0; uint32_t inc = 0;   // the operator's frequency word and its increment (refresh_ctl)
     EG eg; FreqEG feg;
-    EG ueg; FreqEG ufeg; double nphase = 0; double lp[8] = {}; uint32_t rng = 0x12345678;
-    double att = 0, attS = 0, fop = 0, fw = 0, wl7 = 1, uatt = 0, uattS = 0, nf = 0, na = 1, na2 = 1, nscale = 0, nres = 0, uprev = 0; int bw = 0, ratio = 0;   // refresh_ctl
+    EG ueg; FreqEG ufeg; double nphase = 0, lp[2] = {}, walk = 0; uint32_t rng = 0x12345678;   // the unvoiced carrier, in turns, and its walk
+    double att = 0, attS = 0, fop = 0, fw = 0, wl7 = 1, uatt = 0, uattS = 0, ninc = 0, ucoef = 0, udrift = 0, uwidth = 0; int bw = 0, ratio = 0;   // refresh_ctl
     double gain = 0, gto = 0, dg = 0, ugain = 0, ugto = 0, dug = 0;   // the Fast steps' gain ramps, voiced and unvoiced (render_chan)
     double out = 0;                                                   // this sample's voiced output, for tools/wavetrace
 };

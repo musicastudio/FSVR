@@ -96,7 +96,7 @@ struct Synth {
     float lastL = 0, lastR = 0; int quiet = 0; bool asleep = false;
     float partPeak[4] = {};   // ours, for a meter: each part's bus peak since Device::levels took it; the render never reads it
 
-    Synth() { init_perf(perf); init_system(); fx.load((uint8_t*)&perf); if (const char* r = getenv("FSVR_RENDER")) serialOnly = !strcmp(r, "serial"); }
+    Synth() { init_perf(perf); init_system(); for (int c = 0; c < NCHAN; c++) seed_unvoiced(ch[c], c); fx.load((uint8_t*)&perf); if (const char* r = getenv("FSVR_RENDER")) serialOnly = !strcmp(r, "serial"); }
     void init_system();
     static inline double sendlvl(int v) { return db2lin(-LEVEL_DB * SENDTAB[clampi(v, 0, 127)]); }
 

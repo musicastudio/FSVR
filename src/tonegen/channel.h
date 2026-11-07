@@ -3,7 +3,6 @@
 #include <cstdint>
 #include "presets/voice.h"
 #include "tonegen/operator.h"
-#include "tonegen/noise.h"
 
 // The note-on damp, same shape: what is left of the previous note in a reused channel decays at this
 // rate instead of being cut to zero. cal::DAMP_MS.
@@ -74,3 +73,9 @@ double render_chan(Chan& C, const Voice& V, bool fseq, double gateDb, int ctlDec
 // is Synth::now at the segment's first sample, for Chan::ran.
 int render_chan_block(Chan& C, const Voice& V, bool fseq, double gateDb, int ctlDecimation, int egDecimation, uint64_t ctlSerial,
                       long long now, double* out, bool* busy, int n);
+// The unvoiced carriers and their walks run free, per channel and operator: a note never restarts them, and while a
+// channel plays nothing its carriers run on at the centres they last played (docs/noise.md, 2026-11-02).
+// seed_unvoiced starts channel c's once, each from a seed of its own; keep_unvoiced carries them from was into C, which
+// note_on or silence_part has just rebuilt, the carriers run on to now (Synth::now).
+void seed_unvoiced(Chan& C, int c);
+void keep_unvoiced(Chan& C, const Chan& was, long long now);
