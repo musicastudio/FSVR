@@ -45,8 +45,11 @@ static inline double floor_cut(double x) {
 static inline double floor_exact(double x) {
 #if defined(__SSE4_1__) || defined(__AVX__) || defined(__aarch64__) || defined(_M_ARM64)
     return std::floor(x);                                                                  // one instruction
-#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
-    if (g_sse41) return _mm_cvtsd_f64(_mm_floor_sd(_mm_setzero_pd(), _mm_set_sd(x)));     // roundsd, emitted without /arch
+#elif defined(_MSC_VER) && !defined(__clang__) && (defined(_M_X64) || defined(_M_IX86))
+    // cl.exe only: it emits roundsd with no /arch, where clang-cl, which defines _MSC_VER and _M_X64 too,
+    // rejects the intrinsic without sse4.1 in the target. Giving clang the feature per function would cost
+    // the inlining this is here for, so it takes the cut, as every other non-MSVC x86 build does.
+    if (g_sse41) return _mm_cvtsd_f64(_mm_floor_sd(_mm_setzero_pd(), _mm_set_sd(x)));
     return floor_cut(x);
 #else
     return floor_cut(x);
