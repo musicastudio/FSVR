@@ -41,11 +41,13 @@ void refresh_op(Chan& C, const Voice& V, bool fs, int o, uint64_t serial) {
         // and sang at 275 Hz. Formant and fixed operators do not add the channel pitch.
         // Transpose is the formant operator's pitch, the grain rate, not this centre. Detune is the
         // other half of the 0x230 word (FUN_00013bc6) and stays on the centre the coarse and fine set.
-        // A frame replaces that centre and does not take the word.
-        if (fs && C.fseqOp[o]) w = C.fqWord[o] + pmw + det + (v.form != 7 && !v.fixed ? C.regPitch : 0);
-        else if (v.form == 7) w = C.freqWord[o] + C.fbW[o] + C.detW[o] + pmw + (C.regFM * v.fms) / 7;
+        // A frame replaces that centre and does not take the word. LFO freq mod still reaches a formant or fixed
+        // one: FUN_0001DC30 writes the sense whether the operator plays a frame or not.
+        int fmw = (int)(C.regFM * cal::FMS_FRAC[v.fms]);
+        if (fs && C.fseqOp[o]) w = C.fqWord[o] + pmw + det + (v.form != 7 && !v.fixed ? C.regPitch : fmw);
+        else if (v.form == 7) w = C.freqWord[o] + C.fbW[o] + C.detW[o] + pmw + fmw;
         else if (!v.fixed) w = C.freqWord[o] + C.regPitch + pmw + det;
-        else w = C.freqWord[o] + C.fbW[o] + pmw + det + (C.regFM * v.fms) / 7;
+        else w = C.freqWord[o] + C.fbW[o] + pmw + det + fmw;
         // The word through the phase generator (cal.h): the increment the chip steps the phase by, and in hertz
         // the frequency the grain forms run their carriers at.
         s.word = w; s.inc = op_increment(w); s.fop = op_hz(s.inc);
@@ -72,12 +74,15 @@ void refresh_op(Chan& C, const Voice& V, bool fs, int o, uint64_t serial) {
         if (C.ctlSerialU[o] == serial) return;
         C.ctlSerialU[o] = serial;
         double nf;
-        if (fs && C.fseqUOp[o]) nf = op_hz(op_increment(C.fquWord[o]));
+        // LFO freq mod and the control sets' frequency offset reach a frame word too: FUN_0001DC30 writes the
+        // sense for every operator and FUN_0002E308 adds the offset to every unvoiced word.
+        int ufmw = (int)(C.regFM * cal::FMS_FRAC[u.fms]);
+        if (fs && C.fseqUOp[o]) nf = op_hz(op_increment(C.fquWord[o] + ufmw + C.vcFreq[o][1]));
         else if (u.mode == 2 && v.form == 7) nf = op_hz(op_increment(C.freqWord[o] + C.detW[o]));
         // MEASURED: link-ff on a voiced partner that is not a formant operator reaches register 0x300 as
         // link-fo, not as itself. uv-linkff-sine's image reads mode 1 where the sysex asked for 2.
         else if (u.mode) nf = C.f0;
-        else nf = op_hz(op_increment(C.ufreqWord[o] + C.ufbW[o] + (C.regFM * u.fms) / 7 + C.vcFreq[o][1]));
+        else nf = op_hz(op_increment(C.ufreqWord[o] + C.ufbW[o] + ufmw + C.vcFreq[o][1]));
         s.nf = nf * fm::exp2(u.transpose / 12.0);
         // MEASURED noise formant, docs/noise.md and cal.h: two unequal digital one-poles on white noise,
         // their coefficients and the band's peak gain read off the tables against the register and the

@@ -251,6 +251,12 @@ static const double PMS_FRAC[8]  = {0, 0.038, 0.076, 0.125, 0.212, 0.365, 0.620,
                                             // fundamental's swing at pms 1..6 is 0.038, 0.076, 0.125, 0.212, 0.365,
                                             // 0.620 of pms 7's, where the DX7 curve the engine carried gave 0.026,
                                             // 0.053, 0.089, 0.161, 0.277, 0.497, a third shy at every step.
+// Per-op freq mod sensitivity, in 256ths of FMS 7's swing. MEASURED 2026-11-17 on Wouter's FS1R (Montage
+// local/fs1r-hw/fsvr115fms/fms1, findings 2026-11-17): a fixed 1 kHz sine under a square LFO1 swings 92.9, 184.9,
+// 305.4, 518.8, 889.6, 1482.1 and 2373.2 cents at FMS 1..7, FMD 99, each within 0.3 % of these 256ths. FMS 7 is
+// the engine's full LFO word to 0.1 cents at FMD 99, 66 and 33, and FMS 5 keeps its ratio at FMD 66. Unmeasured
+// on the noise half, which takes the same table. The linear fms / 7 the engine had was twice the unit at FMS 5.
+static const double FMS_FRAC[8]  = {0, 10 / 256.0, 20 / 256.0, 33 / 256.0, 56 / 256.0, 96 / 256.0, 160 / 256.0, 1.0};
 // The output path, MEASURED from rgwan's recording of the whole capture set on 2026-09-18. These three
 // are no longer inferred: they come off the digital tap itself. captures/analysis/ holds the numbers and
 // docs/capture_0918.md the working.

@@ -465,6 +465,61 @@ int selftest(Synth& S) {
           for (int n = 0; n < 150; n++) y = op_sample(s, v, 480.0, 0.0, 0, 0, pm, 1.0); return y; };
       ck("engine: a modulated formant grain reads on past its window, an unmodulated one ends", run(0.25) != 0.0 && run(0.0) == 0.0); }
 
+    // A frame replaces an operator's centre and nothing else: LFO freq mod (FUN_0001DC30) and, on the noise half, the
+    // control sets' frequency offset (FUN_0002E308) move it as they move a fixed operator. Note scaling and freq
+    // velocity sense do not (FUN_000135D8, FUN_0001386A).
+    {
+        auto A = std::make_unique<Synth>(); Synth& T = *A;
+        Voice& V = T.perf.part[0].voice;
+        std::vector<float> a(480), b(480);
+        T.fseq = Fseq(); T.fseq.valid = true; T.fseq.nframes = 1; T.fseq.endStep = 0;
+        uint8_t* f = T.fseq.frame[0];
+        f[0] = 101; f[1] = 118;                  // the pitch word of note 60, so the frame does not drag the channel
+        f[2] = 109; f[0x0A] = 68;                // voiced track 1: 28040
+        f[0x1A] = 100; f[0x22] = 0;              // unvoiced track 1: 25600
+        T.perf.c[0x21] = 2;                      // Fseq play mode: fseq
+        T.perf.c[0x26] = 0;                      // Fseq delay 0
+        memset(T.perf.c + 0x1A, 0, 6);           // start step, loop points 0
+        struct Op1 { double word, cents; };      // op 1's voiced word and its noise frequency in cents
+        // 100 ms into a note, where the LFO, a square at speed 0, holds +127.
+        auto play = [&](bool fs, int fmd, int fms, bool ctl, int note = 60, int vel = 100) {
+            init_default_voice(V);
+            V.v[0].form = 7; V.v[0].fixed = 1; V.v[0].level = 99; V.v[0].coarse = 16; V.v[0].fine = 110; V.v[0].bw = 40;
+            V.u[0].level = 99; V.u[0].coarse = 12; V.u[0].mode = 0; V.u[0].bw = 40;
+            V.v[0].notescale = V.u[0].notescale = 99;
+            V.v[0].fmsb = V.u[0].fmsb = 14;      // freq velocity sense +7
+            V.v[0].fms = V.u[0].fms = fms;
+            V.lfo1wave = 3;                      // square
+            V.lfo1speed = 0; V.lfo1delay = 0; V.lfo1sync = 1; V.pmd = V.amd = 0; V.fmd = fmd;
+            V.raw[0x40] = 0x28; V.raw[0x45] = 64 + 50;   // formant control 1 to op 1's unvoiced frequency, depth +50
+            T.perf.part[0].p[0x1D] = ctl ? 127 : 64;     // the part's formant control, full or centre
+            V.fseqV = V.fseqU = fs ? 1 : 0; V.v[0].fseqtrk = 0;
+            T.fseqPart = fs ? 0 : -1;
+            T.perf.c[0x15] = fs ? 1 : 0;         // Fseq part: part 1, or off
+            T.all_off();
+            T.midi_in(0x90, note, vel);
+            for (int k = 0; k < 10; k++) T.render(a.data(), b.data(), 480);
+            for (auto& ch : T.ch) if (ch.active && ch.note == note) return Op1{ch.op[0].word, 1200.0 * log2(ch.op[0].nf)};
+            return Op1{0, 0};
+        };
+        auto lfo = [&](bool fs, int fms) { Op1 on = play(fs, 99, fms, false), off = play(fs, 0, fms, false); return Op1{on.word - off.word, on.cents - off.cents}; };
+        auto ctl = [&](bool fs) { return play(fs, 0, 0, true).cents - play(fs, 0, 0, false).cents; };
+        Op1 fixed5 = lfo(false, 5), fseq5 = lfo(true, 5), fseq7 = lfo(true, 7), fseq0 = lfo(true, 0);
+        ck("an Fseq operator takes LFO freq mod as a fixed one does",
+           fixed5.word > 0 && fabs(fseq5.word - fixed5.word) < 1e-9 && fseq7.word > fseq5.word && fseq0.word == 0);
+        // The unit swings FMS 5 by 96/256 of FMS 7 (cal.h FMS_FRAC, measured 2026-11-17), not 5/7.
+        ck("FMS 5 swings 96/256 of FMS 7", fabs(fixed5.word / lfo(false, 7).word - 96 / 256.0) < 0.005);
+        // Noise is read in cents off two centres (a frame word is even, the fixed one odd), and the phase generator's
+        // steps differ by a fraction of a cent between them.
+        ck("an Fseq noise operator takes LFO freq mod as a fixed one does",
+           fixed5.cents > 0 && fabs(fseq5.cents - fixed5.cents) < 1.0 && fseq7.cents > fseq5.cents && fseq0.cents == 0);
+        ck("an Fseq noise operator takes the control sets' frequency offset", ctl(false) > 0 && fabs(ctl(true) - ctl(false)) < 1.0);
+        // Each against the same operator with Fseq off, which the note and the velocity do move.
+        auto moves = [&](bool fs, int n1, int v1, int n2, int v2) { Op1 p = play(fs, 0, 0, false, n1, v1), q = play(fs, 0, 0, false, n2, v2); return p.word != q.word || p.cents != q.cents; };
+        ck("the note moves a fixed operator and leaves an Fseq one", moves(false, 48, 100, 72, 100) && !moves(true, 48, 100, 72, 100));
+        ck("velocity moves a fixed operator and leaves an Fseq one", moves(false, 60, 20, 60, 127) && !moves(true, 60, 20, 60, 127));
+    }
+
     // Formant transpose is the pitch half of register 0x230 (FUN_00013bc6): it shifts the grain rate.
     // The formant frequency, coarse and fine plus detune, stays. A frame replaces that frequency and
     // leaves the pitch word, so an Fseq formant is transposed the same way. Sine ignores it.
