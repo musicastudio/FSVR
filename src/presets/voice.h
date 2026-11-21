@@ -25,16 +25,13 @@ struct Voice {
     int corrEdit;
     OpV v[8]; OpU u[8];
 };
-// DX7 ACED (49 bytes, DX7II/DX7S/TX802 additions). The Data List: "ACED bulk data is not interpreted
-// until its following VCED bulk data is received", so it is held here and applied after the conversion.
-// Only nine of the 49 bytes carry anything: six per-operator amplitude mod senses, the pitch EG range,
-// its velocity switch and its rate scaling.
-extern uint8_t g_aced[49];   // defined in presets/patch.cpp
-extern bool g_acedValid;
+// DX7 ACED (49 bytes, DX7II/DX7S/TX802 additions), or null for a plain DX7 voice. Only nine of the 49 bytes
+// carry anything: six per-operator amplitude mod senses, the pitch EG range, its velocity switch and its rate
+// scaling. One that comes over MIDI waits in its engine for the next VCED (Synth::aced).
 
 // Defined in presets/patch.cpp.
 void decode_voice(Voice& V);
 void init_blank_voice(uint8_t* b);
 void init_default_voice(Voice& V);
-void apply_aced(uint8_t* out);
-void convert_dx7(const uint8_t* v, uint8_t* out);
+void apply_aced(const uint8_t* aced, uint8_t* out);
+void convert_dx7(const uint8_t* vced, const uint8_t* aced, uint8_t* out);

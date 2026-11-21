@@ -2,41 +2,17 @@
 // one bank, built into the plug-in; the user's library is a folder of .syx files, one bank each, shared by
 // every instance. Nothing here knows how the engine stores a patch: an item is the sysex that loads it.
 #pragma once
+#include "patchfiles/patchfiles.h"   // Item, Bank and readPatches, which reads every file the library takes
 #include <cstdint>
 #include <string>
 #include <vector>
 
 namespace fsvr {
 
-struct Item {
-    std::string name;
-    int category = 0;              // the unit's category byte (performances and FS1R voices; DX voices have none)
-    int address = 0;               // the bulk's address high: 0x10/0x11, 0x40..0x43/0x51, 0x60/0x61/0x70; 0 for a DX voice
-    int number = -1;               // address low of an internal memory bulk (0x11, 0x51, 0x61), -1 otherwise
-    int frames = 0;                // an Fseq's length in frames, as its header's end step gives it
-    std::vector<uint8_t> syx;      // the one F0..F7 message that loads it (a DX voice: VCED, its ACED folded in)
-    int partVoice[4] = {-1, -1, -1, -1};   // a performance: voices (0x40..0x43 bulks) that came right after it
-    int fseq = -1;                         // and the Fseq that came with them
-    size_t at = 0, len = 0;        // its bytes in the bank's file (a DX voice: from its ACED)
-    const uint8_t* data() const { return syx.data() + 9; }   // a native bulk's data, after its address
-};
-
-struct Bank {
-    std::string name, path;        // path: the file, empty for a bank built into the plug-in
-    std::vector<Item> perfs, voices, fseqs;
-    bool empty() const { return perfs.empty() && voices.empty() && fseqs.empty(); }
-    bool readonly() const { return path.empty(); }
-};
-
-// Every bulk in a .syx image: FS1R performances, voices and Fseqs at any of their addresses, DX7 single
-// voices (VCED, with an ACED before it) and DX7 32-voice banks (VMEM, unpacked to VCED here, since the
-// FS1R itself takes only VCED). A system bulk and anything unknown are skipped.
-Bank parseSyx(const std::vector<uint8_t>& bytes, const std::string& name);
-
 // A bulk's F0..F7 with a new address and its checksum redone (a voice bound for a given part).
 std::vector<uint8_t> readdress(const std::vector<uint8_t>& syx, int ah, int am, int al);
 // An item's sysex with a new name (cut to the format's length), or a new category byte (a DX voice has
-// none: unchanged), its checksum redone.
+// none: unchanged), its checksum redone. A VMEM voice's is its whole VMEM, the name written in its slot.
 std::vector<uint8_t> renamed(const Item& it, const std::string& name);
 std::vector<uint8_t> recategorized(const Item& it, int category);
 int nameLength(const Item& it);   // 12 a performance, 10 a voice, 8 an Fseq
@@ -61,14 +37,19 @@ public:
     bool rescan(bool force = false);
     // Why the last look could not read the folder or one of its files, for the status line; empty when it could.
     std::string error;
-    // Copies a .syx into the folder as a new bank named after the file ("Name", "Name 2" ...) and rescans.
-    // The new bank's index, or -1 (err says why).
-    int import(const std::string& path, std::string& err);
-    // Several files as one new bank, named after their folder, each performance keeping the voices and Fseq
+    // Copies a file into the folder as a new bank named after it ("Name", "Name 2" ...) and rescans: a .syx
+    // as it is, anything else as the sysex it was read as. The new bank's index, or -1 (err says why: "Nothing
+    // FSVR can read in <file>: <reason>"); report says what was skipped.
+    int import(const std::string& path, std::string& err, Report* report = nullptr);
+    // Several files as one new bank, named name or else after their folder, each performance keeping the voices and Fseq
     // that came with it. A file holding internal memory (a unit's dump, whose performances name their voices
     // by number) is a bank of its own, as import() makes it, since its numbers would meet another file's.
-    // The new banks' indexes, the shared one first; err says what could not be read.
-    std::vector<int> importAll(const std::vector<std::string>& paths, std::string& err);
+    // The files are read as one stream, so a supplement in one pairs with the bank in the next. A file with no
+    // FS1R performance (DX banks and their performances) is kept as it was, ahead of the rest; another
+    // folder's such files make a bank of their own, since DX banks number per folder.
+    // The new banks' indexes, the shared one first; err says what could not be read ("nothing FSVR can read in
+    // <file> (<reason>)", or in how many files).
+    std::vector<int> importAll(const std::vector<std::string>& paths, std::string& err, Report* report = nullptr, const std::string& name = "");
     // Writes bytes as a new bank called name (made unique the same way); its index, or -1.
     int add(const std::string& name, const std::vector<uint8_t>& bytes, std::string& err);
     int bankOf(const std::string& path) const;
@@ -87,6 +68,11 @@ private:
     std::string stamp_;
     std::string uniqueName(std::string stem) const;
 };
+
+// The files an import is given: each path, a folder's files walked through its subfolders in name order, hidden
+// ones passed over. False when the folders hold more than kImportFiles (err says so), so a whole disk is refused.
+constexpr size_t kImportFiles = 2000;
+bool importPaths(const std::vector<std::string>& paths, std::vector<std::string>& files, std::string& err);
 
 bool readFile(const std::string& utf8Path, std::vector<uint8_t>& out);
 bool writeFile(const std::string& utf8Path, const std::vector<uint8_t>& bytes);

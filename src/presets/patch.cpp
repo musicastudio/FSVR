@@ -1,11 +1,6 @@
 // presets/patch.cpp - voice, performance and part data as the firmware decodes it. KNOWN.
 #include "engine/synth.h"
 
-// The DX7 ACED buffer: a voice edit arrives as VCED then ACED, so the ACED half is held here
-// until the VCED that completes it turns up.
-uint8_t g_aced[49];
-bool g_acedValid = false;
-
 void decode_voice(Voice& V) {
     const uint8_t* b = V.raw;
     memcpy(V.name, b, 10); V.name[10] = 0; V.cat = b[0x0E];
@@ -69,15 +64,14 @@ void init_default_voice(Voice& V) {
 
 // The common half of the ACED. The per-operator half is in convert_dx7, where the firmware applies it
 // (FUN_00035E96: ACED 6 + j replaces the VCED's amp mod sense when it is not 0).
-void apply_aced(uint8_t* out) {
-    if (!g_acedValid) return;
-    out[0x3B] = g_aced[0x0C] & 3;                 // pitch EG range
-    out[0x27] = g_aced[0x0E] ? 7 : 0;             // pitch EG velocity switch
-    out[0x3C] = g_aced[0x26] & 7;                 // pitch EG rate scaling
-    g_acedValid = false;
+void apply_aced(const uint8_t* aced, uint8_t* out) {
+    if (!aced) return;
+    out[0x3B] = aced[0x0C] & 3;                   // pitch EG range
+    out[0x27] = aced[0x0E] ? 7 : 0;               // pitch EG velocity switch
+    out[0x3C] = aced[0x26] & 7;                   // pitch EG rate scaling
 }
 
-void convert_dx7(const uint8_t* v, uint8_t* out) {
+void convert_dx7(const uint8_t* v, const uint8_t* aced, uint8_t* out) {
     // FUN_00035918 (common) and FUN_00035E96 (one operator), byte for byte. The common block is a list of
     // 16-bit words the firmware then packs; the per-algorithm row DX7MAP[alg] carries the FS1R algorithm,
     // the operator slot each DX operator lands on, +2 on the output level where the row says so, and
@@ -127,11 +121,11 @@ void convert_dx7(const uint8_t* v, uint8_t* out) {
         p[20] = 0; p[21] = (uint8_t)rs; p[22] = (uint8_t)ol;
         p[23] = d[8]; p[24] = d[9]; p[25] = d[10]; p[26] = d[11]; p[27] = d[12]; p[28] = p[29] = p[30] = 0;
         p[31] = (uint8_t)(7 << 3 | v[143]); p[32] = 7;
-        int ams = g_acedValid && g_aced[6 + j] ? g_aced[6 + j] & 7 : d[14];             // the ACED's 0..7 sense replaces the VCED's 0..3 unless it is 0
+        int ams = aced && aced[6 + j] ? aced[6 + j] & 7 : d[14];             // the ACED's 0..7 sense replaces the VCED's 0..3 unless it is 0
         p[33] = (uint8_t)(ams << 4 | (d[15] + 7)); 
         p[34] = (uint8_t)(ams + 7); // amp mod sense, velocity sense; EG bias sense = ams
     }
-    apply_aced(out);
+    apply_aced(aced, out);
 }
 
 int bank_perf_index(int lsb, int prog) {

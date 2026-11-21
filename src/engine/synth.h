@@ -49,6 +49,9 @@ struct Synth {
     // instances took each other's draws and a render on Windows differed from the same render on Linux.
     uint32_t rnd = 0x9E3779B9u;
     uint32_t draw() { rnd ^= rnd << 13; rnd ^= rnd >> 17; rnd ^= rnd << 5; return rnd; }   // xorshift32, as the noise
+    // A DX ACED off the MIDI input: "not interpreted until its following VCED bulk data is received" (Data List
+    // 3.2.2), so load_sysex holds it here, one per instance, and the next VCED takes it.
+    uint8_t aced[49] = {}; bool acedValid = false;
     // FUN_0000f7dc's cursors: the last channel allocated, and the last one each part took. Allocation
     // walks from these rather than from channel 0, which is what fixes the channel a note lands on.
     // While a part has its filter on there are two more walks, each over half the channels: the parts

@@ -1,6 +1,6 @@
 // check_plugin: the FSVR processor end to end, as a host drives it but without one: its State (the skin's
 // params and text data), its worker and its audio, a block at a time. The factory banks, a sysex param
-// round trip through a saved session, Import SysEx into the bank manager, a pick from a user bank, the
+// round trip through a saved session, Import into the bank manager, a pick from a user bank, the
 // morph square, Import Audio, program change, panic and the monitor, Save to Bank, .fsvr presets and the
 // browser's right-click menus. Exits non-zero on any failure.
 //   build/<dir>/Release/check_plugin      (ctest runs it as "plugin")
@@ -133,6 +133,22 @@ static std::vector<uint8_t> dx7Bank() {
         std::snprintf(name, sizeof name, "TEST%02d    ", v + 1);
         std::memcpy(d + 118, name, 10);
         b.insert(b.end(), d, d + 128);
+    }
+    int sum = 0;
+    for (size_t i = 6; i < b.size(); ++i) sum += b[i];
+    b.push_back((uint8_t)(-sum & 0x7F));
+    b.push_back(0xF7);
+    return b;
+}
+
+// A DX7II bank's supplements (AMEM): every slot the default (pitch bend range 2), but slot 2's amp mod sense on OP6.
+static std::vector<uint8_t> dx7iiAmem() {
+    std::vector<uint8_t> b = {0xF0, 0x43, 0x00, 0x06, 0x08, 0x60};
+    for (int v = 0; v < 32; ++v) {
+        uint8_t s[35] = {};
+        s[5] = 2 << 2;
+        if (v == 1) s[1] = 5;
+        b.insert(b.end(), s, s + 35);
     }
     int sum = 0;
     for (size_t i = 6; i < b.size(); ++i) sum += b[i];
@@ -350,13 +366,13 @@ int main() {
     // Import SysEx: a DX7 bank becomes a bank of its own, named after the file, and its first voice loads.
     const fs::path syx = tmp / "Test Bank.syx";
     writeBytes(syx, dx7Bank());
-    a.st->setData("sysex.import", syx.u8string());
+    a.st->setData("patch.import", syx.u8string());
     CHECK(a.until([&] { return a.data("bank.list") == builtins + "Test Bank\n"; }), "the bank list is \"%s\"", a.data("bank.list").c_str());
     CHECK(a.lines("voice.user.list") == bonusVoices + 32, "%d user voices, not %d", a.lines("voice.user.list"), bonusVoices + 32);
     CHECK(a.is("browse.bank", nb + 1), "the browser is not on the new bank");
     CHECK(a.until([&] { return a.is("part.bank.p1", 1) && a.is("part.user.p1", 1) && a.data("morph.p1.bl") == "TEST01"; }),
           "the first voice did not load (bank %g, user %g, \"%s\")", a.get("part.bank.p1"), a.get("part.user.p1"), a.data("morph.p1.bl").c_str());
-    a.st->setData("sysex.import", syx.u8string());
+    a.st->setData("patch.import", syx.u8string());
     CHECK(a.until([&] { return a.data("bank.list") == builtins + "Test Bank\nTest Bank 2\n"; }), "a second import did not make \"Test Bank 2\"");
     CHECK(a.lines("voice.user.list") == bonusVoices + 64, "%d user voices, not %d", a.lines("voice.user.list"), bonusVoices + 64);
     CHECK(a.data("live.message").rfind("Imported", 0) == 0, "no import message (\"%s\")", a.data("live.message").c_str());
@@ -374,6 +390,34 @@ int main() {
     a.set("browse.voice.p2", 4);
     CHECK(a.until([&] { return a.data("morph.p2.bl") == "TEST04"; }), "the pick did not load TEST04");
     CHECK(a.st->modified(), "a pick from the browser left the instance unmodified");
+
+    // Rename and Delete on a voice of a 32-voice bank work on its slot: the file keeps its 4104 bytes, the name
+    // goes into the slot with the checksum redone, and Delete leaves INIT VOICE there.
+    {
+        const std::string ui = a.st->ui();
+        a.st->setUi("{\"vars\":{\"browse\":\"voice\"}}");
+        auto onDisk = [&](int slot, const char* name) {
+            std::ifstream f(tmp / "Library" / "Test Bank.syx", std::ios::binary);
+            const std::vector<uint8_t> b((std::istreambuf_iterator<char>(f)), {});
+            if (b.size() != 4104) return false;
+            int sum = 0;
+            for (size_t i = 6; i < 6 + 4096; ++i) sum += b[i];
+            return b[6 + 4096] == (uint8_t)(-sum & 0x7F) && std::memcmp(b.data() + 6 + 128 * slot + 118, name, 10) == 0;
+        };
+        a.st->setData("item.context", "1\tU" + std::to_string(rowOf(a, "voice.user.list", "TEST03")) + "\tTEST03");
+        CHECK(a.until([&] { return a.data("item.name") == "TEST03"; }), "the VMEM voice row did not describe itself (\"%s\")", a.data("item.name").c_str());
+        a.st->setData("item.new_name", "Revoiced");
+        a.st->setData("live.message", "");
+        a.st->setData("item.request", "rename");
+        CHECK(a.until([&] { return onDisk(2, "Revoiced  "); }), "Rename did not write the name into slot 3 of the VMEM (%s)", a.data("live.message").c_str());
+        CHECK(a.until([&] { return rowOf(a, "voice.user.list", "Revoiced") == 3 && rowOf(a, "voice.user.list", "TEST01") == 1; }), "the renamed voice moved in the list");
+        a.st->setData("item.context", "1\tU4\tTEST04");
+        CHECK(a.until([&] { return a.data("item.name") == "TEST04"; }), "the fourth VMEM voice did not describe itself");
+        a.st->setData("item.request", "delete");
+        CHECK(a.until([&] { return onDisk(3, "INIT VOICE"); }), "Delete did not leave INIT VOICE in slot 4 of the VMEM (%s)", a.data("live.message").c_str());
+        CHECK(a.until([&] { return rowOf(a, "voice.user.list", "INIT VOICE") == 4 && rowOf(a, "voice.user.list", "TEST05") == 5; }), "the bank lost its numbering");
+        a.st->setUi(ui);
+    }
 
     // Morph is off until it works: a voice picked with corner A chosen reaches every corner, and moving the
     // square changes nothing.
@@ -582,7 +626,7 @@ int main() {
             if (b.first >= 0x40 && b.first <= 0x43) addBulk(unit, 0x51, 10 + b.first - 0x40, b.second);
         const fs::path unitSyx = tmp / "Unit.syx";
         writeBytes(unitSyx, unit);
-        a.st->setData("sysex.import", unitSyx.u8string());
+        a.st->setData("patch.import", unitSyx.u8string());
         CHECK(a.until([&] { return a.data("perf.name") == "Int Perf" && a.data("perf.user.name") == "Int Perf"; }), "the unit bank's performance did not load (\"%s\")",
               a.data("perf.name").c_str());
         const auto loaded = engine();
@@ -629,9 +673,237 @@ int main() {
     CHECK(a.until([&] { std::vector<uint8_t> b; std::ifstream f(preset, std::ios::binary); std::string x((std::istreambuf_iterator<char>(f)), {});
                         return x.find("<name>Int Perf</name>") != std::string::npos && x.find("<sysex") != std::string::npos; }), "Export Preset wrote no .fsvr");
     a.st->setData("hollow.modal", "");
-    request("fsvr.import", preset.u8string());
-    CHECK(a.until([&] { return a.data("hollow.modal") == "dialog_save" && a.data("save.name") == "Int Perf"; }), "Import FSVR Preset did not open the Save modal (%s)",
+    request("patch.import", preset.u8string());
+    CHECK(a.until([&] { return a.data("hollow.modal") == "dialog_save" && a.data("save.name") == "Int Perf"; }), "one .fsvr did not open the Save modal (%s)",
           a.data("live.message").c_str());
+    a.st->setData("hollow.modal", "");
+
+    // The one Import takes anything, picked or dropped: several .fsvr, a mix, a folder walked through its
+    // subfolders. Each becomes one bank named after its folder, its first performance plays, and no Save opens.
+    // A file nothing can be read in is named on the status line with the reason.
+    {
+        auto file = [&](const fs::path& p, const std::vector<uint8_t>& b) { fs::create_directories(p.parent_path(), ec); writeBytes(p, b); };
+        std::vector<uint8_t> presetBytes;
+        { std::ifstream f(preset, std::ios::binary); presetBytes.assign(std::istreambuf_iterator<char>(f), {}); }
+        const std::string junkText = "Not a patch, just words.\n";
+        const std::vector<uint8_t> junk(junkText.begin(), junkText.end());
+        auto imported = [&](const char* bank, int perfs, int voices) {
+            a.set("browse.category", 0);
+            return a.until([&] { return lineOf("bank.list", bank) > 0 && a.is("browse.bank", lineOf("bank.list", bank)) && a.lines("browse.perf.list") == perfs &&
+                                        a.lines("browse.voice.list") == voices && a.data("perf.user.name") == "Int Perf"; });
+        };
+
+        file(tmp / "Presets" / "One.fsvr", presetBytes);
+        file(tmp / "Presets" / "Two.fsvr", presetBytes);
+        request("patch.import", (tmp / "Presets" / "One.fsvr").u8string() + "\n" + (tmp / "Presets" / "Two.fsvr").u8string());
+        CHECK(imported("Presets", 2, 8), "two .fsvr made no bank \"Presets\" of 2 performances (%d, %s)", a.lines("browse.perf.list"), a.data("live.message").c_str());
+        CHECK(a.data("hollow.modal").empty(), "two .fsvr opened %s", a.data("hollow.modal").c_str());
+
+        file(tmp / "Mixed" / "One.fsvr", presetBytes);
+        file(tmp / "Mixed" / "Bank.syx", dx7Bank());
+        file(tmp / "Mixed" / "Junk.txt", junk);
+        request("patch.import", (tmp / "Mixed" / "One.fsvr").u8string() + "\n" + (tmp / "Mixed" / "Bank.syx").u8string() + "\n" + (tmp / "Mixed" / "Junk.txt").u8string());
+        CHECK(imported("Mixed", 1, 36), "a .fsvr, a .syx and a .txt made no bank \"Mixed\" (%d voices, %s)", a.lines("browse.voice.list"), a.data("live.message").c_str());
+        CHECK(a.data("live.message").find("nothing FSVR can read in Junk.txt (not a patch file FSVR knows)") != std::string::npos, "the mixed import said \"%s\"",
+              a.data("live.message").c_str());
+        CHECK(a.data("hollow.modal").empty(), "a mixed import opened %s", a.data("hollow.modal").c_str());
+
+        file(tmp / "Deep" / "a" / "One.fsvr", presetBytes);
+        file(tmp / "Deep" / "a" / "b" / "Bank", dx7Bank());   // no extension
+        file(tmp / "Deep" / "Junk.txt", junk);
+        file(tmp / "Deep" / "Junk2.txt", junk);
+        request("patch.import", (tmp / "Deep").u8string());
+        CHECK(imported("Deep", 1, 36), "a folder made no bank \"Deep\" (%d voices, %s)", a.lines("browse.voice.list"), a.data("live.message").c_str());
+        CHECK(a.data("live.message").find("nothing FSVR can read in 2 files") != std::string::npos, "the folder's import said \"%s\"", a.data("live.message").c_str());
+
+        // A file that reads as nothing is named even while another file's AMEM waits for a bank, and an AMEM
+        // no bank followed is named at the end.
+        file(tmp / "Waiting" / "A.syx", dx7iiAmem());
+        file(tmp / "Waiting" / "B.txt", junk);
+        request("patch.import", (tmp / "Waiting").u8string());
+        CHECK(a.until([&] { const std::string m = a.data("live.message");
+                            return m.find("FSVR can read in B.txt") != std::string::npos && m.find("A.syx: an AMEM with no voice bank after it") != std::string::npos; }),
+              "an AMEM and a junk file said \"%s\"", a.data("live.message").c_str());
+
+        // A DX7II dump of a bank and its performances: they import as FS1R performances, and the first plays its
+        // two voices on parts 1 and 2, found by number in the bank (#122).
+        {
+            std::vector<uint8_t> pmem = {0xF0, 0x43, 0x00, 0x7E, (10 + 32 * 51) >> 7, (10 + 32 * 51) & 0x7F, 'L', 'M', ' ', ' ', '8', '9', '7', '3', 'P', 'M'};
+            for (int k = 0; k < 32; ++k) {
+                uint8_t r[51] = {};
+                r[0] = k == 0 ? 1 : 0;   // dual, then singles
+                r[1] = 1;                // voice A: TEST02
+                r[2] = 2;                // voice B: TEST03
+                r[13] = r[14] = 24;
+                r[15] = 50;
+                r[16] = 99;
+                std::memcpy(r + 31, k == 0 ? "DX7II Dual          " : "DX7II Single        ", 20);
+                pmem.insert(pmem.end(), r, r + 51);
+            }
+            int sum = 0;
+            for (size_t i = 6; i < pmem.size(); ++i) sum += pmem[i];
+            pmem.push_back((uint8_t)(-sum & 0x7F));
+            pmem.push_back(0xF7);
+            std::vector<uint8_t> dump = dx7iiAmem(), bank = dx7Bank();
+            dump.insert(dump.end(), bank.begin(), bank.end());
+            dump.insert(dump.end(), pmem.begin(), pmem.end());
+            file(tmp / "DX7II" / "DX7II.syx", dump);
+            request("patch.import", (tmp / "DX7II" / "DX7II.syx").u8string());
+            a.set("browse.category", 0);
+            CHECK(a.until([&] { return lineOf("bank.list", "DX7II") > 0 && a.lines("browse.perf.list") == 32 && a.data("perf.user.name") == "DX7II Dual" &&
+                                       a.data("morph.p1.bl") == "TEST02" && a.data("morph.p2.bl") == "TEST03"; }),
+                  "a DX7II PMEM did not load its first performance (%d performances, \"%s\", parts \"%s\" \"%s\", %s)", a.lines("browse.perf.list"),
+                  a.data("perf.user.name").c_str(), a.data("morph.p1.bl").c_str(), a.data("morph.p2.bl").c_str(), a.data("live.message").c_str());
+
+            const fs::path kept = tmp / "Library" / "DX7II.syx";
+            auto onDisk = [&] { std::ifstream f(kept, std::ios::binary); return std::vector<uint8_t>((std::istreambuf_iterator<char>(f)), {}); };
+            auto uOf = [&](const char* list, const std::string& name) {   // the U number of a browsed row
+                const int row = rowOf(a, list, name, 1);
+                std::string d = a.data(list);
+                size_t p = 0;
+                for (int k = 1; k < row && p < d.size(); ++k) p = d.find('\n', p) + 1;
+                return row ? d.substr(p, d.find('\t', p) - p) : std::string();
+            };
+            const std::vector<uint8_t> amem = dx7iiAmem();
+            const size_t vmemAt = amem.size();
+
+            // Delete on a voice of a bank with supplements takes its AMEM slot back to the default as well, so
+            // the slot loads as a plain INIT VOICE.
+            const std::string ui = a.st->ui();
+            a.st->setUi("{\"vars\":{\"browse\":\"voice\"}}");
+            a.st->setData("item.context", "1\t" + uOf("browse.voice.list", "TEST02") + "\tTEST02");
+            CHECK(a.until([&] { return a.data("item.name") == "TEST02"; }), "the DX7II bank's voice row did not describe itself");
+            request("item.request", "delete");
+            CHECK(a.until([&] {
+                      const std::vector<uint8_t> b = onDisk();
+                      int sum = 0;
+                      for (size_t i = 6; i < 6 + 1120 && i < b.size(); ++i) sum += b[i];
+                      return b.size() == dump.size() && b[6 + 35 + 1] == 0 && b[6 + 35 + 5] == 8 && b[6 + 1120] == (uint8_t)(-sum & 0x7F) &&
+                             std::memcmp(b.data() + vmemAt + 6 + 128 + 118, "INIT VOICE", 10) == 0;
+                  }),
+                  "deleting a voice left its AMEM slot (%s)", a.data("live.message").c_str());
+            a.st->setUi(ui);
+
+            // A performance built from the DX7II's PMEM is not a bulk of its own in the file: Delete, Rename and
+            // Edit Attributes leave the file as it is and say so, and Save over it adds an FS1R performance.
+            const std::vector<uint8_t> pmemKept = onDisk();
+            a.st->setData("item.context", "0\t" + uOf("browse.perf.list", "DX7II Single") + "\tDX7II Single");
+            CHECK(a.until([&] { return a.data("item.name") == "DX7II Single"; }), "the DX7II performance row did not describe itself");
+            for (const char* r : {"delete", "rename", "attributes"}) {
+                a.st->setData("item.new_name", "Other");
+                a.set("item.category", 5);
+                request("item.request", r);
+                CHECK(a.until([&] { return a.data("live.message").find("a DX performance") != std::string::npos; }), "%s on a DX7II performance said \"%s\"", r,
+                      a.data("live.message").c_str());
+                CHECK(onDisk() == pmemKept, "%s on a DX7II performance changed its file", r);
+            }
+            saveAs(rowOf(a, "save.bank.list", "DX7II"), "DX7II Dual");
+            CHECK(a.until([&] { return onDisk().size() > pmemKept.size(); }), "saving over a DX7II performance added nothing (%s)", a.data("live.message").c_str());
+            const std::vector<uint8_t> saved = onDisk();
+            CHECK(std::equal(pmemKept.begin(), pmemKept.end(), saved.begin()) && a.until([&] { return a.lines("browse.perf.list") == 33; }),
+                  "saving over a DX7II performance did not leave the PMEM and add one (%zu bytes, were %zu; %d performances)", saved.size(), pmemKept.size(),
+                  a.lines("browse.perf.list"));
+
+            // A folder of DX files, the supplements, the bank and the performances apart, is kept as the files
+            // were, one after the other, so the bank keeps its own bytes and each voice is there once.
+            file(tmp / "DXSet" / "1 AMEM.syx", dx7iiAmem());
+            file(tmp / "DXSet" / "2 VMEM.syx", dx7Bank());
+            file(tmp / "DXSet" / "3 PMEM.syx", pmem);
+            request("patch.import", (tmp / "DXSet").u8string());
+            a.set("browse.category", 0);
+            CHECK(a.until([&] { return lineOf("bank.list", "DXSet") > 0 && a.is("browse.bank", lineOf("bank.list", "DXSet")) && a.lines("browse.perf.list") == 32 &&
+                                       a.lines("browse.voice.list") == 32; }),
+                  "a folder of DX files made no bank of 32 performances and 32 voices (%d, %d, %s)", a.lines("browse.perf.list"), a.lines("browse.voice.list"),
+                  a.data("live.message").c_str());
+            std::vector<uint8_t> whole = dx7iiAmem(), vmem = dx7Bank();
+            whole.insert(whole.end(), vmem.begin(), vmem.end());
+            whole.insert(whole.end(), pmem.begin(), pmem.end());
+            std::vector<uint8_t> setBytes;
+            { std::ifstream f(tmp / "Library" / "DXSet.syx", std::ios::binary); setBytes.assign(std::istreambuf_iterator<char>(f), {}); }
+            CHECK(setBytes == whole, "a folder of DX files was not kept as its files (%zu bytes, not %zu)", setBytes.size(), whole.size());
+
+            // The performances bind whatever order the files come in: a folder whose PMEM sorts first, and a drag
+            // that hands the PMEM first, are read and kept with the bank before it, as the TX802 factory set's
+            // P.SYX and perf_1-64.syx must be.
+            auto boundAndKept = [&](const char* bank) {
+                a.set("browse.category", 0);
+                const bool bound = a.until([&] { return lineOf("bank.list", bank) > 0 && a.is("browse.bank", lineOf("bank.list", bank)) &&
+                                                        a.lines("browse.perf.list") == 32 && a.lines("browse.voice.list") == 32; });
+                std::vector<uint8_t> b;
+                { std::ifstream f(tmp / "Library" / (std::string(bank) + ".syx"), std::ios::binary); b.assign(std::istreambuf_iterator<char>(f), {}); }
+                return bound && b == whole;
+            };
+            file(tmp / "DXFirst" / "0 PMEM.syx", pmem);
+            file(tmp / "DXFirst" / "1 AMEM.syx", dx7iiAmem());
+            file(tmp / "DXFirst" / "2 VMEM.syx", dx7Bank());
+            request("patch.import", (tmp / "DXFirst").u8string());
+            CHECK(boundAndKept("DXFirst"), "a folder whose PMEM sorts first lost its performances (%d, %d, %s)", a.lines("browse.perf.list"),
+                  a.lines("browse.voice.list"), a.data("live.message").c_str());
+            file(tmp / "DXDrag" / "A.syx", dx7iiAmem());
+            file(tmp / "DXDrag" / "B.syx", dx7Bank());
+            file(tmp / "DXDrag" / "P.syx", pmem);
+            request("patch.import", (tmp / "DXDrag" / "P.syx").u8string() + "\n" + (tmp / "DXDrag" / "A.syx").u8string() + "\n" + (tmp / "DXDrag" / "B.syx").u8string());
+            CHECK(boundAndKept("DXDrag"), "a drag handing the PMEM first lost its performances (%d, %d, %s)", a.lines("browse.perf.list"),
+                  a.lines("browse.voice.list"), a.data("live.message").c_str());
+
+            // A TX802 performance naming a ROM preset its files lack plays the library's presets, taken from a bank
+            // that imported them with its performances, and those banks are kept first in the new bank.
+            std::vector<uint8_t> tx = {0xF0, 0x43, 0x00, 0x7E};
+            {
+                uint8_t r[84] = {};
+                r[8] = 0x82;                        // TG1 plays preset A03
+                r[24] = 99;
+                r[32] = 7 << 3 | 3;                 // no detune, both outputs
+                for (int t = 0; t < 8; ++t) { r[t] = (uint8_t)(t << 5); r[48 + t] = 127; r[56 + t] = 24; }
+                std::memcpy(r + 64, "TX Preset           ", 20);
+                const char* hex = "0123456789ABCDEF";
+                std::vector<uint8_t> frame = {'L', 'M', ' ', ' ', '8', '9', '5', '2', 'P', 'M'};
+                for (uint8_t b : r) { frame.push_back((uint8_t)hex[b >> 4]); frame.push_back((uint8_t)hex[b & 15]); }
+                int sum = 0;
+                for (uint8_t b : frame) sum += b;
+                tx.push_back(0x01);
+                tx.push_back(0x28);
+                tx.insert(tx.end(), frame.begin(), frame.end());
+                tx.push_back((uint8_t)(-sum & 0x7F));
+                tx.push_back(0xF7);
+            }
+            file(tmp / "TXPresets" / "A.syx", dx7Bank());
+            file(tmp / "TXPresets" / "B.syx", dx7Bank());
+            file(tmp / "TXPresets" / "P.syx", tx);
+            request("patch.import", (tmp / "TXPresets").u8string());
+            a.set("browse.category", 0);
+            CHECK(a.until([&] { return lineOf("bank.list", "TXPresets") > 0 && a.lines("browse.perf.list") == 1; }), "the TX802 presets with a performance did not import (%s)",
+                  a.data("live.message").c_str());
+            const std::vector<uint8_t> select = {0xF0, 0x43, 0x10, 0x19, 0x4D, 0x00, 0xF7};
+            std::vector<uint8_t> own = select, v = dx7Bank();
+            own.insert(own.end(), v.begin(), v.end());
+            file(tmp / "TXUnit" / "I.syx", own);
+            file(tmp / "TXUnit" / "P.syx", tx);
+            request("patch.import", (tmp / "TXUnit").u8string());
+            a.set("browse.category", 0);
+            CHECK(a.until([&] { return lineOf("bank.list", "TXUnit") > 0 && a.is("browse.bank", lineOf("bank.list", "TXUnit")) && a.lines("browse.perf.list") == 1 &&
+                                       a.lines("browse.voice.list") == 96 && a.data("perf.user.name") == "TX Preset" && a.data("morph.p1.bl") == "TEST03"; }),
+                  "a TX802 performance did not play the library's presets (%d performances, %d voices, %s)", a.lines("browse.perf.list"), a.lines("browse.voice.list"),
+                  a.data("live.message").c_str());
+            std::vector<uint8_t> unit, want = v;
+            want.insert(want.end(), v.begin(), v.end());
+            want.insert(want.end(), own.begin(), own.end());
+            want.insert(want.end(), tx.begin(), tx.end());
+            { std::ifstream f(tmp / "Library" / "TXUnit.syx", std::ios::binary); unit.assign(std::istreambuf_iterator<char>(f), {}); }
+            CHECK(unit == want, "the library's presets were not kept before the TX802 set (%zu bytes, not %zu)", unit.size(), want.size());
+        }
+
+        for (int k = 0; k <= 2000; ++k) file(tmp / "Huge" / ("f" + std::to_string(k) + ".syx"), {});
+        request("patch.import", (tmp / "Huge").u8string());
+        CHECK(a.until([&] { return a.data("live.message").find("More than 2,000 files") != std::string::npos; }), "a folder of 2,001 files said \"%s\"",
+              a.data("live.message").c_str());
+        CHECK(lineOf("bank.list", "Huge") == 0, "a folder of 2,001 files was imported");
+
+        file(tmp / "Junk.txt", junk);
+        request("patch.import", (tmp / "Junk.txt").u8string());
+        CHECK(a.until([&] { return a.data("live.message") == "Nothing FSVR can read in Junk.txt: not a patch file FSVR knows"; }), "an unreadable file said \"%s\"",
+              a.data("live.message").c_str());
+    }
 
     // The right-click menu on a user performance: Rename, Edit Attributes, Paste Attributes, Delete.
     const std::string second = "0\tU" + std::to_string(lineOf("perf.user.list", "Second")) + "\tSecond";
@@ -702,7 +974,7 @@ int main() {
         }
         const fs::path unitSyx = tmp / "Unit Two.syx";
         writeBytes(unitSyx, unit);
-        a.st->setData("sysex.import", unitSyx.u8string());
+        a.st->setData("patch.import", unitSyx.u8string());
         CHECK(a.until([&] { return a.data("perf.user.name") == "Tines Int" && a.is("gui.edited", 0); }), "Unit Two's performance did not load (\"%s\")", a.data("perf.name").c_str());
         CHECK(a.is("fseq.part", 0), "Tines Int loaded with Fseq part %g", a.get("fseq.part"));
         const double hz = pitchOf(a);
@@ -812,7 +1084,7 @@ int main() {
         }
         const fs::path bigSyx = tmp / "Zz Big.syx";
         writeBytes(bigSyx, big);
-        a.st->setData("sysex.import", bigSyx.u8string());
+        a.st->setData("patch.import", bigSyx.u8string());
         CHECK(a.until([&] { return lineOf("bank.list", "Zz Big") > 0; }, 30000), "the big bank did not import (%s)", a.data("live.message").c_str());
         a.set("browse.category", 0);
         a.set("browse.bank", lineOf("bank.list", "Zz Big"));
@@ -908,6 +1180,6 @@ int main() {
     }
 
     fs::remove_all(tmp, ec);
-    if (!fails) std::printf("check_plugin: factory banks, sessions, Import SysEx, the bank browser, morph (off), Import Audio, program change, panic, the monitor, Save to Bank, .fsvr presets, the right-click menus, a preset's Fseq after a reopen, a host's performance bulk, the part lamp, the Init and last patches, and an unreadable library all pass\n");
+    if (!fails) std::printf("check_plugin: factory banks, sessions, Import (files, several, a folder), the bank browser, morph (off), Import Audio, program change, panic, the monitor, Save to Bank, .fsvr presets, the right-click menus, a preset's Fseq after a reopen, a host's performance bulk, the part lamp, the Init and last patches, and an unreadable library all pass\n");
     return fails ? 1 : 0;
 }

@@ -344,7 +344,8 @@ public:
     int icon = -1;                                 // and the app window's icon, where the platform sets one (Linux)
     std::vector<Binding> keys;                     // skin.json "keys": keyboard shortcuts, in the order given
     // skin.json "drop": a file dropped on the window goes to the text data key of the first rule naming its
-    // extension (lower case, no dot), as a File action's chosen path does. None: the window takes no drops.
+    // extension (lower case, no dot), or "*" for any file or folder, as a File action's chosen path does.
+    // None: the window takes no drops.
     struct DropRule { std::vector<std::string> types; std::string key; };
     std::vector<DropRule> drops;
     // skin.json "steppers": a number drawn on one of these plates gets a down button at its left end and an

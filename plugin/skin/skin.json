@@ -905,7 +905,7 @@
   "icon": "app_icon"
  },
  "drop": [
-  {"types": "syx;fs1", "key": "sysex.import"}
+  {"types": "*", "key": "patch.import"}
  ],
  "keys": [
   {

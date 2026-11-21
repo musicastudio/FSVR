@@ -13,7 +13,7 @@ bool load_rom(Rom& R, const char* path) {
 void rom_voice(const Rom& R, int idx, Voice& V) {
     idx = clampi(idx, 0, 1407);
     if (idx < 256) memcpy(V.raw, R.d.data() + 0x5C280 + (size_t)idx * 608, 608);
-    else convert_dx7(R.d.data() + 0x30000 + (size_t)(idx - 256) * 155, V.raw);   // 155-byte VCED, name last, as tools/extract_presets.py reads it
+    else convert_dx7(R.d.data() + 0x30000 + (size_t)(idx - 256) * 155, nullptr, V.raw);   // 155-byte VCED, name last, as tools/extract_presets.py reads it
     decode_voice(V);
 }
 
@@ -106,13 +106,14 @@ bool load_sysex(Synth& S, const Rom* R, const uint8_t* d, size_t len, int pick, 
             }
         } else if (d[i + 3] == 0x05 && d[i + 4] == 0x00 && d[i + 5] == 0x31) {
             if (i + 6 + 49 + 2 > len) break;
-            memcpy(g_aced, d + i + 6, 49); g_acedValid = true;       // held for the next VCED
+            memcpy(S.aced, d + i + 6, 49); S.acedValid = true;       // held for the next VCED
             i += 6 + 49 + 1;
         } else if (d[i + 3] == 0x00 && d[i + 4] == 0x01 && d[i + 5] == 0x1B) {
             if (i + 6 + 155 + 2 > len) break;
             if (found++ != pick) continue;
             S.silence_part(part);                                    // FUN_0003d370: FUN_000195ac(1, 0)
-            convert_dx7(d + i + 6, S.perf.part[part].voice.raw); decode_voice(S.perf.part[part].voice); return true;
+            convert_dx7(d + i + 6, S.acedValid ? S.aced : nullptr, S.perf.part[part].voice.raw); S.acedValid = false;
+            decode_voice(S.perf.part[part].voice); return true;
         }
     }
     return false;

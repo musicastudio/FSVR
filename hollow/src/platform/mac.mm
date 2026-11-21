@@ -346,12 +346,14 @@ PlatformWindow* platformPopup(PlatformWindow*, Gui*) { return nullptr; }   // no
 // NSOpenPanel / NSSavePanel, run modal; the types' extensions become the allowed ones.
 bool platformFileDialog(PlatformWindow*, bool save, bool multiple, const std::string& title, const Vars& types, const std::string& name, std::string& path) {
     NSMutableArray* exts = [NSMutableArray array];
+    bool any = false;   // a type of "*": any file, so no list of allowed ones
     for (auto& t : types) {
         size_t a = 0;
         while (a <= t.second.size()) {
             size_t b = t.second.find(';', a);
             std::string e = t.second.substr(a, b == std::string::npos ? std::string::npos : b - a);
-            if (!e.empty()) [exts addObject:[NSString stringWithUTF8String:e.c_str()]];
+            if (e == "*") any = true;
+            else if (!e.empty()) [exts addObject:[NSString stringWithUTF8String:e.c_str()]];
             if (b == std::string::npos) break;
             a = b + 1;
         }
@@ -360,7 +362,7 @@ bool platformFileDialog(PlatformWindow*, bool save, bool multiple, const std::st
     if (!title.empty()) [panel setTitle:[NSString stringWithUTF8String:title.c_str()]];
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    if ([exts count]) [panel setAllowedFileTypes:exts];
+    if ([exts count] && !any) [panel setAllowedFileTypes:exts];
 #pragma clang diagnostic pop
     if (save && !name.empty()) [panel setNameFieldStringValue:[NSString stringWithUTF8String:name.c_str()]];
     if (multiple) [(NSOpenPanel*)panel setAllowsMultipleSelection:YES];

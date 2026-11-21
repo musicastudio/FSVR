@@ -222,9 +222,9 @@ class Fsvr final : public hollow::Processor {
 public:
     explicit Fsvr(State& s) : st(s), base(s.size(), 0), sel(s.size(), 0), fields(s.size()) {
         buildFields();
-        factory = parseSyx(factoryBytes("fs1r_performances.syx"), "Yamaha FS1R");
-        factory.voices = parseSyx(factoryBytes("fs1r_presets.syx"), "").voices;
-        factory.fseqs = parseSyx(factoryBytes("fs1r_fseqs.syx"), "").fseqs;
+        factory = readPatches(factoryBytes("fs1r_performances.syx"), "Yamaha FS1R");
+        factory.voices = readPatches(factoryBytes("fs1r_presets.syx"), "").voices;
+        factory.fseqs = readPatches(factoryBytes("fs1r_fseqs.syx"), "").fseqs;
         lib.builtin = builtinBanks();
         dev.setSampleRate(fsvr::ENGINE_RATE);
         // A fresh instance is what its params say (FSVR's init performance and voice): the engine takes
@@ -1042,7 +1042,7 @@ private:
         Bank bonus;
         bonus.name = "Yamaha FS1R (Bonus)";
         for (const char* f : {"1_Best_of_DX.syx", "2_Popular.syx", "3_Cyber.syx", "4_WX5.syx"}) {
-            Bank b = parseSyx(factoryBytes(f), "");
+            Bank b = readPatches(factoryBytes(f), "");
             const int base = (int)bonus.voices.size();
             for (Item& perf : b.perfs) {
                 for (int p = 0; p < 4; ++p) {
@@ -1053,7 +1053,7 @@ private:
             }
             bonus.voices.insert(bonus.voices.end(), b.voices.begin(), b.voices.end());
         }
-        return {bonus, parseSyx(factoryBytes("templates.syx"), "Templates")};
+        return {bonus, readPatches(factoryBytes("templates.syx"), "Templates")};
     }
 
     // ---- loading -----------------------------------------------------------------------------------
@@ -1308,11 +1308,10 @@ private:
     }
 
     void requests() {
-        if (std::string path = take("sysex.import"); !path.empty()) importSyx(path, false);
-        if (std::string path = take("fseq.import"); !path.empty()) importSyx(path, true);
+        if (std::string path = take("patch.import"); !path.empty()) importFiles(path, false);
+        if (std::string path = take("fseq.import"); !path.empty()) importFiles(path, true);
         if (std::string path = take("sysex.export"); !path.empty()) exportSyx(path);
         if (std::string path = take("fsvr.export"); !path.empty()) exportPreset(path);
-        if (std::string path = take("fsvr.import"); !path.empty()) importPreset(path);
         if (take("save.open") == "1") openSave();
         if (take("save.request") == "1") saveToBank();
         if (std::string c = st.data("item.context"); c != itemSeen) {
@@ -1336,27 +1335,41 @@ private:
             }
     }
 
-    // Import SysEx: the file becomes a bank of the library, named after it, and what it holds first loads
-    // (its first performance, else its first voice into the selected part, else its first Fseq). Several
-    // files, one path a line (a drop, or the dialog's several), share one bank, named after their folder.
-    void importSyx(const std::string& list, bool fseqFirst) {
-        std::vector<std::string> paths;
+    // Import, a pick or a drop of any patch files: one .fsvr alone plays and opens Save (importPreset). Else a
+    // file becomes a bank of the library, named after it, and what it holds first loads (its first performance,
+    // else its first voice into the selected part, else its first Fseq). Several files, one path a line, or a
+    // folder walked through its subfolders, share one bank, named after the folder.
+    void importFiles(const std::string& list, bool fseqFirst) {
+        std::vector<std::string> paths, files;
         for (size_t a = 0; a < list.size();) {
             const size_t e = std::min(list.find('\n', a), list.size());
             if (e > a) paths.push_back(list.substr(a, e - a));
             a = e + 1;
         }
-        std::string err;
+        std::string err, name;
+        std::error_code ec;
+        const bool folder = std::any_of(paths.begin(), paths.end(), [&](const std::string& p) { return std::filesystem::is_directory(std::filesystem::u8path(p), ec); });
+        if (folder && paths.size() == 1) name = std::filesystem::u8path(paths[0]).filename().u8string();
+        if (!importPaths(paths, files, err)) { message(err); return; }
+        if (files.empty()) { message("Nothing FSVR can read in " + name + ": no files in it"); return; }
+        if (files.size() == 1 && !folder && !fseqFirst && isPreset(files[0])) return importPreset(files[0]);
+        Report report;
         std::lock_guard<std::mutex> g(ctl);
-        const std::vector<int> made = paths.size() == 1 ? std::vector<int>{lib.import(paths[0], err)} : lib.importAll(paths, err);
-        if (made.empty() || made[0] < 0) { message(err); return; }
+        const std::vector<int> made = files.size() == 1 && !folder ? std::vector<int>{lib.import(files[0], err, &report)} : lib.importAll(files, err, &report, name);
+        const std::string notes = report.summary();
+        if (made.empty() || made[0] < 0) {
+            if (!err.empty()) err[0] = (char)std::toupper((unsigned char)err[0]);
+            message(err + (notes.empty() ? "" : " (" + notes + ")"));
+            return;
+        }
         const int k = made[0];
         const Bank& b = lib.banks[(size_t)k];
         put(browseBank, k + 1);
         writeLists();
         std::string more;
         if (made.size() > 1) more = ", and " + std::to_string(made.size() - 1) + " more as banks of their own";   // unit dumps
-        if (!err.empty()) more += " (" + err + ")";
+        if (!err.empty()) more += "; " + err;
+        if (!notes.empty()) more += "; " + notes;
         message("Imported \"" + b.name + "\": " + std::to_string(b.perfs.size()) + " performances, " + std::to_string(b.voices.size()) +
                 " voices, " + std::to_string(b.fseqs.size()) + " Fseqs" + more);
         if (!b.fseqs.empty() && (fseqFirst || (b.perfs.empty() && b.voices.empty()))) {
@@ -1364,10 +1377,10 @@ private:
             putUser(fseqUser, userFseq, n);
             choose(fseqBank, 0);
             loadUserFseq(n);
-        } else if (!b.perfs.empty()) {
+        } else if (!b.perfs.empty() && !b.perfs[0].ofVoice) {
             const int n = lib.number(lib.perfs, k, 0);
             loadUserPerf(n);
-        } else if (!b.voices.empty()) {
+        } else if (!b.voices.empty()) {   // a bank of voices, whose performances only play them, loads its first into the part
             const int p = selectedPart(), n = lib.number(lib.voices, k, 0);
             putUser(partUser[p], userVoice[p], n);
             choose(partBank[p], 1);
@@ -1481,7 +1494,7 @@ private:
             const Bank& b = lib.banks[(size_t)k];
             std::vector<Library::Splice> e;
             for (auto& perf : b.perfs)
-                if (trimmed(perf.name) == name) {
+                if (trimmed(perf.name) == name && !perf.fromDx) {   // a DX performance stays, and the FS1R one goes after it
                     e = presetRanges(b, perf);
                     e[0].bytes = bytes;
                     break;
@@ -1493,7 +1506,7 @@ private:
         writeLists();
         const Bank& b = lib.banks[(size_t)k];
         for (int i = (int)b.perfs.size() - 1; i >= 0; --i)
-            if (trimmed(b.perfs[(size_t)i].name) == name) {
+            if (trimmed(b.perfs[(size_t)i].name) == name && !b.perfs[(size_t)i].fromDx) {
                 putUser(perfUser, userPerf, lib.number(lib.perfs, k, i));
                 break;
             }
@@ -1659,7 +1672,7 @@ private:
         if (!readFile(path, raw)) { message("Cannot read " + path); return {}; }
         const std::string doc(raw.begin(), raw.end());
         if (doc.find("<fsvr") == std::string::npos) { message(std::filesystem::u8path(path).filename().u8string() + " is not an FSVR preset"); return {}; }
-        const Bank b = parseSyx(unb64(xmlText(doc, "sysex")), "");
+        const Bank b = readPatches(raw, "");
         if (b.perfs.empty()) { message("No performance in " + std::filesystem::u8path(path).filename().u8string()); return {}; }
         std::string name = trimmed(xmlText(doc, "name")).substr(0, 12);
         if (name.empty()) name = b.perfs[0].name;
@@ -1670,7 +1683,15 @@ private:
         return name;
     }
 
-    // Import FSVR Preset: the preset plays at once, and the Save modal opens on its name.
+    static bool isPreset(const std::string& path) {   // a .fsvr, by its content
+        std::vector<uint8_t> raw;
+        if (!readFile(path, raw)) return false;
+        const std::string doc(raw.begin(), raw.begin() + (long)std::min<size_t>(raw.size(), 4096));
+        const size_t at = doc.find_first_not_of(" \t\r\n\xEF\xBB\xBF");
+        return at != std::string::npos && doc[at] == '<' && doc.find("<fsvr") != std::string::npos;
+    }
+
+    // One .fsvr imported: the preset plays at once, and the Save modal opens on its name.
     void importPreset(const std::string& path) {
         std::lock_guard<std::mutex> g(ctl);
         const std::string name = playPreset(path);
@@ -1837,6 +1858,11 @@ private:
         }
         const Library::Ref* ref = refOf(target);
         if (!ref || lib.banks[(size_t)ref->bank].readonly()) { message("The " + (ref ? lib.banks[(size_t)ref->bank].name : "Yamaha FS1R") + " presets are read only"); return; }
+        // Its bytes in the file are the whole DX performance bank, so there is no bulk of its own to change.
+        if (it->fromDx && (r == "delete" || r == "rename" || r == "attributes" || r == "paste")) {
+            message("\"" + it->name + "\" is a DX performance: edit it and Save to keep it as an FS1R performance");
+            return;
+        }
         const Bank& b = lib.banks[(size_t)ref->bank];
         const std::string path = b.path, old = it->name;
         const Loaded was = loaded();
@@ -1845,7 +1871,14 @@ private:
         std::string done, name;
         int cat = -1;
         if (r == "delete") {
-            e = target.kind == 0 ? presetRanges(b, *it) : std::vector<Library::Splice>{{it->at, it->len, {}}};
+            // A voice in a VMEM goes back to INIT VOICE, and its AMEM slot to a DX7 voice's, so the bank keeps 32
+            // voices and its numbering, and the slot loads as a plain INIT VOICE.
+            if (target.kind == 0) e = presetRanges(b, *it);
+            else if (it->slot < 0) e = {{it->at, it->len, {}}};
+            else {
+                e = {{it->at, it->len, vmemBlanked(*it)}};
+                if (it->amem) e.push_back({it->amemAt, it->amem->size(), amemBlanked(*it)});
+            }
             done = "Deleted \"" + old + "\"";
         } else if (r == "rename") {
             name = trimmed(st.data("item.new_name")).substr(0, (size_t)nameLength(*it));

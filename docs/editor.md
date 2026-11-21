@@ -60,9 +60,9 @@ The operator column's panel is the operator page's most used settings, on whiche
 
 The unit holds 128 internal performances, 128 voices (or 64 and six Fseqs). FSVR has a user library instead: a folder of .syx files, `Documents/FSVR/Library` (`FSVR_LIBRARY` names another), each file a bank, shared by every instance and read again whenever a file comes, goes or changes.
 
-- **Banks.** The browser's Bank column holds the factory bank, Yamaha FS1R, then the library's banks by name. Import > Import FS1R SysEx to New Bank copies the file into the library as a new bank named after it, "Name", then "Name 2" if that is taken, and opens it; its first performance loads, else its first voice into the selected part, else its first Fseq. A bank is any mix of FS1R performance, voice and Fseq bulks at any of their addresses, DX7 single voices (VCED, with an ACED before it) and DX7 32-voice banks, which are unpacked to single voices since the unit takes only those.
+- **Banks.** The browser's Bank column holds the factory bank, Yamaha FS1R, then the library's banks by name. Import > Import... (or a drop of files or a folder) copies the file into the library as a new bank named after it, "Name", then "Name 2" if that is taken, and opens it; its first performance loads, else its first voice into the selected part, else its first Fseq. A bank is any mix of FS1R performance, voice and Fseq bulks at any of their addresses, DX7 single voices (VCED, with an ACED before it) and DX7 32-voice banks, which are unpacked to single voices since the unit takes only those.
 - **Save > Save Current Preset** opens a modal: the library's banks with `<New Bank>` first, the preset's name (the performance's 12 characters) and, for a new bank, the bank's name. The factory bank is not listed, since it is read only. The performance goes into the bank's .syx with its four voices and its Fseq after it, where it is a user performance; one of the same name in that bank is replaced, with the voices and Fseq that came with it.
-- **Save > Export Current Preset** writes the performance as a `.fsvr` file, FSVR's own format: XML, so it can carry more than the unit's bytes later on. Version 1 holds `<name>`, `<category>` and `<sysex encoding="base64">`, the performance, voice and Fseq bulks it loads from. **Import > Import FSVR Preset** loads one at once and opens the Save modal on the name the file gives.
+- **Save > Export Current Preset** writes the performance as a `.fsvr` file, FSVR's own format: XML, so it can carry more than the unit's bytes later on. Version 1 holds `<name>`, `<category>` and `<sysex encoding="base64">`, the performance, voice and Fseq bulks it loads from. Importing one on its own loads it at once and opens the Save modal on the name the file gives.
 - **Save > Export to FS1R SysEx** writes the whole unit, system included, as bulk dumps a real FS1R takes.
 - **Right-click on a preset** (a performance, voice or Fseq row, in any bank): a heading naming it ("Performance: China Pop"), then Rename, Delete, Edit Attributes, Copy Attributes, Paste Attributes. The row lights while its menu and the modal it opens are up. A preset's attributes are its category; an Fseq and a DX voice have none. Delete and Rename edit the bank's file in place, and deleting a performance takes the voices and Fseq that came with it. The factory's presets open the same modals read only, and their attributes still copy. The row's first cell, its code, names the item: U and a number for a user item, A001 for a factory performance or voice, 01 for a factory Fseq.
 - **Right-click on a bank**: a heading ("Bank: CYBER"), then Rename and Delete. A deleted bank's file moves to the library's `Deleted` folder rather than going for good; renaming renames the file. Yamaha FS1R is read only.
@@ -203,7 +203,7 @@ Every dialog, the About box too, is a Hollow modal: a view named `dialog_*`, ope
 
 | Modal | Opened by |
 |---|---|
-| `dialog_save` | Save > Save Current Preset; Import FSVR Preset; Save... when closing |
+| `dialog_save` | Save > Save Current Preset; one `.fsvr` imported; Save... when closing |
 | `dialog_delete`, `dialog_rename`, `dialog_attributes` | A preset's right-click menu |
 | `dialog_bank_delete`, `dialog_bank_rename` | A bank's right-click menu |
 | `dialog_quit` | Closing the standalone with the performance edited (skin.json `close`) |
@@ -279,9 +279,9 @@ The skin asks through params and the instance's text data; the processor (`plugi
 
 | Key or param | Kind | Written by | Meaning |
 |---|---|---|---|
-| `sysex.import`, `fseq.import` | text data | GUI | A .syx or .fs1 to import as a bank (the Import menu, a file dropped on the window; the Fseq bank's Import); several, one a line, share a bank |
+| `patch.import`, `fseq.import` | text data | GUI | Patch files or folders to import as a bank (the Import menu, anything dropped on the window; the Fseq bank's Import); several, one a line, share a bank; one `.fsvr` alone plays and opens Save |
 | `sysex.export`, `fseq.export` | text data | GUI | Where to write the unit, the Fseq |
-| `fsvr.export`, `fsvr.import` | text data | GUI | A .fsvr preset to write, or to load and save |
+| `fsvr.export` | text data | GUI | A .fsvr preset to write |
 | `save.open`, `save.request`, `save.then_close` | text data | GUI | Save to Bank opened (the processor fills it in), confirmed, and whether the standalone closes after it |
 | `save.name`, `save.bank_name`, `save.bank` | text data, param (not the host's) | both | The preset's name, a new bank's name, the bank (0 a new one, else 1 + its row) |
 | `item.context`, `bank.context` | text data | GUI | The row a right-click was on: its index and cells, tab-separated (a list's `contextRow`) |

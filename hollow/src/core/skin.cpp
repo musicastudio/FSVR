@@ -1099,7 +1099,7 @@ std::shared_ptr<Skin> loadFiles(std::shared_ptr<const Files> all, std::string* e
         b.action = Loader::action(kj);
         if (b.action.type != Action::None) skin->keys.push_back(std::move(b));
     }
-    for (auto& dj : sj["drop"].items) {   // "drop": [ { "types": "syx;fs1", "key": "sysex.import" }, ... ]
+    for (auto& dj : sj["drop"].items) {   // "drop": [ { "types": "wav", "key": "audio.import" }, { "types": "*", "key": "patch.import" } ]
         Skin::DropRule r;
         r.key = dj["key"].str();
         const std::string t = dj["types"].str();

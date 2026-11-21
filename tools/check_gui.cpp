@@ -270,8 +270,20 @@ int main() {
             u.menuIs({"Save Current Preset...", "-", "Export Current Preset...", "Export to FS1R SysEx..."}, "Save");
         u.gui.keyDown(KeyEscape, false, false);
         CHECK(u.gui.menuLabels().empty(), "Escape left the Save menu open");
-        if (u.click("topbar/import_menu")) u.menuIs({"Import FSVR Preset...", "Import FS1R SysEx to New Bank..."}, "Import");
+        if (u.click("topbar/import_menu")) u.menuIs({"Import..."}, "Import");
         u.gui.keyDown(KeyEscape, false, false);
+        {   // its one entry opens a dialog of several files to the import key, every kind of patch file and any file
+            const Action* a = nullptr;
+            for (auto& w : u.gui.skin().views.at("topbar").widgets)
+                if (w.name == "import_menu" && w.items.size() == 1) a = &w.items[0].action;
+            std::string types;
+            if (a)
+                for (auto& t : a->vars) types += ";" + t.second;
+            types += ";";
+            CHECK(a && a->type == Action::File && a->target == "open" && a->key == "patch.import" && a->multiple, "Import... is not an open of several files to patch.import");
+            for (const char* t : {"syx", "fs1", "fsvr", "mid", "ini", "bin", "dat", "dx7voice", "*"})
+                CHECK(types.find(";" + std::string(t) + ";") != std::string::npos, "Import...'s dialog does not list %s (%s)", t, types.c_str());
+        }
         // With nothing of ours open, Escape is nobody's: the platform forwards exactly what keyDown refuses,
         // and a host closing the plug-in's window on Escape is what that forwarding is for.
         CHECK(!u.gui.keyDown(KeyEscape, false, false), "Escape with nothing open was taken from the host");
@@ -1356,10 +1368,14 @@ int main() {
             put(second, fs1Of("Second Perf ", "SECONDVOX "));
             fs1Of("Unused Perf ", "LOOSEVOX  ", &looseVoice);
             put(loose, looseVoice);   // one voice for part 1, after no performance of its own
-            CHECK(u.gui.dropAccepts(fs1.u8string()) && u.gui.dropAccepts((tmp / "X.SYX").u8string()) && !u.gui.dropAccepts(wav.u8string()),
-                  "the window takes the wrong files");
+            CHECK(u.gui.dropAccepts(fs1.u8string()) && u.gui.dropAccepts((tmp / "X.SYX").u8string()) && u.gui.dropAccepts((tmp / "No Extension").u8string()) &&
+                  u.gui.dropAccepts(tmp.u8string()), "the window refuses a file or a folder");
+            put(wav, {'R', 'I', 'F', 'F'});   // a file the window takes and nothing can be read in: named, with the reason
+            CHECK(u.gui.drop({wav.u8string()}), "the window refused the .wav");
+            CHECK(u.until([&] { return u.data("live.message") == "Nothing FSVR can read in Dropped.wav: not a patch file FSVR knows"; }),
+                  "the dropped .wav said \"%s\"", u.data("live.message").c_str());
             u.st->setData("live.browse.filter", "zz");   // the bank the import opens shows its rows, not the last bank's filter
-            CHECK(u.gui.drop({wav.u8string(), fs1.u8string()}), "the window refused the .fs1");
+            CHECK(u.gui.drop({fs1.u8string()}), "the window refused the .fs1");
             CHECK(u.until([&] { return u.lineOf("bank.list", "Dropped") > 0 && u.data("perf.name") == "Dropped Perf"; }),
                   "the dropped .fs1 did not import and play (\"%s\")", u.data("perf.name").c_str());
             CHECK(u.data("live.browse.filter").empty(), "the dropped .fs1's bank opened with \"%s\" in the filter", u.data("live.browse.filter").c_str());

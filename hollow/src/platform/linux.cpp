@@ -542,7 +542,7 @@ bool platformFileDialog(PlatformWindow*, bool save, bool multiple, const std::st
         for (size_t a = 0; a <= t.second.size();) {
             size_t b = t.second.find(';', a);
             std::string e = t.second.substr(a, b == std::string::npos ? std::string::npos : b - a);
-            if (!e.empty()) pats += (pats.empty() ? "*." : " *.") + e;
+            if (!e.empty()) pats += (pats.empty() ? "" : " ") + (e == "*" ? std::string("*") : "*." + e);   // "*": any file
             if (b == std::string::npos) break;
             a = b + 1;
         }

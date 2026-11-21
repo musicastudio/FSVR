@@ -3239,13 +3239,14 @@ bool Gui::closeRequested() {
     return false;
 }
 
+// The first rule naming the path's extension, or "*" (any file, one with no extension, a folder).
 static const Skin::DropRule* dropRule(const Skin& skin, const std::string& path) {
     const size_t dot = path.find_last_of('.'), sep = path.find_last_of("/\\");
-    if (dot == std::string::npos || (sep != std::string::npos && dot < sep)) return nullptr;
-    std::string ext = path.substr(dot + 1);
+    std::string ext = dot == std::string::npos || (sep != std::string::npos && dot < sep) ? std::string() : path.substr(dot + 1);
     for (char& c : ext) c = (char)std::tolower((unsigned char)c);
     for (auto& r : skin.drops)
-        if (std::find(r.types.begin(), r.types.end(), ext) != r.types.end()) return &r;
+        for (auto& t : r.types)
+            if (t == "*" || (!ext.empty() && t == ext)) return &r;
     return nullptr;
 }
 

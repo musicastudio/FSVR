@@ -677,7 +677,8 @@ void platformCloseApp(PlatformWindow* w) {
     PostMessageW(GetAncestor(w->hwnd, GA_ROOT), WM_CLOSE, 0, 0);
 }
 
-// The common dialogs: a filter of "Name (*.a;*.b)" then "*.a;*.b" per type, a save's extension the first type's first.
+// The common dialogs: a filter of "Name (*.a;*.b)" then "*.a;*.b" per type ("*" is "*.*", any file), a save's
+// extension the first type's first.
 bool platformFileDialog(PlatformWindow* w, bool save, bool multiple, const std::string& title, const Vars& types, const std::string& name, std::string& path) {
     std::wstring filter, ext;
     for (auto& t : types) {
@@ -688,7 +689,7 @@ bool platformFileDialog(PlatformWindow* w, bool save, bool multiple, const std::
             std::string e = t.second.substr(a, b == std::string::npos ? std::string::npos : b - a);
             if (!e.empty()) {
                 pats += (pats.empty() ? L"*." : L";*.") + wide(e);
-                if (ext.empty()) ext = wide(e);
+                if (ext.empty() && e != "*") ext = wide(e);
             }
             if (b == std::string::npos) break;
             a = b + 1;

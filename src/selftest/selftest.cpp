@@ -41,6 +41,7 @@ struct HashSink : H::WriteSink {
 };
 }  // namespace fx
 
+int selftest_patchfiles();
 static int g_fails = 0;
 static void ck(const char* what, bool ok) { if (!ok) { printf("  FAIL %s\n", what); g_fails++; } }
 int selftest(Synth& S) {
@@ -768,14 +769,14 @@ int selftest(Synth& S) {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x4E, 0x00, 0x00, 0x01, 0x0A, 0x3B, 0x0F, 0x0A, 0x41, 0x63, 0x5C, 0x52, 0x00, 0x37, 0x00, 0x0A, 0x00, 0x00, 0x01, 0x03, 0x06, 0x63, 0x00, 0x01,
     0x00, 0x0B, 0x63, 0x62, 0x62, 0x62, 0x2F, 0x32, 0x32, 0x32, 0x03, 0x07, 0x01, 0x13, 0x26, 0x07, 0x00, 0x00, 0x04, 0x01, 0x24, 0x44, 0x58, 0x2D, 0x41, 0x63, 0x72, 0x64, 0x20, 0x34, 0x20,
       };
-      uint8_t out[608]; convert_dx7(vced, out); int bad = 0;
+      uint8_t out[608]; convert_dx7(vced, nullptr, out); int bad = 0;
       for (int i = 0; i < 608; i++) if (i != 0x0E && out[i] != demo[i]) bad++;   // 0x0E is the category, the demo's one edit
       ck("DX7 conversion matches the unit's own DX-Acrd 4 bulk on every byte but the category", bad == 0); }
 
     // DX7 conversion: the operator slot is DX7MAP word 25 + j, and every DX carrier lands on an FS1R carrier
     { uint8_t vced[155] = {}; vced[134] = 4;                        // DX algorithm 5: carriers 1, 3, 5
       for (int j = 0; j < 6; j++) vced[j * 21 + 16] = (uint8_t)(10 + j);   // output level tags op6..op1 as 10..15
-      uint8_t out[608]; convert_dx7(vced, out); bool ok = true;
+      uint8_t out[608]; convert_dx7(vced, nullptr, out); bool ok = true;
       const unsigned char* alg = FS1R_ALG[out[0x2C]];
       for (int j = 0; j < 6; j++) for (int o = 0; o < 8; o++) if (out[112 + o * 62 + 22] == 10 + j) {
           bool carrier = alg[2 * o + 1] & 1, want = (6 - j) == 1 || (6 - j) == 3 || (6 - j) == 5; if (carrier != want) ok = false; }
@@ -785,10 +786,10 @@ int selftest(Synth& S) {
     // is 0, and the EG bias sense follows it (FUN_00035E96). The slot is the algorithm's, not a fixed one.
     { uint8_t vced[155] = {}; vced[134] = 4;
       for (int j = 0; j < 6; j++) { vced[j * 21 + 20] = (uint8_t)(1 + j); vced[j * 21 + 14] = 2; }   // detune tags the operator, ams 2
-      g_acedValid = false; uint8_t plain[608]; convert_dx7(vced, plain);
-      memset(g_aced, 0, sizeof g_aced); g_aced[6] = 5; g_aced[8] = 0; g_aced[9] = 7;                    // DX op 6 -> 5, op 5 stays, op 4 -> 7
-      g_acedValid = true; uint8_t out[608]; convert_dx7(vced, out);
-      bool ok = !g_acedValid; int seen = 0;
+      uint8_t plain[608]; convert_dx7(vced, nullptr, plain);
+      uint8_t aced[49] = {}; aced[6] = 5; aced[8] = 0; aced[9] = 7;                                      // DX op 6 -> 5, op 5 stays, op 4 -> 7
+      uint8_t out[608]; convert_dx7(vced, aced, out);
+      bool ok = true; int seen = 0;
       for (int o = 0; o < 8; o++) {
           const uint8_t* a = plain + 112 + o * 62; const uint8_t* b = out + 112 + o * 62;
           int j = b[7] >= 9 && b[7] <= 14 ? b[7] - 9 : -1; if (j < 0) continue; seen++;
@@ -796,6 +797,20 @@ int selftest(Synth& S) {
           if ((b[33] >> 4) != want || b[34] != want + 7 || (a[33] >> 4) != 2 || (b[33] & 15) != (a[33] & 15)) ok = false; }
       if (seen != 6) ok = false;
       ck("DX7 ACED amp mod sense replaces the VCED's on the operator's own slot, 0 leaves it", ok); }
+
+    // An ACED waits for the next VCED of its own engine: two instances never take each other's.
+    { std::vector<uint8_t> aced(6 + 49 + 2, 0), vced(6 + 155 + 2, 0);
+      const uint8_t ah[6] = {0xF0, 0x43, 0x00, 0x05, 0x00, 0x31}, vh[6] = {0xF0, 0x43, 0x00, 0x00, 0x01, 0x1B};
+      memcpy(aced.data(), ah, 6); aced[6 + 6] = 7; aced.back() = 0xF7;                                   // DX op 6 -> 7
+      memcpy(vced.data(), vh, 6); vced.back() = 0xF7; uint8_t* v = vced.data() + 6; v[134] = 4;
+      for (int j = 0; j < 6; j++) { v[j * 21 + 20] = (uint8_t)(1 + j); v[j * 21 + 14] = 2; }
+      auto A = std::make_unique<Synth>(), B = std::make_unique<Synth>();
+      auto op6ams = [](Synth& T) { for (int o = 0; o < 8; o++) { const uint8_t* p = T.perf.part[0].voice.raw + 112 + o * 62;
+                                       if (p[7] == 9) return p[33] >> 4; } return -1; };
+      load_sysex(*A, nullptr, aced.data(), aced.size(), 0, 0);
+      load_sysex(*B, nullptr, vced.data(), vced.size(), 0, 0);
+      load_sysex(*A, nullptr, vced.data(), vced.size(), 0, 0);
+      ck("an ACED sent to one engine reaches its own next VCED and not another engine's", op6ams(*A) == 7 && op6ams(*B) == 2); }
 
     // A read leaves the sum bus as it is and t1 bit 1 starts it over (docs/ymp706_registers.md, the algorithm word).
     // The table bears that out on all 88: the bit never falls while an add waits for its reader, and every entry
@@ -1654,6 +1669,7 @@ int selftest(Synth& S) {
         ck("filter host: its register writes are the firmware's", sink.h == 0xf188051d637d4182ull); }
     }
 
+    g_fails += selftest_patchfiles();   // selftest/patchfiles.cpp
     printf(g_fails ? "selftest: %d FAILURES\n" : "selftest: ok\n", g_fails);
     return g_fails ? 1 : 0;
 }

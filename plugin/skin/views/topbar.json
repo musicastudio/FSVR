@@ -2702,32 +2702,21 @@
    ],
    "items": [
     {
-     "label": "Import FSVR Preset...",
+     "label": "Import...",
      "value": 0,
      "action": {
       "file": "open",
-      "key": "fsvr.import",
-      "types": {
-       "FSVR preset": "fsvr"
-      },
-      "title": "Import FSVR Preset"
-     }
-    },
-    {
-     "label": "Import FS1R SysEx to New Bank...",
-     "value": 1,
-     "action": {
-      "file": "open",
-      "key": "sysex.import",
+      "key": "patch.import",
       "multiple": true,
       "types": {
-       "SysEx": "syx;fs1"
+       "Patch files": "syx;fs1;fsvr;mid;midi;ini;bin;dat;dx7;dx7voice",
+       "All files": "*"
       },
-      "title": "Import SysEx"
+      "title": "Import"
      }
     }
    ],
-   "tip": "Import an FSVR preset, or a .syx or .fs1 as a new bank",
+   "tip": "Import FSVR presets, FS1R and DX sysex, banks and MIDI files, as a bank; or drop them, or a folder, on the window",
    "text": {
     "text": "Import",
     "font": "caption_white_12",
