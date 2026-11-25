@@ -18,6 +18,7 @@ struct Item {
     int partVoice[4] = {-1, -1, -1, -1};   // a performance: voices (0x40..0x43 bulks) that came right after it
     int fseq = -1;                         // and the Fseq that came with them
     size_t at = 0, len = 0;        // its bytes in the bank's file (a DX voice: from its ACED)
+    mutable uint64_t hash = 0;     // its sysex's FNV-1a once something asked (the plug-in's ratings), 0 before
     const uint8_t* data() const { return syx.data() + 9; }   // a native bulk's data, after its address
 };
 
