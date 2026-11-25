@@ -712,6 +712,23 @@
    ],
    "surface": false
   },
+  "library/group_box": {
+   "slice": [
+    3,
+    3,
+    3,
+    3
+   ],
+   "surface": false
+  },
+  "library/stars_filter": {
+   "tiles": 6,
+   "surface": false
+  },
+  "library/stars_row": {
+   "tiles": 6,
+   "surface": false
+  },
   "library/toolbar_bar": {
    "slice": [
     0,

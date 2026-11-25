@@ -131,35 +131,52 @@
   },
   {
    "type": "plate",
+   "name": "filter_box",
+   "rect": [
+    403,
+    5,
+    807,
+    33
+   ],
+   "layer": 2,
+   "fill": {
+    "image": "library/group_box"
+   }
+  },
+  {
+   "type": "plate",
    "name": "filter_caption",
    "rect": [
-    906,
-    8,
-    50,
-    29
+    380,
+    11,
+    46,
+    23
    ],
-   "layer": 3,
+   "layer": 4,
    "text": {
     "text": "Filter",
     "font": "library_row_white_12",
-    "align": "right",
+    "align": "center",
     "valign": "middle"
    },
    "pad": [
     0,
     0,
-    2,
+    0,
     0
-   ]
+   ],
+   "fill": {
+    "colour": "#8f9ea6ff"
+   }
   },
   {
    "type": "textbox",
    "name": "filter",
    "rect": [
-    960,
-    8,
-    250,
-    29
+    436,
+    9,
+    644,
+    25
    ],
    "layer": 3,
    "fill": {
@@ -185,27 +202,41 @@
    "tip": "Shows only the rows that hold this text in any column: a code such as B028, a name or a category"
   },
   {
-   "type": "plate",
-   "name": "message",
+   "type": "custom",
+   "name": "min_rating",
    "rect": [
-    376,
-    3,
-    524,
+    1090,
+    8,
+    112,
     29
    ],
-   "text": {
-    "text": "{data:live.message|}",
-    "font": "library_row_white_12",
-    "align": "right",
-    "valign": "middle"
-   },
-   "pad": [
-    2,
-    0,
-    6,
-    0
+   "layer": 3,
+   "kind": "rating",
+   "image": "library/stars_filter",
+   "param": "browse.min_rating",
+   "steps": 5,
+   "tip": "Shows only the presets rated at least this many stars. Click the lit star again to show them all"
+  },
+  {
+   "type": "custom",
+   "name": "message",
+   "rect": [
+    18,
+    451,
+    1185,
+    29
    ],
-   "layer": 4
+   "layer": 6,
+   "kind": "message_box",
+   "key": "live.message",
+   "text": {
+    "text": "",
+    "font": "library_row_white_12"
+   },
+   "box": "#1e2728ff",
+   "edge": "#96a6aeff",
+   "padX": 12,
+   "radius": 4
   },
   {
    "type": "plate",
@@ -654,7 +685,7 @@
    "type": "plate",
    "name": "head_channels",
    "rect": [
-    1019,
+    975,
     42,
     100,
     25
@@ -674,6 +705,27 @@
     "var": "browse",
     "equals": "perf"
    }
+  },
+  {
+   "type": "plate",
+   "name": "head_rating",
+   "rect": [
+    1097,
+    42,
+    100,
+    25
+   ],
+   "layer": 5,
+   "text": {
+    "text": "Rating",
+    "font": "library_header_white_11"
+   },
+   "pad": [
+    0,
+    2,
+    0,
+    0
+   ]
   },
   {
    "type": "list",
@@ -697,7 +749,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -3871,6 +3935,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -3896,7 +3972,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -13855,6 +13943,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -13880,7 +13980,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -14081,6 +14193,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -14106,7 +14230,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -14456,6 +14592,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -14481,7 +14629,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -15823,6 +15983,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -15848,7 +16020,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -16046,6 +16230,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -16071,7 +16267,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -16993,6 +17201,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -17018,7 +17238,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -17328,6 +17560,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -17353,7 +17597,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -18289,6 +18545,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -18314,7 +18582,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -18512,6 +18792,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -18537,7 +18829,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -19102,6 +19406,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -19127,7 +19443,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -19525,6 +19853,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -19550,7 +19890,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -20528,6 +20880,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -20553,7 +20917,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -20759,6 +21135,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -20784,7 +21172,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -21517,6 +21917,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -21542,7 +21954,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -21668,6 +22092,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -21693,7 +22129,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -21831,6 +22279,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -21856,7 +22316,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -22134,6 +22606,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -22159,7 +22643,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -22850,6 +23346,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -22875,7 +23383,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -23001,6 +23521,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -23026,7 +23558,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -23248,6 +23792,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -23273,7 +23829,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -23439,6 +24007,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -23464,7 +24044,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -23777,6 +24369,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -23802,7 +24406,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -24168,6 +24784,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -24193,7 +24821,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -24807,6 +25447,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -24832,7 +25484,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -25246,6 +25910,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -25271,7 +25947,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -25997,6 +26685,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -26022,7 +26722,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -26284,6 +26996,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -26309,7 +27033,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -26755,6 +27491,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -26780,7 +27528,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -27018,6 +27778,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -27043,7 +27815,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -27440,6 +28224,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -27465,7 +28261,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -27607,6 +28415,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -27632,7 +28452,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -28190,6 +29022,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -28215,7 +29059,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -28461,6 +29317,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -28486,7 +29354,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -29198,6 +30078,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -29223,7 +30115,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -29405,6 +30309,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -29430,7 +30346,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -29764,6 +30692,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -29789,7 +30729,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -30099,6 +31051,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -30124,7 +31088,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -30577,6 +31553,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -30602,7 +31590,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -30952,6 +31952,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -30977,7 +31989,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -31353,6 +32377,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -31378,7 +32414,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -31560,6 +32608,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -31585,7 +32645,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -31856,6 +32928,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -31881,7 +32965,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "perf.program",
@@ -32047,6 +33143,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -32072,7 +33180,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "part.program.{part}",
@@ -32266,6 +33386,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -32291,7 +33423,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.fseq",
+     "click": "live.rating.click.fseq",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "fseq.number",
@@ -33019,6 +34163,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -33044,7 +34200,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.perf",
+     "click": "live.rating.click.perf",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "browse.perf",
@@ -33148,6 +34316,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -33173,7 +34353,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.voice",
+     "click": "live.rating.click.voice",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "browse.voice.{part}",
@@ -33275,6 +34467,18 @@
        "item.request": "paste"
       }
      }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
+      }
+     }
     }
    ]
   },
@@ -33300,7 +34504,19 @@
      "width": 128
     },
     {
-     "width": 250
+     "width": 206
+    },
+    {
+     "width": 120
+    },
+    {
+     "width": 92,
+     "image": "library/stars_row",
+     "tileCell": true,
+     "lookup": "live.rating.fseq",
+     "click": "live.rating.click.fseq",
+     "steps": 5,
+     "min": "browse.min_rating"
     }
    ],
    "param": "browse.fseq",
@@ -33401,6 +34617,18 @@
      "action": {
       "data": {
        "item.request": "paste"
+      }
+     }
+    },
+    {
+     "separator": true
+    },
+    {
+     "label": "Clear Rating",
+     "value": 6,
+     "action": {
+      "data": {
+       "item.request": "clear_rating"
       }
      }
     }

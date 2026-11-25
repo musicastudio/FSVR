@@ -906,6 +906,40 @@ int main() {
         }
     }
 
+    // Ratings (#41): a star clicked in the browser's Rating column ("code<TAB>stars<TAB>count") rates the row's preset, for
+    // every instance and the next one, a factory preset by its code and a library one by its U number; 0 takes it off,
+    // and the same star twice keeps it.
+    {
+        auto rated = [](Rig& s, const char* key, const std::string& line) {
+            const std::string d = s.data(key);
+            return ("\n" + d).find("\n" + line + "\n") != std::string::npos;
+        };
+        int count = 0;
+        auto click = [&](Rig& s, const char* kind, const std::string& code, int stars) {
+            s.st->setData(std::string("live.rating.click.") + kind, code + "\t" + std::to_string(stars) + "\t" + std::to_string(++count));
+        };
+        {
+            Rig s;
+            click(s, "perf", "A003", 3);
+            CHECK(s.until([&] { return rated(s, "live.rating.perf", "A003\t3"); }), "A003 was not rated 3 (\"%s\")", s.data("live.rating.perf").c_str());
+            CHECK(fs::exists(tmp / "Ratings.json"), "a rating wrote no Ratings.json");
+            click(s, "perf", "A003", 3);   // the same star again keeps it
+            s.until([] { return false; }, 300);
+            CHECK(rated(s, "live.rating.perf", "A003\t3"), "the same star twice left \"%s\"", s.data("live.rating.perf").c_str());
+            click(s, "voice", "U1", 5);
+            CHECK(s.until([&] { return rated(s, "live.rating.voice", "U1\t5"); }), "U1 was not rated 5 (\"%s\")", s.data("live.rating.voice").c_str());
+        }
+        {
+            Rig s;   // a new instance has them
+            CHECK(s.until([&] { return rated(s, "live.rating.perf", "A003\t3") && rated(s, "live.rating.voice", "U1\t5"); }),
+                  "a new instance came up with ratings \"%s\" and \"%s\"", s.data("live.rating.perf").c_str(), s.data("live.rating.voice").c_str());
+            click(s, "perf", "A003", 0);
+            CHECK(s.until([&] { return s.data("live.rating.perf").empty(); }), "0 left A003 at \"%s\"", s.data("live.rating.perf").c_str());
+            click(s, "voice", "U1", 0);
+            CHECK(s.until([&] { return s.data("live.rating.voice").empty(); }), "0 left U1 at \"%s\"", s.data("live.rating.voice").c_str());
+        }
+    }
+
     // A library the instance cannot read says so on the status line, rather than every bank just vanishing:
     // macOS refuses ~/Documents to an app it has no grant for, and the import then wrote a file nobody saw.
     {
@@ -927,6 +961,6 @@ int main() {
     }
 
     fs::remove_all(tmp, ec);
-    if (!fails) std::printf("check_plugin: factory banks, sessions, Import SysEx, the bank browser, morph (off), Import Audio, program change, panic, the monitor, Save to Bank, .fsvr presets, the right-click menus, a preset's Fseq after a reopen, a host's performance bulk, the part lamp, the Init and last patches, and an unreadable library all pass\n");
+    if (!fails) std::printf("check_plugin: factory banks, sessions, Import SysEx, the bank browser, morph (off), Import Audio, program change, panic, the monitor, Save to Bank, .fsvr presets, the right-click menus, a preset's Fseq after a reopen, a host's performance bulk, the part lamp, the Init and last patches, ratings, and an unreadable library all pass\n");
     return fails ? 1 : 0;
 }

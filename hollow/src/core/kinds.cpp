@@ -2928,6 +2928,91 @@ static void velUp(Gui& g, const Hit& h, Rect r, int, int) {
     g.invalidate(r);
 }
 
+// ---- rating: a row of stars on its param -----------------------------------------------------------
+// The image's tile is the param's value (tile n: n stars lit), centred in the rect. A press lands on
+// star 1.."steps" by where across the image it falls and sets the param to it; a double-click or a right-click sets 0.
+
+static Rect ratingArt(Gui& g, const Hit& h, Rect r) {
+    const Rect t = g.skin().images[g.wid(h).image].tile(0);
+    return {r.x + (r.w - t.w) / 2, r.y + (r.h - t.h) / 2, t.w, t.h};
+}
+
+static void ratingDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
+    const Widget& w = g.wid(h);
+    if (w.image < 0 || g.inst(h).param < 0) return;
+    drawImage(c, g.skin().images[w.image], (int)std::lround(g.plain(*h.node, h.i)), ratingArt(g, h, r));
+}
+
+static bool ratingDown(Gui& g, const Hit& h, Rect r, int x, int, bool) {
+    const Widget& w = g.wid(h);
+    if (w.image < 0 || g.inst(h).param < 0) return false;
+    const Rect a = ratingArt(g, h, r);
+    if (x < a.x || x >= a.x + a.w) return false;
+    const int steps = std::max(1, (int)w.json["steps"].integer(5));
+    const int star = std::clamp((x - a.x) * steps / a.w + 1, 1, steps);
+    g.begin(h);
+    g.setPlain(h, star);
+    g.end();
+    g.invalidate(r);
+    return false;
+}
+
+static void ratingDbl(Gui& g, const Hit& h, Rect r, int, int) {
+    if (g.inst(h).param < 0) return;
+    g.begin(h);
+    g.setPlain(h, 0);
+    g.end();
+    g.invalidate(r);
+}
+
+static void ratingRight(Gui& g, const Hit& h, Rect r, int x, int y, bool, bool up) {   // a right-click sets 0 too
+    if (up) ratingDbl(g, h, r, x, y);
+}
+
+// ---- message_box: a status message floating over what is under it -----------------------------------
+// The text data under the widget's "key" in its text.font, in a box as wide as the text and "padX" either side
+// (skin px, default 12), from the rect's left and its full height: rounded by "radius" (default 4), an "edge"
+// line round a "box" fill, over a soft shadow to its lower left (2.7 skin px down and left, fading over 2 px
+// either side of the box's outline from 59% black). Nothing while the text is empty, and no input, so a click goes
+// to what is under it.
+
+static void messageBoxDraw(Gui& g, Canvas& c, const Hit& h, Rect r) {
+    const Widget& w = g.wid(h);
+    const std::string& key = g.inst(h).key;
+    const std::string s = key.empty() ? std::string() : g.state().data(key);
+    if (s.empty() || w.text.font < 0) return;
+    const Font& f = g.skin().fonts[(size_t)w.text.font];
+    const double k = g.skin().scale;
+    const int pad = (int)std::lround(w.json["padX"].num(12) * k), rad = (int)std::lround(w.json["radius"].num(4) * k);
+    const int line = std::max(1, (int)std::lround(k)), off = (int)std::lround(2.7 * k);
+    const double blur = std::max(1.0, 2 * k);
+    // The widget clips what it draws to its rect, so the box stands in from the rect's left and bottom by the room
+    // its shadow takes there.
+    const int m = off + (int)std::ceil(blur);
+    const Rect b{r.x + m, r.y, std::min(r.w - m, f.width(s) + 2 * pad), r.h - m};
+    auto shape = [&](Rect q, int rr, uint32_t col) {   // a rounded rectangle, a row at a time
+        for (int y = 0; y < q.h; ++y) {
+            const int d = y < rr ? rr - y : y >= q.h - rr ? y - (q.h - rr - 1) : 0;
+            const int in = d ? rr - (int)std::lround(std::sqrt(std::max(0.0, double(rr * rr - d * d)))) : 0;
+            fillRect(c, {q.x + in, q.y + y, q.w - 2 * in, 1}, col);
+        }
+    };
+    {   // the shadow: the box's outline moved to its lower left, each pixel shaded by its distance from that outline
+        const double cx = b.x - off + b.w / 2.0, cy = b.y + off + b.h / 2.0, hx = b.w / 2.0 - rad, hy = b.h / 2.0 - rad;
+        const int reach = (int)std::ceil(blur);
+        for (int y = b.y + off - reach; y < b.y + off + b.h + reach; ++y)
+            for (int x = b.x - off - reach; x < b.x - off + b.w + reach; ++x) {
+                const double qx = std::fabs(x + 0.5 - cx) - hx, qy = std::fabs(y + 0.5 - cy) - hy;
+                const double d = std::hypot(std::max(qx, 0.0), std::max(qy, 0.0)) + std::min(std::max(qx, qy), 0.0) - rad;   // < 0 inside
+                const double t = std::clamp((blur - d) / (2 * blur), 0.0, 1.0);
+                if (t > 0) fillRect(c, {x, y, 1, 1}, (uint32_t)std::lround(150 * t) << 24);
+            }
+    }
+    shape(b, rad, colourField(g, h, "edge", 0xff96a6ae));
+    shape({b.x + line, b.y + line, b.w - 2 * line, b.h - 2 * line}, std::max(0, rad - line), colourField(g, h, "box", 0xff1e2728));
+    drawText(c, f, s, {b.x + pad, b.y, b.w - 2 * pad, b.h}, 0, 1, false);
+}
+
 // ---- the table ------------------------------------------------------------------------------------
 
 const KindOps* findKind(const std::string& kind) {
@@ -2947,6 +3032,8 @@ const KindOps* findKind(const std::string& kind) {
     static const KindOps levelScale   = {levelScaleDraw,   nullptr,   nullptr,   nullptr, nullptr,    nullptr, nullptr,  sigTick<SigState>};
     static const KindOps keyRange     = {keyRangeDraw, keyRangeDown, keyRangeDrag, keyRangeUp, keyRangeDbl, nullptr, nullptr, sigTick<KeyRangeState>};
     static const KindOps velocity     = {velDraw,          velDown,   velDrag,   velUp,   nullptr,    nullptr, nullptr,  sigTick<VelState>};
+    static const KindOps rating       = {ratingDraw,       ratingDown, nullptr,  nullptr, ratingDbl,  nullptr, ratingRight, nullptr};
+    static const KindOps messageBox   = {messageBoxDraw,   nullptr,   nullptr,   nullptr, nullptr,    nullptr, nullptr,  nullptr};
     if (kind == "pad") return &pad;
     if (kind == "morph_pad") return &morph;
     if (kind == "piano") return &piano;
@@ -2962,6 +3049,8 @@ const KindOps* findKind(const std::string& kind) {
     if (kind == "level_scale") return &levelScale;
     if (kind == "key_range") return &keyRange;
     if (kind == "velocity") return &velocity;
+    if (kind == "rating") return &rating;
+    if (kind == "message_box") return &messageBox;
     return nullptr;   // "fx_chain" and unknown kinds: the fill only
 }
 

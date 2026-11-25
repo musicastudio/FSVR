@@ -888,7 +888,8 @@ struct Loader {
         w.colGap = px(j["colGap"].num());
         for (auto& c : j["columns"].items) {
             std::string a = c["align"].str();
-            w.columns.push_back({px(c["width"].num()), a == "center" ? 1 : a == "right" ? 2 : 0, c["edit"].str() == "int", image(c["image"].str()), c["tileCell"].flag()});
+            w.columns.push_back({px(c["width"].num()), a == "center" ? 1 : a == "right" ? 2 : 0, c["edit"].str() == "int", image(c["image"].str()), c["tileCell"].flag(),
+                                 c["lookup"].str(), c["click"].str(), (int)c["steps"].integer(1), c["min"].str()});
         }
         for (auto& f : j["fixed"].items) w.fixed.push_back({f["param"].str(), f["label"].str(), f["ccParam"].str()});
         for (auto& row : j["rows"].items) {

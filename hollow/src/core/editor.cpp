@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cctype>
 #include <climits>
+#include <map>
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
@@ -1190,12 +1191,38 @@ std::vector<Gui::ListRow> Gui::listModel(const Node& n, int i, int* total) const
     }
     for (size_t k = 0; k < rows.size(); ++k) rows[k].src = (int)k;
     if (total) *total = (int)rows.size();
+    // "lookup" columns: each row's number off its data key by the row's first cell, then "min" leaves out the
+    // rows under its param's value.
+    std::vector<bool> looked(w.columns.size(), false);
+    for (size_t col = 0; col < w.columns.size(); ++col) {
+        const Column& cdef = w.columns[col];
+        if (cdef.lookup.empty()) continue;
+        looked[col] = true;
+        std::map<std::string, std::string> by;
+        const std::string text = state_.data(subst(n, cdef.lookup));
+        for (size_t p = 0; p < text.size();) {
+            size_t e = std::min(text.find('\n', p), text.size()), t = text.find('\t', p);
+            if (t < e) by[text.substr(p, t - p)] = text.substr(t + 1, e - t - 1);
+            p = e + 1;
+        }
+        for (auto& r : rows) {
+            if (r.cells.size() <= col) r.cells.resize(col + 1);
+            auto at = r.cells.empty() ? by.end() : by.find(r.cells[0]);
+            r.cells[col] = at == by.end() ? "0" : at->second;
+        }
+        const int mp = cdef.min.empty() ? -1 : state_.indexOf(subst(n, cdef.min));
+        if (const double least = mp >= 0 ? state_.get((size_t)mp) : 0; least > 0)
+            rows.erase(std::remove_if(rows.begin(), rows.end(), [&](const ListRow& r) { return std::atof(r.cells[col].c_str()) < least; }), rows.end());
+    }
     std::string filter = listFilter(n, i);
     if (filter.empty()) return rows;
     for (auto& c : filter) c = c >= 'A' && c <= 'Z' ? char(c + 32) : c;
-    rows.erase(std::remove_if(rows.begin(), rows.end(),
-                              [&](const ListRow& r) { return std::none_of(r.cells.begin(), r.cells.end(), [&](const std::string& c) { return hasText(c, filter); }); }),
-               rows.end());
+    auto matches = [&](const ListRow& r) {
+        for (size_t col = 0; col < r.cells.size(); ++col)
+            if ((col >= looked.size() || !looked[col]) && hasText(r.cells[col], filter)) return true;
+        return false;
+    };
+    rows.erase(std::remove_if(rows.begin(), rows.end(), [&](const ListRow& r) { return !matches(r); }), rows.end());
     return rows;
 }
 
@@ -1314,6 +1341,23 @@ void Gui::listDown(const Hit& h, int x, int y, bool dbl) {
     Rect r = rectOf(*h.node, h.i);
     int row = listRowAt(h, y);
     if (row < 0) return;
+    // A "click" column's image (a star of five) answers the press itself, and the row stays as it was: a press
+    // writes the step it lands on, a double-click 0.
+    for (int cx = r.x, col = 0; col < (int)w.columns.size(); cx += w.columns[(size_t)col].width + w.colGap, ++col) {
+        const Column& cdef = w.columns[(size_t)col];
+        if (cdef.click.empty() || cdef.image < 0 || x < cx || x >= cx + cdef.width) continue;
+        const Rect t = skin_->images[cdef.image].tile(0);
+        const int ix = cx + (cdef.width - t.w) / 2;
+        if (x < ix || x >= ix + t.w) return;
+        const auto model = listModel(*h.node, h.i);
+        const int at = placeOf(model, row);
+        if (at < 0 || model[(size_t)at].cells.empty()) return;
+        // step 1.."steps" by where it lands; the second press of a double-click, 0
+        const int step = dbl ? 0 : std::clamp((x - ix) * std::max(1, cdef.steps) / t.w + 1, 1, std::max(1, cdef.steps));
+        state_.setData(subst(*h.node, cdef.click), model[(size_t)at].cells[0] + "\t" + std::to_string(step) + "\t" + std::to_string(++clickCount_));
+        invalidate(r);
+        return;
+    }
     s.row = row;
     if (s.param >= 0) setParams(listRowParams(h, row));   // a bound list: the row's params
     listFocus_ = h;
@@ -2907,6 +2951,15 @@ void Gui::checkValues(Node& n) {
         if (w.kind == Kind::List && !w.filter.empty()) {   // a list follows its filter, and starts again from the top when it changes
             std::string f = listFilter(n, (int)i);
             if (f != s.filter) { s.filter = f; s.scroll = 0; s.revealed = -2; changed = true; }
+        }
+        if (w.kind == Kind::List) {   // and its "lookup" columns' data, and their "min" params as it does its filter
+            std::string looked, least;
+            for (const Column& c : w.columns) {
+                if (!c.lookup.empty()) looked += state_.data(subst(n, c.lookup)) + '\x1f';
+                if (const int mp = c.min.empty() ? -1 : state_.indexOf(subst(n, c.min)); mp >= 0) least += std::to_string(state_.get((size_t)mp)) + ' ';
+            }
+            if (looked != s.looked) { s.looked = looked; changed = true; }
+            if (least != s.least) { s.least = least; s.scroll = 0; s.revealed = -2; changed = true; }
         }
         if (w.source == Widget::MidiMap) {   // the list follows the assignments and its CC params
             std::string sig;

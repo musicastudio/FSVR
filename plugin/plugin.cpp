@@ -243,6 +243,7 @@ public:
         lib.rescan(true);
         libraryError();
         readOptions();
+        readRatings();
         // What the LCD and the browser name is what plays: the worker's first look loads the Init Patch (Options), else
         // that factory performance (A001), unless a session arrives first. The standalone's app brings back the state
         // it closed with as a session: Load Last Patch keeps it, and otherwise the Init Patch plays over it (restore).
@@ -730,6 +731,10 @@ private:
                 libraryError();
             }
             if (n % 10 == 0) watchOptions();
+            {
+                std::lock_guard<std::mutex> g(ctl);
+                ratingClicks();
+            }
             if (n % 2 == 0) harmonics();
             if (n % 3 == 1) waves();
             levels();
@@ -1282,6 +1287,7 @@ private:
         st.setData("browse.perf.list", rows[0]);
         st.setData("browse.voice.list", rows[1]);
         st.setData("browse.fseq.list", rows[2]);
+        publishRatings();
         syncBrowse();
     }
 
@@ -1620,6 +1626,104 @@ private:
         writeFile(optionsFile("Settings.json"), std::vector<uint8_t>(j.begin(), j.end()));
     }
 
+    // ---- ratings: 0 to 5 stars on any preset, kept for every instance ---------------------------------
+    // A rating belongs to the preset's bytes, not to where it sits: the same sysex in two banks shares one, a
+    // factory or Bonus preset takes one without its read-only bank changing, and a moved or re-imported bank keeps
+    // its own. <Documents>/FSVR/Ratings.json holds them, {"p<hash>": 3, ...}, p v or f for the kind.
+    std::map<std::string, int> ratings;
+
+    static std::string ratingKey(int kind, const std::vector<uint8_t>& syx, uint64_t* cache = nullptr) {
+        uint64_t h = cache ? *cache : 0;
+        if (!h) {
+            h = 1469598103934665603ull;   // FNV-1a
+            for (uint8_t b : syx) h = (h ^ b) * 1099511628211ull;
+            if (cache) *cache = h;
+        }
+        char out[20];
+        std::snprintf(out, sizeof out, "%c%016llx", "pvf"[kind], (unsigned long long)h);
+        return out;
+    }
+    static std::string ratingKey(int kind, const Item& it) { return ratingKey(kind, it.syx, &it.hash); }   // hashed once an item
+
+    void readRatings() {
+        std::vector<uint8_t> raw;
+        Json j;
+        if (readFile(optionsFile("Ratings.json"), raw) && hollow::parseJson(std::string(raw.begin(), raw.end()), j))
+            for (auto& m : j.members)
+                if (const int n = (int)m.second.integer(); n >= 1 && n <= 5) ratings[m.first] = n;
+    }
+
+    void writeRatings() {
+        std::string j = "{";
+        for (auto& r : ratings) j += std::string(j.size() > 1 ? ",\n " : "\n ") + "\"" + r.first + "\": " + std::to_string(r.second);
+        j += "\n}\n";
+        std::error_code ec;
+        std::filesystem::create_directories(std::filesystem::u8path(optionsFile("")), ec);
+        writeFile(optionsFile("Ratings.json"), std::vector<uint8_t>(j.begin(), j.end()));
+    }
+
+    // Each kind's rated rows for the browser's Rating column, "code<TAB>stars" a line: the factory's by their codes
+    // and the library's by their U numbers.
+    void publishRatings() {
+        static const char* keys[3] = {"live.rating.perf", "live.rating.voice", "live.rating.fseq"};
+        for (int kind = 0; kind < 3; ++kind) {
+            std::string out;
+            auto add = [&](const std::string& code, const Item& it) {
+                auto r = ratings.find(ratingKey(kind, it));
+                if (r != ratings.end()) out += code + "\t" + std::to_string(r->second) + "\n";
+            };
+            const std::vector<Item>& f = kind == 0 ? factory.perfs : kind == 1 ? factory.voices : factory.fseqs;
+            char code[8];
+            for (size_t i = 0; i < f.size(); ++i) {
+                if (kind == 2) std::snprintf(code, sizeof code, "%02d", (int)i + 1);
+                else std::snprintf(code, sizeof code, "%c%03d", 'A' + (int)(i / 128), (int)(i % 128) + 1);
+                add(code, f[i]);
+            }
+            const std::vector<Library::Ref>& l = kind == 0 ? lib.perfs : kind == 1 ? lib.voices : lib.fseqs;
+            for (size_t n = 1; n <= l.size(); ++n) {
+                const Bank& b = lib.banks[(size_t)l[n - 1].bank];
+                const std::vector<Item>& items = kind == 0 ? b.perfs : kind == 1 ? b.voices : b.fseqs;
+                add("U" + std::to_string(n), items[(size_t)l[n - 1].index]);
+            }
+            if (st.data(keys[kind]) != out) st.setData(keys[kind], out);
+        }
+    }
+
+    // Worker: a star clicked in a Rating column ("code<TAB>stars<TAB>count"): the rating it lands on, 0 (a double-click)
+    // none. The count is new with each click, so a click is taken once by its value and the key is never cleared, which
+    // would race the editor writing the next one.
+    std::string clickSeen[3];
+    void ratingClicks() {
+        static const char* keys[3] = {"live.rating.click.perf", "live.rating.click.voice", "live.rating.click.fseq"};
+        bool changed = false;
+        for (int kind = 0; kind < 3; ++kind) {
+            const std::string click = st.data(keys[kind]);
+            if (click.empty() || click == clickSeen[kind]) continue;
+            clickSeen[kind] = click;
+            const size_t tab = click.find('\t');
+            const int stars = tab == std::string::npos ? 0 : std::atoi(click.c_str() + tab + 1);
+            const Item* it = itemOf(targetOf(kind, click.substr(0, tab)));
+            if (!it || stars < 0 || stars > 5) continue;
+            const std::string key = ratingKey(kind, *it);
+            if (stars) ratings[key] = stars;
+            else ratings.erase(key);
+            changed = true;
+        }
+        if (!changed) return;
+        writeRatings();
+        publishRatings();
+    }
+
+    // An item whose bytes changed in place (a rename, new attributes) keeps its rating.
+    void moveRating(int kind, const std::vector<uint8_t>& from, const std::vector<uint8_t>& to) {
+        auto r = ratings.find(ratingKey(kind, from));
+        if (r == ratings.end()) return;
+        const int n = r->second;
+        ratings.erase(r);
+        ratings[ratingKey(kind, to)] = n;
+        writeRatings();
+    }
+
     std::string initName() {
         std::vector<uint8_t> raw;
         if (!readFile(optionsFile("Init.fsvr"), raw)) return "A001 Zap ! (factory)";
@@ -1783,6 +1887,20 @@ private:
         return hollow::parseJson(st.ui(), ui) ? ui["vars"]["browse"].str("perf") : "perf";
     }
 
+    // A browser row's item by its code: U and a number for the library's, A001 (a performance or voice) or 01
+    // (an Fseq) for the factory's.
+    static Target targetOf(int kind, const std::string& code) {
+        Target t;
+        t.kind = kind;
+        if (!code.empty() && code[0] == 'U') t.user = std::atoi(code.c_str() + 1);
+        else if (kind == 2) t.factory = std::atoi(code.c_str()) - 1;
+        else if (code.size() >= 2 && code[0] >= 'A' && code[0] <= 'K') {
+            const int num = std::atoi(code.c_str() + 1) - 1;
+            t.factory = kind == 0 ? (code[0] - 'A') * 128 + num : factoryVoice(code[0] - 'A' + 2, num);
+        }
+        return t;
+    }
+
     const Item* itemOf(const Target& t) const {
         const std::vector<Item>* f = t.kind == 0 ? &factory.perfs : t.kind == 1 ? &factory.voices : &factory.fseqs;
         if (t.user) return t.kind == 0 ? lib.perf(t.user) : t.kind == 1 ? lib.voice(t.user) : lib.fseq(t.user);
@@ -1802,14 +1920,7 @@ private:
             a = e + 1;
         }
         const std::string tab = browseTab(), code = f.size() > 1 ? f[1] : "";
-        target = {};
-        target.kind = tab == "voice" ? 1 : tab == "fseq" ? 2 : 0;
-        if (!code.empty() && code[0] == 'U') target.user = std::atoi(code.c_str() + 1);
-        else if (target.kind == 2) target.factory = std::atoi(code.c_str()) - 1;
-        else if (code.size() >= 2 && code[0] >= 'A' && code[0] <= 'K') {
-            const int num = std::atoi(code.c_str() + 1) - 1;
-            target.factory = target.kind == 0 ? (code[0] - 'A') * 128 + num : factoryVoice(code[0] - 'A' + 2, num);
-        }
+        target = targetOf(tab == "voice" ? 1 : tab == "fseq" ? 2 : 0, code);
         const Item* it = itemOf(target);
         const char* kinds[3] = {"performance", "voice", "Fseq"};
         st.setData("item.name", it ? it->name : "");
@@ -1850,6 +1961,10 @@ private:
         const Item* it = itemOf(target);
         if (!it) return;
         const bool categorized = target.kind < 2 && it->address;
+        if (r == "clear_rating") {   // any preset, the read-only banks' too: a rating is not part of the bank
+            if (ratings.erase(ratingKey(target.kind, *it))) { writeRatings(); publishRatings(); }
+            return;
+        }
         if (r == "copy") {
             if (!categorized) { message("An Fseq or a DX voice has no attributes to copy"); return; }
             clip = it->category;
@@ -1883,7 +1998,9 @@ private:
             return;
         }
         std::string err;
+        const std::vector<uint8_t> before = it->syx;
         if (!lib.splice(ref->bank, e, err)) { message(err); return; }
+        if (r != "delete") moveRating(target.kind, before, e.back().bytes);
         if (isLoaded && r != "delete") setPerf(name.empty() ? nullptr : &name, cat);   // the engine's copy follows its bank
         if (isLoaded && !name.empty()) st.setData("perf.user.name", name);
         relocate(was, path);

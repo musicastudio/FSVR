@@ -172,6 +172,15 @@ struct Column {                  // list columns
     bool editInt = false;
     int image = -1;              // an icon column: this image, centred, for each non-empty cell
     bool tileCell = false;       // "tileCell": the cell's number is the tile to draw (a lamp per row)
+    // "lookup": the cell is the number a text data key gives the row's first cell, on lines "first<TAB>number",
+    // 0 for a row it does not name (a rating). The text filter does not search it.
+    std::string lookup;
+    // "click": a press on the cell's image writes "first<TAB>step<TAB>count" to this data key instead of choosing the
+    // row, step 1.."steps" by where across the image it lands (a star of five), a double-click step 0, and count new
+    // with every press, so whoever reads the key knows a press it has not seen without having to clear it.
+    std::string click;
+    int steps = 0;
+    std::string min;             // "min": a param; rows whose cell is under its value are left out
 };
 
 class Gui;
@@ -456,6 +465,8 @@ struct Inst {                    // one widget of one shown view
     int context = -1;             // lists: the row a right-click is for, lit while its menu or modal is open
     std::string caption;          // a caption's "{data:}" text at the last look, to repaint when it changes
     std::string filter;           // lists: the filter at the last look, to repaint and start from the top when it changes
+    std::string looked;           // lists: their "lookup" columns' data at the last look, to repaint when it changes
+    std::string least;            // lists: their "min" params at the last look, to repaint and start from the top
     std::string text;             // text.text with {vars} resolved
     std::string key, data;        // resolved text data key, and its text (or source value) at the last paint
     bool stored = false;          // whether the key held data at the last paint
@@ -643,6 +654,7 @@ private:
     bool editing_on_ = false, caretOn_ = true, editDrag_ = false;
     bool charPending_ = false;                   // the last key's character is still to come (charPending)
     Hit listFocus_;                              // a list with a selected row takes Delete
+    unsigned clickCount_ = 0;                    // a "click" column's presses, counted into what each writes
     Hit learnTarget_;                            // MIDI learn: the widget whose param learns
     bool learnOn_ = false;
     unsigned midiSeen_ = 0;

@@ -37605,5 +37605,14 @@
   ],
   "default": 0,
   "host": false
+ },
+ {
+  "id": "browse.min_rating",
+  "name": "Minimum Rating",
+  "min": 0,
+  "max": 5,
+  "default": 0,
+  "steps": 5,
+  "host": false
  }
 ]

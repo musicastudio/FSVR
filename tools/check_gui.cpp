@@ -12,6 +12,8 @@
 // With FSVR_GUI_SHOTS set to a folder it also saves the window as a PNG at each u.shot("name"), to look at.
 #include <hollow/hollow.h>
 #include "core/core.h"
+#include <map>
+#include <cctype>
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -990,6 +992,151 @@ int main() {
             u.click("pages/library/tab_perf");   // back to the performances, where the browser's checks start
         }
 
+        // ---- ratings (#41): a star in a row's Rating cell rates the row up to it, drawn at once and without loading it; a
+        // double-click or Clear Rating takes it off; the Filter box's stars set the least rating shown. Every program list
+        // has the Programs bed's rect, so its cells are found from that whichever list shows. ----
+        {
+            Rect L, f;
+            const bool have = u.rect("pages/library/programs_bed", L) && u.rect("pages/library/min_rating", f);
+            const char* kinds[3] = {"perf", "voice", "fseq"};
+            auto starX = [&](int star) { return L.x + 720 + 16 * (star - 1); };   // the cell at 706, its art 6 in, 16 a star
+            // The first whole row's top: a list opened on its selected row can stand part way into the row above it.
+            auto top = [&] {
+                const auto& px = u.gui.pixels();
+                auto at = [&](int y) { return px[(size_t)y * u.gui.width() + L.x + 2] & 0xffffff; };
+                for (int y = L.y; y < L.y + 26; ++y)
+                    if (at(y) != 0x3a4546 && (y == L.y ? at(y + 23) == 0x3a4546 : at(y - 1) == 0x3a4546)) return y;
+                return L.y;
+            };
+            auto rowY = [&](int place) { return top() + place * 25 + 11; };
+            auto lit = [&](int place) { return (u.gui.pixels()[(size_t)rowY(place) * u.gui.width() + L.x + L.w - 20] & 0xffffff) == 0x82ca9c; };
+            auto drawn = [&](int place) {   // the lit stars the row shows: a lit star's middle is the row text's near white
+                const auto& px = u.gui.pixels();
+                int n = 0;
+                for (int s = 1; s <= 5; ++s) {
+                    const uint32_t p = px[(size_t)rowY(place) * u.gui.width() + starX(s)];
+                    if ((77 * (p >> 16 & 255) + 150 * (p >> 8 & 255) + 29 * (p & 255)) >> 8 > 200) ++n;
+                }
+                return n;
+            };
+            auto lineMap = [&](int kind) {
+                std::map<std::string, std::string> m;
+                const std::string d = u.data(std::string("live.rating.") + kinds[kind]);
+                for (size_t p = 0; p < d.size();) {
+                    const size_t e = std::min(d.find('\n', p), d.size()), t = d.find('\t', p);
+                    if (t < e) m[d.substr(p, t - p)] = d.substr(t + 1, e - t - 1);
+                    p = e + 1;
+                }
+                return m;
+            };
+            // The one code whose rating moved since `was`, and what it moved to ("" for none, "0" for taken off).
+            auto moved = [&](int kind, const std::map<std::string, std::string>& was, std::string& code) {
+                auto now = lineMap(kind);
+                std::string to;
+                int n = 0;
+                for (auto& e : now) if (!was.count(e.first) || was.at(e.first) != e.second) code = e.first, to = e.second, ++n;
+                for (auto& e : was) if (!now.count(e.first)) code = e.first, to = "0", ++n;
+                return n == 1 ? to : std::string();
+            };
+            // A star clicked (dbl: double-clicked) on the row at place: the row's rating becomes want, drawn at once.
+            auto rate = [&](int kind, int place, int star, int want, bool dbl, const char* where) {
+                const auto was = lineMap(kind);
+                const double program = u.get("perf.program"), voice = u.get("part.program.p1"), fseq = u.get("fseq.number");
+                u.clickAt(starX(star), rowY(place));
+                if (dbl) u.clickAt(starX(star), rowY(place), true);
+                std::string code, to;
+                const bool got = u.until([&] { to = moved(kind, was, code); return to == std::to_string(want); });
+                CHECK(got, "%s: star %d%s on row %d moved %s to \"%s\", not %d", where, star, dbl ? " (double-click)" : "", place, code.c_str(), to.c_str(), want);
+                u.run(2);   // what the editor shows now, with no click on the row
+                CHECK(drawn(place) == want, "%s: row %d draws %d stars after the click, not %d", where, place, drawn(place), want);
+                CHECK(u.get("perf.program") == program && u.get("part.program.p1") == voice && u.get("fseq.number") == fseq, "%s: a star loaded a preset", where);
+                return code;
+            };
+            if (have) {
+                u.row("pages/library/banks", 0);
+                u.row("pages/library/category_list", 0);
+                u.run(4);
+                // the factory's performances: set, raise, lower, a double-click takes it off
+                const std::string c1 = rate(0, 1, 3, 3, false, "factory performances");
+                rate(0, 1, 5, 5, false, "factory performances, raised");
+                rate(0, 1, 2, 2, false, "factory performances, lowered");
+                rate(0, 1, 2, 0, true, "factory performances, double-clicked");
+                // Clear Rating from the row's right-click menu
+                rate(0, 2, 4, 4, false, "factory performances, row 2");
+                u.rclickAt(L.x + 60, rowY(2));
+                u.choose("Clear Rating");
+                CHECK(u.until([&] { return lineMap(0).empty(); }, 3000), "Clear Rating left \"%s\"", u.data("live.rating.perf").c_str());
+                u.run(2);
+                CHECK(drawn(2) == 0, "Clear Rating left row 2 drawing %d stars", drawn(2));
+                // the selected row
+                int sel = -1;
+                for (int p = 0; p < 16 && sel < 0; ++p) if (lit(p)) sel = p;
+                if (sel >= 0) {
+                    rate(0, sel, 3, 3, false, "the selected performance");
+                    CHECK(lit(sel), "a star on the selected row unlit it");
+                    rate(0, sel, 3, 0, true, "the selected performance, double-clicked");
+                }
+                // a scrolled list: the row under the pointer, not the one that was there before the scroll
+                u.gui.wheel(L.x + 200, L.y + 100, -8, false);
+                u.run(2);
+                const std::string c2 = rate(0, 0, 4, 4, false, "a scrolled list");
+                CHECK(c2 != c1, "the scrolled list rated %s, the row from before the scroll", c2.c_str());
+                rate(0, 0, 4, 0, true, "a scrolled list, double-clicked");
+                // the text filter: its first row is the one that holds the text
+                u.st->setData("live.browse.filter", "Nightmare");
+                u.run(4);
+                CHECK(rate(0, 0, 2, 2, false, "filtered by text") == "A003", "the text filter's first row was not A003 Nightmare");
+                rate(0, 0, 2, 0, true, "filtered by text, double-clicked");
+                u.st->setData("live.browse.filter", "");
+                // a category's list (Piano)
+                u.row("pages/library/category_list", 2);
+                u.run(4);
+                rate(0, 0, 5, 5, false, "the Piano category");
+                rate(0, 0, 5, 0, true, "the Piano category, double-clicked");
+                u.row("pages/library/category_list", 0);
+                // the factory's voices and Fseqs
+                u.click("pages/library/tab_voice");
+                u.run(4);
+                rate(1, 3, 4, 4, false, "factory voices");
+                rate(1, 3, 4, 0, true, "factory voices, double-clicked");
+                u.click("pages/library/tab_fseq");
+                u.run(4);
+                { const std::string fc = rate(2, 0, 1, 1, false, "factory Fseqs"); CHECK(fc.size() == 2 && std::isdigit((unsigned char)fc[0]) && std::isdigit((unsigned char)fc[1]), "a factory Fseq rated as \"%s\", not its two digits", fc.c_str()); }
+                rate(2, 0, 1, 0, true, "factory Fseqs, double-clicked");
+                // a library bank, whose rows the processor writes: Yamaha FS1R (Bonus)
+                u.click("pages/library/tab_perf");
+                u.row("pages/library/banks", 1);
+                CHECK(u.until([&] { return u.lines("browse.perf.list") > 3; }), "the Bonus bank listed no performances");   // the processor writes its rows
+                u.run(6);
+                CHECK(rate(0, 2, 3, 3, false, "the Bonus bank")[0] == 'U', "the Bonus bank's row did not rate by its U number");
+                rate(0, 2, 3, 0, true, "the Bonus bank, double-clicked");
+                // the Filter box's stars: rows under the least go, a double-click brings them back
+                u.row("pages/library/banks", 0);
+                u.run(4);
+                u.gui.wheel(L.x + 200, L.y + 100, 40, false);   // the top of the list
+                u.run(2);
+                rate(0, 0, 4, 4, false, "for the filter, a 4");
+                rate(0, 1, 2, 2, false, "for the filter, a 2");
+                u.clickAt(f.x + 6 + 10 + 2 * 20, f.y + f.h / 2);   // the Filter box's third star
+                CHECK(u.get("browse.min_rating") == 3, "the Filter box's third star set %g", u.get("browse.min_rating"));
+                u.run(2);
+                CHECK(drawn(0) == 4 && drawn(1) == 0, "at 3 and up the list draws %d and %d stars on its first two rows, not 4 and none", drawn(0), drawn(1));
+                u.clickAt(f.x + 6 + 10 + 2 * 20, f.y + f.h / 2);   // the same star again keeps it
+                CHECK(u.get("browse.min_rating") == 3, "the Filter box's lit star changed the least to %g", u.get("browse.min_rating"));
+                u.clickAt(f.x + 6 + 10 + 2 * 20, f.y + f.h / 2, true);   // a double-click: every rating
+                CHECK(u.get("browse.min_rating") == 0, "a double-click left the least at %g", u.get("browse.min_rating"));
+                u.clickAt(f.x + 6 + 10 + 4 * 20, f.y + f.h / 2);   // the fifth star, then a right-click anywhere on them: every rating
+                CHECK(u.get("browse.min_rating") == 5, "the Filter box's fifth star set %g", u.get("browse.min_rating"));
+                u.rclickAt(f.x + 6 + 10 + 1 * 20, f.y + f.h / 2);
+                CHECK(u.get("browse.min_rating") == 0, "a right-click left the least at %g", u.get("browse.min_rating"));
+                CHECK(u.gui.menuLabels().empty(), "a right-click on the Filter box's stars opened a menu");
+                u.run(2);
+                CHECK(drawn(0) == 4 && drawn(1) == 2, "the whole list back draws %d and %d stars, not 4 and 2", drawn(0), drawn(1));
+                rate(0, 0, 4, 0, true, "for the filter, cleared");
+                rate(0, 1, 2, 0, true, "for the filter, cleared");
+            }
+        }
+
         // ---- copy and paste from the right-click menus: an operator, an envelope from V to N, a part --------
         {
             Rect r;
@@ -1137,7 +1284,7 @@ int main() {
         u.settle();
         u.row("pages/library/perfs_all", 1, true);   // A002 Shaman
         CHECK(u.lit("pages/library/perfs_all", 1) && !u.lit("pages/library/perfs_all", 0), "the right-clicked row is not the lit one");
-        u.menuIs({"Performance: Shaman", "-", "Rename", "Delete", "-", "Edit Attributes", "Copy Attributes", "Paste Attributes"}, "a factory preset's");
+        u.menuIs({"Performance: Shaman", "-", "Rename", "Delete", "-", "Edit Attributes", "Copy Attributes", "Paste Attributes", "-", "Clear Rating"}, "a factory preset's");
         u.choose("Delete");
         CHECK(u.until([&] { return u.gui.modal() == "dialog_delete" && u.get("item.readonly") == 1; }) && !u.shows(M + "delete"),
               "a factory preset's Delete offered to delete it");
@@ -1237,7 +1384,7 @@ int main() {
                 CHECK(u.shownRows(bank) == 2, "\"bass\" shows %d of the bank's rows, not 2", u.shownRows(bank));
                 u.row(bank, 1, true);
                 CHECK(u.data("item.context").rfind("2\tU3\tCharlie", 0) == 0, "the right-click on the second row left shown named \"%s\"", u.data("item.context").c_str());
-                u.menuIs({"Performance: Charlie", "-", "Rename", "Delete", "-", "Edit Attributes", "Copy Attributes", "Paste Attributes"}, "a filtered user preset's");
+                u.menuIs({"Performance: Charlie", "-", "Rename", "Delete", "-", "Edit Attributes", "Copy Attributes", "Paste Attributes", "-", "Clear Rating"}, "a filtered user preset's");
                 u.gui.keyDown(KeyEscape, false, false);
                 u.run(2);
                 filter("bass");   // leaving the bank for another empties the box again, and coming back lists the processor's own rows
@@ -1252,7 +1399,7 @@ int main() {
         u.row("pages/library/banks", bankRow);
         u.settle();
         u.row("pages/library/perfs_bank", 0, true);
-        u.menuIs({"Performance: Zap Edit", "-", "Rename", "Delete", "-", "Edit Attributes", "Copy Attributes", "Paste Attributes"}, "a user preset's");
+        u.menuIs({"Performance: Zap Edit", "-", "Rename", "Delete", "-", "Edit Attributes", "Copy Attributes", "Paste Attributes", "-", "Clear Rating"}, "a user preset's");
         u.choose("Rename");
         CHECK(u.until([&] { return u.gui.modal() == "dialog_rename" && u.data("item.new_name") == "Zap Edit"; }), "Rename opened on \"%s\"", u.data("item.new_name").c_str());
         u.settle();
@@ -1419,6 +1566,6 @@ int main() {
         u.proc.reset();
     }
     fs::remove_all(tmp, ec);
-    if (!fails) std::printf("check_gui: the top bar, its menus and toggles, every page and the Operators tab's sub-tabs, the keyboard shortcuts and their tooltips, the Parts page's steppers, keyboard, velocity curve and radios, copy and paste, the Fseq speed, the browser's right-click menus, every dialog, the modal's veil, Escape and close X, the close prompt, the Options page and About all pass\n");
+    if (!fails) std::printf("check_gui: the top bar, its menus and toggles, every page and the Operators tab's sub-tabs, the keyboard shortcuts and their tooltips, the Parts page's steppers, keyboard, velocity curve and radios, copy and paste, the Fseq speed, the browser's right-click menus and ratings, every dialog, the modal's veil, Escape and close X, the close prompt, the Options page and About all pass\n");
     return fails ? 1 : 0;
 }
